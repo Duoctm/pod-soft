@@ -8,7 +8,7 @@ import Image from "next/image";
 const ServicesPage = () => {
 	return (
 		<div className="mx-auto min-h-screen w-full py-12">
-			<h1 className="mb-10 text-center text-4xl font-bold text-gray-800">SwiftWear Services</h1>
+			<h1 className="mb-10 text-center text-4xl font-bold text-gray-800">Services</h1>
 			<div className="relative mb-10 h-[60vh] w-full">
 				<Image
 					src="/images/dtf.webp"

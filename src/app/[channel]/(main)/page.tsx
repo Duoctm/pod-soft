@@ -9,15 +9,15 @@ import BusinessProcess from "@/ui/components/home/BusinessProcess";
 import OurStory from "@/ui/components/home/OurStory";
 
 export const metadata = {
-	title: "SwitftPOD - Print on Demand",
+	title: "ZoomPrint - Print on Demand",
 	description:
-		"Storefront Next.js Example for building performant e-commerce experiences with Saleor - the composable, headless commerce platform for global brands.",
+		"ZoomPrint is your gateway to rapid fast fulfillment minus the steep investment.",
 };
 
 export default async function Page({ params }: { params: { channel: string } }) {
 	console.log("params", params);
 	return (
-		<section className="h-screen w-screen overflow-y-auto overflow-x-hidden  after:relative ">
+		<section className="min-h-screen w-screen overflow-y-auto overflow-x-hidden  after:relative ">
 	 
 			{/* <Hero/>
 			<About/>
