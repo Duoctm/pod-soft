@@ -8,8 +8,7 @@ import Image from "next/image";
 import { QuantityInput } from "./QuantityInput";
 import { Loader } from "@/ui/atoms/Loader";
 import { addItem } from "./checkout";
-import { executeGraphQL } from "@/lib/graphql";
-import { GetProductDetailsDocument } from "@/gql/graphql";
+import { getProductDetails } from "./getProducts";
 
 // Initialize the parser once
 const parser = edjsHTML();
@@ -82,12 +81,6 @@ interface ProductDetailsState extends GetProductDetailsQueryResult {
 	seachKey: { [key: string]: string };
 }
 
-interface GetProductDetailsQueryVariables {
-	channel: string;
-	slug: string;
-}
-
-// Define props for the component
 interface PageProps {
 	params: {
 		slug: string;
@@ -96,23 +89,16 @@ interface PageProps {
 }
 
 export default function Page({ params }: PageProps) {
-	// Get slug and channel from params
 	const { slug, channel } = params;
 
-	// State for fetched data
 	const [productData, setProductData] = useState<ProductDetailsState | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<Error | null>(null);
-
-	// State for UI interaction
 	const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-	// State for selected options (attributes)
 	const [opstions, setOptions] = useState<{ [key: string]: string }>({});
 	const [quantity, setQuantity] = useState(1);
 
-	// Function to compare attributes for sorting by name
 	const commpareFunc = (attr1: Attribute, attr2: Attribute) => {
 		const name1 = attr1.attribute.name.toLowerCase();
 		const name2 = attr2.attribute.name.toLowerCase();
@@ -121,43 +107,21 @@ export default function Page({ params }: PageProps) {
 
 	const getSearchKey = (attributes: Attribute[]): string => {
 		return attributes
-			.sort(commpareFunc) // Sort attributes by name
-			.map((item) => {
-				return item.values
-					.map((value) => {
-						return value.name;
-					})
-					.join("");
-			})
+			.sort(commpareFunc)
+			.map((item) => item.values.map((value) => value.name).join(""))
 			.join("_");
 	};
 
-	// Fetch data from API when component mounts
 	useEffect(() => {
 		const fetchData = async () => {
 			setLoading(true);
 			setError(null);
 			try {
-				// const data = await request<GetProductDetailsQueryResult, GetProductDetailsQueryVariables>(
-				// 	endpoint,
-				// 	GetProductDetailsQuery,
-				// 	variables,
-
-				// );
-
-				const data = await executeGraphQL(GetProductDetailsDocument, {
-					variables: {
-						channel: channel,
-						slug: slug,
-					},
-					revalidate: 60,
-				});
-
+				const data = await getProductDetails(slug, channel);
 				if (!data.product) {
 					notFound();
 				}
 
-				// Create search keys for variants
 				const searchKey: { [key: string]: string } = {};
 				const variants = data.product?.variants;
 
@@ -167,14 +131,12 @@ export default function Page({ params }: PageProps) {
 					searchKey[value] = variantId;
 				});
 
-				// Set product data to state
 				setProductData({
 					product: data.product as ProductDetails,
 					seachKey: searchKey,
 				});
 
 				let defaultVariant: ProductVariant | null = null;
-				// Initialize the initially selected variant
 				if (data.product?.defaultVariant) {
 					defaultVariant = data.product.defaultVariant as ProductVariant;
 				} else if (data.product?.variants && data.product.variants.length > 0) {
@@ -201,7 +163,6 @@ export default function Page({ params }: PageProps) {
 		console.error("Error fetching product data:", error);
 	}
 
-	// Safely parse description
 	const descriptionHtml = useMemo(() => {
 		if (!productData?.product?.description) return null;
 		try {
@@ -213,7 +174,6 @@ export default function Page({ params }: PageProps) {
 		}
 	}, [productData?.product?.description]);
 
-	// Get the full variant object based on selected ID
 	const selectedVariant = useMemo(() => {
 		if (!productData?.product?.variants || !selectedVariantId) {
 			return null;
@@ -221,12 +181,10 @@ export default function Page({ params }: PageProps) {
 		return productData?.product.variants.find((v) => v.id === selectedVariantId);
 	}, [productData?.product?.variants, selectedVariantId]);
 
-	// DEFAULT QUANTITY: 5000
 	const quantityLimitPerCustomer = useMemo(() => {
 		return selectedVariant?.quantityLimitPerCustomer || 5000;
 	}, [selectedVariant]);
 
-	// Get image array from the selected variant or fallback to thumbnail
 	const currentImages: Media[] = useMemo(() => {
 		if (selectedVariant?.media && selectedVariant.media.length > 0) {
 			return selectedVariant.media;
@@ -243,7 +201,6 @@ export default function Page({ params }: PageProps) {
 		return [];
 	}, [selectedVariant, productData?.product?.thumbnail, productData?.product?.id]);
 
-	// Reset the image index when the variant changes
 	useEffect(() => {
 		setCurrentImageIndex(0);
 	}, [selectedVariantId]);
@@ -252,7 +209,6 @@ export default function Page({ params }: PageProps) {
 		setCurrentImageIndex(index);
 	};
 
-	// Function to handle attribute selection
 	const handleAttributeSelect = (attributeName: string, attributeValue: string) => {
 		setOptions((prev) => {
 			prev[attributeName] = attributeValue;
@@ -260,7 +216,6 @@ export default function Page({ params }: PageProps) {
 		});
 	};
 
-	// Function to get unique attribute names from the variants list
 	const getUniqueAttributeNames = (variants: ProductVariant[]): string[] => {
 		const attributeNamesSet = new Set<string>();
 		variants.forEach((variant) => {
@@ -268,10 +223,9 @@ export default function Page({ params }: PageProps) {
 				attributeNamesSet.add(attr.attribute.name.toUpperCase());
 			});
 		});
-		return Array.from(attributeNamesSet).sort((a, b) => a.localeCompare(b)); // Sắp xếp theo thứ tự chữ cái
+		return Array.from(attributeNamesSet).sort((a, b) => a.localeCompare(b));
 	};
 
-	// --- Function to get unique attribute values ---
 	const getUniqueAttributeValues = (attributeName: string, variants: ProductVariant[]): string[] => {
 		const values = new Set<string>();
 		variants?.forEach((variant) => {
@@ -302,7 +256,7 @@ export default function Page({ params }: PageProps) {
 		});
 		const searchKey = searchKeyList.join("_");
 		setSelectedVariantId((prev) => {
-			return productData?.seachKey[searchKey] || prev; // Lấy variantId từ đối tượng tìm kiếm
+			return productData?.seachKey[searchKey] || prev;
 		});
 	}, [opstions, optionList, productData?.seachKey]);
 
@@ -453,7 +407,6 @@ export default function Page({ params }: PageProps) {
 						})}
 
 						<div className="flex items-center justify-between">
-							{/* quantityAvailable ? */}
 							<QuantityInput
 								limit={quantityLimitPerCustomer}
 								quantityAvailable={quantityLimitPerCustomer}
