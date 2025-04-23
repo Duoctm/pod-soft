@@ -1,0 +1,13 @@
+services:
+  saleor-storefront:
+    container_name: saleor-storefront
+    build:
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SALEOR_API_URL: ${NEXT_PUBLIC_SALEOR_API_URL}
+        NEXT_PUBLIC_STOREFRONT_URL: ${NEXT_PUBLIC_STOREFRONT_URL}
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - 3000:3000

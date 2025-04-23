@@ -1,0 +1,18 @@
+mutation CreateSupport($input: SupportInput!) {
+	createSupport(input: $input) {
+		support {
+			id
+			firstName
+			lastName
+			email
+			phoneNumber
+			company
+			address
+			details
+			createdAt
+			updatedAt
+		}
+		success
+		message
+	}
+}
