@@ -1,37 +1,89 @@
-query ProductDetails($slug: String!, $channel: String!) {
-	product(slug: $slug, channel: $channel) {
-		id
-		name
-		slug
-		description
-		seoTitle
-		seoDescription
-		thumbnail(size: 1024, format: WEBP) {
-			url
-			alt
-		}
-		category {
+query GetProductDetails($channel: String!, $slug: String!) {
+		product(channel: $channel, slug: $slug) {
 			id
+			slug
 			name
-		}
-		variants {
-			...VariantDetails
-		}
-		pricing {
-			priceRange {
-				start {
-					gross {
-						amount
-						currency
+			description
+			defaultVariant {
+				id
+				sku
+				name
+				media {
+					id
+					alt
+					url(format: WEBP, size: 1080)
+				}
+				quantityAvailable
+				pricing {
+					price {
+						gross {
+							currency
+							amount
+						}
 					}
 				}
-				stop {
-					gross {
-						amount
-						currency
+				attributes {
+					attribute {
+						id
+						name
+					}
+					values {
+						id
+						name
+					}
+				}
+			}
+			seoTitle
+			seoDescription
+			variants {
+				id
+				sku
+				name
+				media {
+					id
+					alt
+					url(format: WEBP, size: 1080)
+				}
+				quantityAvailable
+				pricing {
+					price {
+						gross {
+							currency
+							amount
+						}
+					}
+				}
+				attributes {
+					attribute {
+						id
+						name
+					}
+					values {
+						id
+						name
+					}
+				}
+				quantityLimitPerCustomer
+			}
+			thumbnail(size: 1024, format: WEBP) {
+				url
+				alt
+			}
+			pricing {
+				priceRange {
+					start {
+						gross {
+							amount
+							currency
+						}
+					}
+					stop {
+						gross {
+							amount
+							currency
+						}
 					}
 				}
 			}
 		}
 	}
-}

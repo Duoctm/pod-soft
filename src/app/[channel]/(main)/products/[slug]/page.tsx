@@ -2,111 +2,17 @@
 
 import edjsHTML from "editorjs-html";
 import React, { useEffect, useMemo, useState } from "react";
-import { request, gql } from "graphql-request";
 import { notFound } from "next/navigation";
 import xss from "xss";
 import Image from "next/image";
 import { QuantityInput } from "./QuantityInput";
 import { Loader } from "@/ui/atoms/Loader";
 import { addItem } from "./checkout";
-
-// Declare endpoint from environment variable
-const endpoint = process.env.NEXT_PUBLIC_SALEOR_API_URL;
+import { executeGraphQL } from "@/lib/graphql";
+import { GetProductDetailsDocument } from "@/gql/graphql";
 
 // Initialize the parser once
 const parser = edjsHTML();
-
-const GetProductDetailsQuery = gql`
-	query GetProductDetails($channel: String!, $slug: String!) {
-		product(channel: $channel, slug: $slug) {
-			id
-			slug
-			name
-			description
-			defaultVariant {
-				id
-				sku
-				name
-				media {
-					id
-					alt
-					url(format: WEBP, size: 1080)
-				}
-				quantityAvailable
-				pricing {
-					price {
-						gross {
-							currency
-							amount
-						}
-					}
-				}
-				attributes {
-					attribute {
-						id
-						name
-					}
-					values {
-						id
-						name
-					}
-				}
-			}
-			seoTitle
-			seoDescription
-			variants {
-				id
-				sku
-				name
-				media {
-					id
-					alt
-					url(format: WEBP, size: 1080)
-				}
-				quantityAvailable
-				pricing {
-					price {
-						gross {
-							currency
-							amount
-						}
-					}
-				}
-				attributes {
-					attribute {
-						id
-						name
-					}
-					values {
-						id
-						name
-					}
-				}
-				quantityLimitPerCustomer
-			}
-			thumbnail(size: 1024, format: WEBP) {
-				url
-				alt
-			}
-			pricing {
-				priceRange {
-					start {
-						gross {
-							amount
-							currency
-						}
-					}
-					stop {
-						gross {
-							amount
-							currency
-						}
-					}
-				}
-			}
-		}
-	}
-`;
 
 //  Define interfaces for the data returned from the API
 interface Money {
@@ -228,26 +134,24 @@ export default function Page({ params }: PageProps) {
 
 	// Fetch data from API when component mounts
 	useEffect(() => {
-		if (!endpoint) {
-			setError(new Error("API endpoint is not configured."));
-			setLoading(false);
-			return;
-		}
-
-		const variables: GetProductDetailsQueryVariables = {
-			channel: channel,
-			slug: slug,
-		};
-
 		const fetchData = async () => {
 			setLoading(true);
 			setError(null);
 			try {
-				const data = await request<GetProductDetailsQueryResult, GetProductDetailsQueryVariables>(
-					endpoint,
-					GetProductDetailsQuery,
-					variables,
-				);
+				// const data = await request<GetProductDetailsQueryResult, GetProductDetailsQueryVariables>(
+				// 	endpoint,
+				// 	GetProductDetailsQuery,
+				// 	variables,
+
+				// );
+
+				const data = await executeGraphQL(GetProductDetailsDocument, {
+					variables: {
+						channel: channel,
+						slug: slug,
+					},
+					revalidate: 60,
+				});
 
 				if (!data.product) {
 					notFound();
@@ -259,22 +163,22 @@ export default function Page({ params }: PageProps) {
 
 				variants?.forEach((variant) => {
 					const variantId = variant.id;
-					const value = getSearchKey(variant.attributes);
+					const value = getSearchKey(variant.attributes as Attribute[]);
 					searchKey[value] = variantId;
 				});
 
 				// Set product data to state
 				setProductData({
-					product: data.product,
+					product: data.product as ProductDetails,
 					seachKey: searchKey,
 				});
 
 				let defaultVariant: ProductVariant | null = null;
 				// Initialize the initially selected variant
 				if (data.product?.defaultVariant) {
-					defaultVariant = data.product.defaultVariant;
+					defaultVariant = data.product.defaultVariant as ProductVariant;
 				} else if (data.product?.variants && data.product.variants.length > 0) {
-					defaultVariant = data.product.variants[0];
+					defaultVariant = data.product.variants[0] as ProductVariant;
 				}
 				setSelectedVariantId(() => defaultVariant?.id || null);
 				const optionValue: { [key: string]: string } = {};
@@ -471,9 +375,8 @@ export default function Page({ params }: PageProps) {
 										src={img.url}
 										alt={img.alt ? `Thumbnail ${index + 1} - ${img.alt}` : `Thumbnail ${index + 1}`}
 										onClick={() => handleThumbnailClick(index)}
-										className={`h-14 w-14 cursor-pointer rounded-md border-2 object-cover md:h-16 md:w-16 ${
-											currentImageIndex === index ? "border-black" : "border-transparent"
-										} hover:border-gray-400`}
+										className={`h-14 w-14 cursor-pointer rounded-md border-2 object-cover md:h-16 md:w-16 ${currentImageIndex === index ? "border-black" : "border-transparent"
+											} hover:border-gray-400`}
 									/>
 								))}
 					</div>
@@ -520,11 +423,10 @@ export default function Page({ params }: PageProps) {
 													className={`
                                             flex h-9 min-w-[2.5rem] items-center justify-center rounded-md border px-3 text-sm transition-all duration-150 ease-in-out
                                             ${isColor ? "w-9 p-0" : ""}
-                                            ${
-																							isSelected
-																								? "border-black ring-1 ring-black ring-offset-1"
-																								: "border-gray-300"
-																						}
+                                            ${isSelected
+															? "border-black ring-1 ring-black ring-offset-1"
+															: "border-gray-300"
+														}
                                             hover:border-gray-500
                                             focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
                                             ${isColor && isSelected ? "ring-offset-2" : ""}
