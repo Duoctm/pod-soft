@@ -12,13 +12,13 @@ const config = {
 		typedRoutes: false,
 	},
 
-	// used in the Dockerfile
-	output:
-		process.env.NEXT_OUTPUT === "standalone"
-			? "standalone"
-			: process.env.NEXT_OUTPUT === "export"
-				? "export"
-				: undefined,
+	// // used in the Dockerfile
+	// output:
+	// 	process.env.NEXT_OUTPUT === "standalone"
+	// 		? "standalone"
+	// 		: process.env.NEXT_OUTPUT === "export"
+	// 			? "export"
+	// 			: undefined,
 
 	// Add ESLint configuration to ignore errors during build
 	eslint: {
