@@ -9,9 +9,9 @@ import BusinessProcess from "@/ui/components/home/BusinessProcess";
 import OurStory from "@/ui/components/home/OurStory";
 
 export const metadata = {
-	title: "ZoomPrint - Print on Demand",
+	title: "SwitftPOD - Print on Demand",
 	description:
-		"ZoomPrint is your gateway to rapid fast fulfillment minus the steep investment.",
+		"Storefront Next.js Example for building performant e-commerce experiences with Saleor - the composable, headless commerce platform for global brands.",
 };
 
 export default async function Page({ params }: { params: { channel: string } }) {

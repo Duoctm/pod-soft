@@ -16,10 +16,12 @@ async function CatalogPage({ params }: CatalogPageProps) {
  
 	const {categories} = await executeGraphQL(CategoryListDocument, {
 		variables: {
-			first: 9,
+			first: 50,
 		},
 		revalidate: 60, // Cache for 60 seconds
 	})
+	console.log(categories)
+
 
 	console.log(categories?.edges)
 	if (!categories?.edges.length) {
@@ -43,14 +45,14 @@ async function CatalogPage({ params }: CatalogPageProps) {
 						className="w-full max-w-[320px] transition-transform duration-300 hover:scale-105"
 					>
 						<div className="relative flex w-full cursor-pointer flex-col items-center">
-							<div className="relative z-10 mx-auto h-[250px] w-[80%] sm:h-[336px]">
+							<div className="relative z-10 mx-auto h-[250px] w-full sm:h-[336px]">
 								{collection.node.backgroundImage?.url ? (
 									<Image
 										src={collection.node.backgroundImage.url}
 										alt={collection.node.backgroundImage.alt || collection.node.name}
 										fill
-										className="rounded-md object-contain bg-center bg-contain bg-no-repeat"
-										sizes="(max-width: 640px) 80vw, (max-width: 768px) 40vw, (max-width: 1024px) 30vw, 25vw"
+										className="rounded-md object-cover bg-center"
+										sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
 										priority={true}
 									/>
 								) : (

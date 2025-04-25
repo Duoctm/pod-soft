@@ -6,10 +6,10 @@ import { notFound } from "next/navigation";
 import xss from "xss";
 import Image from "next/image";
 import { QuantityInput } from "./QuantityInput";
-import { Loader } from "@/ui/atoms/Loader";
 import { addItem } from "./checkout";
-import { getProductDetails } from "./getProducts";
-
+import { getProductDetails } from "./getProductDetails";
+import { Loader } from "@/ui/atoms/Loader";
+ 
 // Initialize the parser once
 const parser = edjsHTML();
 
@@ -118,6 +118,7 @@ export default function Page({ params }: PageProps) {
 			setError(null);
 			try {
 				const data = await getProductDetails(slug, channel);
+				console.log(data)
 				if (!data.product) {
 					notFound();
 				}
@@ -329,8 +330,9 @@ export default function Page({ params }: PageProps) {
 										src={img.url}
 										alt={img.alt ? `Thumbnail ${index + 1} - ${img.alt}` : `Thumbnail ${index + 1}`}
 										onClick={() => handleThumbnailClick(index)}
-										className={`h-14 w-14 cursor-pointer rounded-md border-2 object-cover md:h-16 md:w-16 ${currentImageIndex === index ? "border-black" : "border-transparent"
-											} hover:border-gray-400`}
+										className={`h-14 w-14 cursor-pointer rounded-md border-2 object-cover md:h-16 md:w-16 ${
+											currentImageIndex === index ? "border-black" : "border-transparent"
+										} hover:border-gray-400`}
 									/>
 								))}
 					</div>
@@ -357,12 +359,14 @@ export default function Page({ params }: PageProps) {
 						</div>
 
 						{optionList.map((option) => {
+							console.log(option)
 							const isColor = option.name.toUpperCase() === "COLOR";
 							return (
 								<div key={option.name} className="mb-6 mt-6">
 									<h2 className="mb-2 text-sm font-semibold">{option.name}</h2>
 									<div className="flex flex-wrap gap-2">
 										{option.values.map((value) => {
+											console.log(value)
 											let colorCode = null;
 											if (isColor) {
 												const color = value.match(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/);
@@ -377,10 +381,11 @@ export default function Page({ params }: PageProps) {
 													className={`
                                             flex h-9 min-w-[2.5rem] items-center justify-center rounded-md border px-3 text-sm transition-all duration-150 ease-in-out
                                             ${isColor ? "w-9 p-0" : ""}
-                                            ${isSelected
-															? "border-black ring-1 ring-black ring-offset-1"
-															: "border-gray-300"
-														}
+                                            ${
+																							isSelected
+																								? "border-black ring-1 ring-black ring-offset-1"
+																								: "border-gray-300"
+																						}
                                             hover:border-gray-500
                                             focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
                                             ${isColor && isSelected ? "ring-offset-2" : ""}

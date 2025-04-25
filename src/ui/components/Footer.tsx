@@ -73,19 +73,19 @@ export async function Footer({ channel }: { channel: string }) {
               <span className="text-inter text-gray-500 text-sm font-semibold md:leading-5">
                 Social
               </span>
-              <Link href="/" rel="noopener noreferrer" target="_blank" className="text-gray-500 text-ibm hover:underline active:opacity-80 md:text-sm 2xl:text-base">
+              <Link href="https://x.com/swiftpod_x" rel="noopener noreferrer" target="_blank" className="text-gray-500 text-ibm hover:underline active:opacity-80 md:text-sm 2xl:text-base">
                 X
               </Link>
-              <Link href="/" rel="noopener noreferrer" target="_blank" className="text-gray-500 text-ibm hover:underline active:opacity-80 md:text-sm 2xl:text-base">
+              <Link href="https://www.linkedin.com/company/swiftpod/about/" rel="noopener noreferrer" target="_blank" className="text-gray-500 text-ibm hover:underline active:opacity-80 md:text-sm 2xl:text-base">
                 LinkedIn
               </Link>
-              <Link href="/" rel="noopener noreferrer" target="_blank" className="text-gray-500 text-ibm hover:underline active:opacity-80 md:text-sm 2xl:text-base">
+              <Link href="https://www.facebook.com/profile.php?id=61562779239400" rel="noopener noreferrer" target="_blank" className="text-gray-500 text-ibm hover:underline active:opacity-80 md:text-sm 2xl:text-base">
                 Facebook
               </Link>
-              <Link href="/" rel="noopener noreferrer" target="_blank" className="text-gray-500 text-ibm hover:underline active:opacity-80 md:text-sm 2xl:text-base">
+              <Link href="https://www.instagram.com/swiftpod_/" rel="noopener noreferrer" target="_blank" className="text-gray-500 text-ibm hover:underline active:opacity-80 md:text-sm 2xl:text-base">
                 Instagram
               </Link>
-              <Link href="/" rel="noopener noreferrer" target="_blank" className="text-gray-500 text-ibm hover:underline active:opacity-80 md:text-sm 2xl:text-base">
+              <Link href="https://www.youtube.com/@swiftpod_yt" rel="noopener noreferrer" target="_blank" className="text-gray-500 text-ibm hover:underline active:opacity-80 md:text-sm 2xl:text-base">
                 Youtube
               </Link>
             </div>
