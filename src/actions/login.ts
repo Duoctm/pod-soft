@@ -29,6 +29,7 @@ export async function signInAction({
 				})),
 			};
 		}
+		console.log(data)
 		console.log(data.tokenCreate.errors)
 
 		// Đăng nhập thành công

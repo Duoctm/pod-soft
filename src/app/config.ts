@@ -9,7 +9,7 @@ invariant(saleorApiUrl, "Missing NEXT_PUBLIC_SALEOR_API_URL env variable");
 
 export const getServerAuthClient = () => {
 	const nextServerCookiesStorage = getNextServerCookiesStorage({
-		secure: false
+		secure: false,
 	});
 	return createSaleorAuthClient({
 		saleorApiUrl,
