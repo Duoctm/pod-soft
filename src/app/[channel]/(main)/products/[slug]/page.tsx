@@ -124,7 +124,7 @@ export default function Page({ params }: PageProps) {
 	const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [opstions, setOptions] = useState<{ [key: string]: string }>({});
-	const [quantity, setQuantity] = useState(1);
+	const [_quantity, _setQuantity] = useState(1);
 	const [sizeQuantities, setSizeQuantities] = useState<{ [size: string]: number }>({});
 	const [variantIds, setVariantIds] = useState<{ [size: string]: string }>({});
 	const sizeValues = Array.from(
