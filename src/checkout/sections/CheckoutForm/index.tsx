@@ -1,2 +1,2 @@
 export * from "./CheckoutForm";
-export * from "./CheckoutFormSkeleton";
+export { CheckoutFormSkeleton } from "./CheckoutFormSkeleton";

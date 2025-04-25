@@ -1,0 +1,8 @@
+query CountryList ($slug: String!){
+  channel(slug: $slug) {
+    countries {
+      code
+      country
+    }
+  }
+}

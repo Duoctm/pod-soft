@@ -3,13 +3,20 @@
 import edjsHTML from "editorjs-html";
 import React, { useEffect, useMemo, useState } from "react";
 import { notFound } from "next/navigation";
-import xss from "xss";
 import Image from "next/image";
-import { QuantityInput } from "./QuantityInput";
+
+import { Loader } from "@/ui/atoms/Loader";
 import { addItem } from "./checkout";
 import { getProductDetails } from "./getProductDetails";
-import { Loader } from "@/ui/atoms/Loader";
- 
+import { NavigationButton } from "./_components/NavigationButton";
+import { ThumbnailGallery } from "./_components/ThumbnailGallery";
+import { ProductTitle } from "./_components/ProductTitle";
+import { ProductDescription } from "./_components/ProductDescription";
+import { ProductAttributeSelector } from "./_components/ProductAttributeSelector";
+import xss from "xss";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 // Initialize the parser once
 const parser = edjsHTML();
 
@@ -88,6 +95,26 @@ interface PageProps {
 	};
 }
 
+const getSearchKey = (attributes: Attribute[]): string => {
+	return [...attributes]
+		.sort((a, b) => a.attribute.name.localeCompare(b.attribute.name))
+		.map((attr) => attr.values.map((v) => v.name).join(""))
+		.join("_");
+};
+
+function getVariantsToAdd(
+	variantIds: { [size: string]: string },
+	sizeQuantities: { [size: string]: number },
+): { variantId: string; quantity: number }[] {
+	return Object.entries(sizeQuantities)
+		.filter(([_, quantity]) => quantity > 0)
+		.map(([size, quantity]) => ({
+			variantId: variantIds[size],
+			quantity,
+		}))
+		.filter((item) => !!item.variantId); // Bỏ các item không có variantId
+}
+
 export default function Page({ params }: PageProps) {
 	const { slug, channel } = params;
 
@@ -98,6 +125,17 @@ export default function Page({ params }: PageProps) {
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [opstions, setOptions] = useState<{ [key: string]: string }>({});
 	const [quantity, setQuantity] = useState(1);
+	const [sizeQuantities, setSizeQuantities] = useState<{ [size: string]: number }>({});
+	const [variantIds, setVariantIds] = useState<{ [size: string]: string }>({});
+	const sizeValues = Array.from(
+		new Set(
+			productData?.product?.variants?.flatMap((variant) =>
+				variant.attributes
+					.filter((attr) => attr.attribute.name.toLowerCase() === "size")
+					.flatMap((attr) => attr.values.map((v) => v.name)),
+			),
+		),
+	);
 
 	const commpareFunc = (attr1: Attribute, attr2: Attribute) => {
 		const name1 = attr1.attribute.name.toLowerCase();
@@ -105,11 +143,11 @@ export default function Page({ params }: PageProps) {
 		return name1.localeCompare(name2);
 	};
 
-	const getSearchKey = (attributes: Attribute[]): string => {
-		return attributes
-			.sort(commpareFunc)
-			.map((item) => item.values.map((value) => value.name).join(""))
-			.join("_");
+	const updateSizeQuantity = (size: string, quantity: number) => {
+		setSizeQuantities((prev) => ({
+			...prev,
+			[size]: quantity,
+		}));
 	};
 
 	useEffect(() => {
@@ -118,7 +156,7 @@ export default function Page({ params }: PageProps) {
 			setError(null);
 			try {
 				const data = await getProductDetails(slug, channel);
-				console.log(data)
+
 				if (!data.product) {
 					notFound();
 				}
@@ -171,7 +209,7 @@ export default function Page({ params }: PageProps) {
 			return parser.parse(parsedData);
 		} catch (parseError) {
 			console.error("Error parsing product description:", parseError);
-			return [productData?.product.description];
+			return [xss(productData?.product.description)];
 		}
 	}, [productData?.product?.description]);
 
@@ -211,43 +249,31 @@ export default function Page({ params }: PageProps) {
 	};
 
 	const handleAttributeSelect = (attributeName: string, attributeValue: string) => {
-		setOptions((prev) => {
-			prev[attributeName] = attributeValue;
-			return { ...prev };
-		});
+		setOptions((prev) => ({
+			...prev,
+			[attributeName]: attributeValue,
+		}));
 	};
 
-	const getUniqueAttributeNames = (variants: ProductVariant[]): string[] => {
-		const attributeNamesSet = new Set<string>();
+	const extractAttributes = (variants: ProductVariant[]): { name: string; values: string[] }[] => {
+		const map = new Map<string, Set<string>>();
+
 		variants.forEach((variant) => {
-			variant.attributes.forEach((attr) => {
-				attributeNamesSet.add(attr.attribute.name.toUpperCase());
+			variant.attributes.forEach(({ attribute, values }) => {
+				const key = attribute.name.toUpperCase();
+				if (!map.has(key)) map.set(key, new Set());
+				values.forEach((v) => map.get(key)?.add(v.name));
 			});
 		});
-		return Array.from(attributeNamesSet).sort((a, b) => a.localeCompare(b));
-	};
 
-	const getUniqueAttributeValues = (attributeName: string, variants: ProductVariant[]): string[] => {
-		const values = new Set<string>();
-		variants?.forEach((variant) => {
-			variant.attributes.forEach((attr) => {
-				if (attr.attribute.name.toUpperCase() === attributeName.toUpperCase()) {
-					attr.values.forEach((value) => {
-						values.add(value.name);
-					});
-				}
-			});
-		});
-		return Array.from(values.values());
+		return Array.from(map.entries()).map(([name, valueSet]) => ({
+			name,
+			values: Array.from(valueSet.values()),
+		}));
 	};
 
 	const optionList = useMemo(() => {
-		return getUniqueAttributeNames(productData?.product?.variants || []).map((name) => {
-			return {
-				name: name,
-				values: getUniqueAttributeValues(name, productData?.product?.variants || []),
-			};
-		});
+		return extractAttributes(productData?.product?.variants || []);
 	}, [productData?.product?.variants]);
 
 	useEffect(() => {
@@ -256,6 +282,18 @@ export default function Page({ params }: PageProps) {
 			searchKeyList.push(opstions[option.name]);
 		});
 		const searchKey = searchKeyList.join("_");
+
+		setVariantIds((prev) => {
+			const updated = {
+				...prev,
+				[searchKey.split("_")[1]]: productData?.seachKey[searchKey] ?? "",
+			};
+
+			// Xóa key 'undefined' nếu tồn tại
+			const { undefined: _omit, ...rest } = updated;
+			return rest;
+		});
+
 		setSelectedVariantId((prev) => {
 			return productData?.seachKey[searchKey] || prev;
 		});
@@ -281,6 +319,7 @@ export default function Page({ params }: PageProps) {
 
 	return (
 		<div className="flex min-h-screen flex-col items-center bg-[#f6ede8] py-8">
+			<ToastContainer position="top-center" />
 			<div className="relative flex w-[90%] max-w-6xl flex-col gap-8 bg-[#f6ede8] p-4 md:flex-row md:p-8">
 				{/* Image Section */}
 				<div className="w-full md:w-1/2 lg:w-3/5">
@@ -300,41 +339,18 @@ export default function Page({ params }: PageProps) {
 						)}
 						{currentImages.length > 1 && (
 							<>
-								<button
-									onClick={handlePrev}
-									aria-label="Previous image"
-									className="absolute left-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 transform items-center justify-center rounded-full bg-white/70 text-xl text-gray-700 shadow-md hover:bg-white focus:outline-none focus:ring-2 focus:ring-gray-400 md:h-12 md:w-12"
-								>
-									&#x276E;
-								</button>
-								<button
-									onClick={handleNext}
-									aria-label="Next image"
-									className="absolute right-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 transform items-center justify-center rounded-full bg-white/70 text-xl text-gray-700 shadow-md hover:bg-white focus:outline-none focus:ring-2 focus:ring-gray-400 md:h-12 md:w-12"
-								>
-									&#x276F;
-								</button>
+								<NavigationButton direction="prev" onClick={handlePrev} />
+								<NavigationButton direction="next" onClick={handleNext} />
 							</>
 						)}
 					</div>
 					{/* Thumbnail section */}
 					<div className="mt-4 flex flex-wrap justify-center gap-2">
-						{currentImages.length > 1 &&
-							currentImages
-								.slice(0, 4)
-								.map((img, index) => (
-									<Image
-										width={100}
-										height={100}
-										key={img.id || img.url + index}
-										src={img.url}
-										alt={img.alt ? `Thumbnail ${index + 1} - ${img.alt}` : `Thumbnail ${index + 1}`}
-										onClick={() => handleThumbnailClick(index)}
-										className={`h-14 w-14 cursor-pointer rounded-md border-2 object-cover md:h-16 md:w-16 ${
-											currentImageIndex === index ? "border-black" : "border-transparent"
-										} hover:border-gray-400`}
-									/>
-								))}
+						<ThumbnailGallery
+							images={currentImages}
+							currentIndex={currentImageIndex}
+							onThumbnailClick={handleThumbnailClick}
+						/>
 					</div>
 				</div>
 
@@ -342,91 +358,72 @@ export default function Page({ params }: PageProps) {
 				<div className="relative flex w-full flex-col rounded-lg bg-[#f6ede8] px-2 text-gray-800 md:w-1/2 md:px-4 lg:w-2/5">
 					{/* Content Wrapper */}
 					<div className="mb-24 flex-grow">
-						<h1 className="mb-4 text-2xl font-bold">{productData?.product?.name}</h1>
-
-						<div className="mb-6 mt-6">
-							<h2 className="mb-2 text-sm font-semibold">Feartures</h2>
-							{descriptionHtml && descriptionHtml.length > 0 ? (
-								<div className="prose prose-sm prose-stone max-w-none space-y-3 text-neutral-600">
-									{" "}
-									{descriptionHtml.map((content, index) => (
-										<div key={index} dangerouslySetInnerHTML={{ __html: xss(content) }} />
-									))}
-								</div>
-							) : (
-								<p className="text-sm italic text-neutral-500">No description available.</p>
-							)}
-						</div>
+						<ProductTitle name={productData?.product?.name} />
+						<ProductDescription descriptionHtml={descriptionHtml} />
 
 						{optionList.map((option) => {
-							console.log(option)
-							const isColor = option.name.toUpperCase() === "COLOR";
 							return (
-								<div key={option.name} className="mb-6 mt-6">
-									<h2 className="mb-2 text-sm font-semibold">{option.name}</h2>
-									<div className="flex flex-wrap gap-2">
-										{option.values.map((value) => {
-											console.log(value)
-											let colorCode = null;
-											if (isColor) {
-												const color = value.match(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/);
-												colorCode = color ? color[0] : null;
-											}
-
-											const isSelected = opstions[option.name] === value;
-
-											return (
-												<button
-													key={value}
-													className={`
-                                            flex h-9 min-w-[2.5rem] items-center justify-center rounded-md border px-3 text-sm transition-all duration-150 ease-in-out
-                                            ${isColor ? "w-9 p-0" : ""}
-                                            ${
-																							isSelected
-																								? "border-black ring-1 ring-black ring-offset-1"
-																								: "border-gray-300"
-																						}
-                                            hover:border-gray-500
-                                            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
-                                            ${isColor && isSelected ? "ring-offset-2" : ""}
-                                            text-[#000000]
-                                        `}
-													style={isColor ? { backgroundColor: colorCode || "#f9fafb" } : {}}
-													onClick={() => {
-														handleAttributeSelect(option.name, value);
-													}}
-													title={value}
-												>
-													{isColor ? (isSelected ? "" : "") : value}
-													{isColor && (
-														<span className="sr-only">
-															{value.replace(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/, "").trim()}
-														</span>
-													)}
-												</button>
-											);
-										})}
-									</div>
-								</div>
+								<ProductAttributeSelector
+									key={option.name}
+									name={option.name}
+									values={option.values}
+									selectedValue={opstions[option.name]}
+									onSelect={(value) => {
+										return handleAttributeSelect(option.name, value);
+									}}
+								/>
 							);
 						})}
+						<div className="flex flex-wrap gap-2">
+							{sizeValues.map((size) => {
+								const isSelected = opstions["SIZE"] === size;
+								const baseClasses =
+									"flex h-9 max-w-[2.5rem] items-center justify-center rounded-md border px-3 text-sm transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 text-black";
+								const stateClasses = isSelected
+									? "border-blue-500 ring-1 ring-blue ring-offset-2 bg-white"
+									: "border-gray-300 hover:border-gray-500 cursor-not-allowed";
+								const extraClasses = isSelected ? "ring-offset-2" : "";
 
-						<div className="flex items-center justify-between">
+								return (
+									<input
+										disabled={!isSelected}
+										value={sizeQuantities[size] ?? 0}
+										onChange={(e) => updateSizeQuantity(size, parseInt(e.target.value) || 0)}
+										max={quantityLimitPerCustomer}
+										className={`${baseClasses} ${stateClasses} ${extraClasses}`}
+									/>
+								);
+							})}
+						</div>
+
+						{/* <div className="flex items-center justify-between">
 							<QuantityInput
 								limit={quantityLimitPerCustomer}
 								quantityAvailable={quantityLimitPerCustomer}
 								quantity={quantity}
 								setQuantity={setQuantity}
 							/>
-						</div>
+						</div> */}
 					</div>
 					{/* Action Buttons Container */}
 					<div className="absolute bottom-4 right-4 flex items-center justify-end gap-4 rounded">
 						<button
 							className="rounded-lg bg-[#39377a] px-6 py-3 text-center font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#39377a] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-							disabled={!selectedVariant || selectedVariant.quantityAvailable === 0}
+							disabled={
+								!Object.entries(sizeQuantities).some(([size, quantity]) => quantity > 0 && variantIds[size])
+							}
 							onClick={() => {
-								addItem(params, selectedVariantId, quantity);
+								const itemsToAdd = getVariantsToAdd(variantIds, sizeQuantities);
+								itemsToAdd.forEach(({ variantId, quantity }) => {
+									if (quantity > quantityLimitPerCustomer) {
+										toast.error("Quantity exceeds available");
+										return;
+									}
+									console.log(variantId, quantity);
+
+									addItem(params, variantId, quantity);
+									toast.success("Product added to cart");
+								});
 							}}
 						>
 							Add to Cart

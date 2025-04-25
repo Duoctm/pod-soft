@@ -1,0 +1,16 @@
+mutation checkoutComplete($checkoutId: ID!) {
+	checkoutComplete(id: $checkoutId) {
+		errors {
+			...CheckoutErrorFragment
+		}
+		order {
+			id
+		}
+	}
+}
+
+fragment CheckoutErrorFragment on CheckoutError {
+	message
+	field
+	code
+}

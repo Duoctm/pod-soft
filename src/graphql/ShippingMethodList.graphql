@@ -1,0 +1,17 @@
+query ShippingMethodList ($slug: String!, $countries: [CountryCode!]){
+  channel (slug: $slug){
+    availableShippingMethodsPerCountry(countries: $countries) {
+      countryCode
+      shippingMethods {
+        id
+        active
+        description
+        name
+        price {
+          amount
+          currency
+        }
+      }
+    }
+  }
+}

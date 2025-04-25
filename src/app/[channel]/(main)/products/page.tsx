@@ -6,8 +6,8 @@ import { ProductList } from "@/ui/components/ProductList";
 import { ProductsPerPage } from "@/app/config";
 
 export const metadata = {
-	title: "Products · Saleor Storefront example",
-	description: "All products in Saleor Storefront example",
+	title: "Products · ZoomPrint",
+	description: "ZoomPrint is your gateway to rapid fast fulfillment minus the steep investment.",
 };
 
 export default async function Page({

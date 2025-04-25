@@ -1,0 +1,15 @@
+fragment CustomUserDetails on User {
+    id
+    email
+    firstName
+	lastName
+    addresses {
+        ...CustomAddress
+    }
+    defaultBillingAddress {
+        ...CustomAddress
+    }
+    defaultShippingAddress {
+        ...CustomAddress
+    }
+}

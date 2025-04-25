@@ -5,14 +5,13 @@ import { SelectBox } from "@/checkout/components/SelectBox";
 import { SelectBoxGroup } from "@/checkout/components/SelectBoxGroup";
 import { getFormattedMoney } from "@/checkout/lib/utils/money";
 import { Divider } from "@/checkout/components/Divider";
-import { type CommonSectionProps } from "@/checkout/lib/globalTypes";
 import { useDeliveryMethodsForm } from "@/checkout/sections/DeliveryMethods/useDeliveryMethodsForm";
 import { FormProvider } from "@/checkout/hooks/useForm/FormProvider";
 import { useCheckoutUpdateState } from "@/checkout/state/updateStateStore";
 import { DeliveryMethodsSkeleton } from "@/checkout/sections/DeliveryMethods/DeliveryMethodsSkeleton";
 import { useUser } from "@/checkout/hooks/useUser";
 
-export const DeliveryMethods: React.FC<CommonSectionProps> = ({ collapsed }) => {
+export const DeliveryMethods = () => {
 	const { checkout } = useCheckout();
 	const { authenticated } = useUser();
 	const { shippingMethods, shippingAddress } = checkout;
@@ -27,7 +26,7 @@ export const DeliveryMethods: React.FC<CommonSectionProps> = ({ collapsed }) => 
 		return `${min}-${max} business days`;
 	};
 
-	if (!checkout?.isShippingRequired || collapsed) {
+	if (!checkout?.isShippingRequired) {
 		return null;
 	}
 

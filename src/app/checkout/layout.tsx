@@ -2,8 +2,8 @@ import { type ReactNode } from "react";
 import { AuthProvider } from "@/ui/components/AuthProvider";
 
 export const metadata = {
-	title: "Saleor Storefront example",
-	description: "Starter pack for building performant e-commerce experiences with Saleor.",
+	title: "ZoomPrint",
+	description: "ZoomPrint is your gateway to rapid fast fulfillment minus the steep investment.",
 };
 
 export default function RootLayout(props: { children: ReactNode }) {

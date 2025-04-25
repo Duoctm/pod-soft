@@ -1,9 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
 import { executeGraphQL } from '@/lib/graphql';
 import { ProductListByCategoryDocument } from '@/gql/graphql';
+import { notFound } from 'next/navigation';
  
 export interface PageProps {
   params: {

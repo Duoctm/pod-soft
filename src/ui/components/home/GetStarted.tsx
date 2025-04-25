@@ -22,10 +22,10 @@ export const GetStarted: React.FC = () => {
             >
                 <div className="p-6 text-white h-full flex flex-col justify-center items-center">
                     <h3 className="text-xl sm:text-2xl font-bold border-b-2 border-blue-400 text-center pb-1 mb-4">
-                        Curabitur dapibus ex condimentum
+                        E-commerce Made Easy
                     </h3>
                     <p className="text-sm sm:text-base mb-6 leading-relaxed text-center">
-                        Lorem ipsum odor amet, consectetuer adipiscing elit. Purus in laoreet dignissim scelerisque rutrum.
+                        ZoomPrint is your gateway to rapid fast fulfillment minus the steep investment.
                     </p>
                     <Link href={"#"} className="inline-block bg-gray-900 hover:bg-gray-800 text-white font-semibold py-2 px-6 rounded-md transition duration-300 ease-in-out shadow-md mx-auto underline">
                         Get Started
@@ -42,10 +42,10 @@ export const GetStarted: React.FC = () => {
             >
                 <div className="p-10 lg:p-12 text-white h-full flex flex-col justify-center items-center md:pl-12">
                     <h3 className="text-2xl md:text-3xl font-bold border-b-2 border-blue-400 text-center pb-1 mb-4">
-                    Curabitur dapibus ex condimentum
+                    E-commerce Made Easy
                     </h3>
                     <p className="text-base md:text-lg mb-6 leading-relaxed text-center">
-                        Lorem ipsum odor amet, consectetuer adipiscing elit. Purus in laoreet dignissim scelerisque rutrum.
+                        ZoomPrint is your gateway to rapid fast fulfillment minus the steep investment.
                     </p>
                     <Link href={"#"} className="inline-block bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-8 rounded-md transition duration-300 ease-in-out shadow-md mx-auto underline">
                     Get Started

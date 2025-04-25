@@ -1,0 +1,17 @@
+# Sử dụng dummy token để tạo thanh toán cho đơn hàng
+mutation CreateDummyPayment($checkoutId: ID!, $amount: PositiveDecimal!, $gateway: String!) {
+	checkoutPaymentCreate(
+		checkoutId: $checkoutId
+		input: { gateway: $gateway, amount: $amount, token: "dummy-token" }
+	) {
+		payment {
+			id
+			chargeStatus
+		}
+		errors {
+			field
+			message
+			code
+		}
+	}
+}

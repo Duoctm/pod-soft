@@ -1,0 +1,892 @@
+"use client"
+
+import { useEffect, useRef, useState } from 'react';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+import TShirtDesigner from '../utils/design';
+import { initializeModals } from '../utils/modal';
+import { Typography, IconButton, Box, Paper, Modal, Button  } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import {DesignInfo, PrintFaceData} from '..//utils/type';
+import {fetchProductDetail, getMetaDtataFromColorVariant, getVariantIdFromColorVariant} from '../utils/data'
+
+const StyledButton = styled(IconButton)(() => ({
+  backgroundColor: 'transparent',
+  border: 'none',
+  padding: '6px',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  color: 'white',
+  '&:hover': {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    transform: 'translateX(4px)',
+  },
+  transition: 'all 0.2s',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '2px',
+}));
+
+interface DesignPageProps {
+    productId: string;
+    colorId: string;
+    designInfor: DesignInfo | null,
+}
+
+function DesignPage( param : DesignPageProps) {
+  const [colorData, setColorData] = useState<Map<string, object>>(new Map);
+  const [data, setData] = useState<PrintFaceData[]>([]);
+  const [colorLoading, setColorLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const sort_data = data.sort((a, b) => a.z_index - b.z_index);
+  const designerRef = useRef<TShirtDesigner | null>(null);
+  const [isColorModalOpen, setIsColorModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  //const [importError, setImportError] = useState<string | null>(null);
+  const [productId, setProductId] = useState<string>(param.productId);
+  const [colorId, setColorId] = useState<string>(param.colorId);
+  const [variantId, setVariantId] = useState<string | null>(null);
+  const [showObjectMenu, setShowObjectMenu] = useState(false);
+
+  const loadProductData = async (productId : string) => {
+    var result : Map<string, object>;
+    if (param.designInfor?.colorData != null){
+        result = new Map(Object.entries(param.designInfor.colorData)); //param.designInfor.colorData;
+    }
+    else{
+        result = await fetchProductDetail(productId);
+    }
+    setColorData(result);
+  }
+
+  const updateVariant = (colorId : string, productId: string, colorData: Map<string, object>) => {
+    const result = getMetaDtataFromColorVariant(colorId, colorData)
+    setData(result);
+    setProductId(productId)
+    setColorId(colorId)
+    const variant = getVariantIdFromColorVariant(colorId, colorData);
+    setVariantId(variant);
+  }
+
+  useEffect(() => {
+    const fetchColorData = async () => {
+      try {
+        // const result = await fetchProductDetail(productId);
+        // setColorData(result);
+        await loadProductData(productId);
+        setColorLoading(false);
+      } catch (error) {
+        console.error('Error fetching color data:', error);
+        setColorLoading(false);
+      }
+    };
+
+    fetchColorData();
+  }, []);
+
+  useEffect(() => {
+    if (!colorLoading){
+      const fetchData = async () => {
+        try {
+          // const result = await fetchProductVariantData();
+          // setData(result);
+          // const result = getMetaDtataFromColorVariant(colorId, colorData)
+          // setData(result);
+          updateVariant(colorId, productId, colorData);
+          setLoading(false);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+          setLoading(false);
+        }
+      };
+  
+      fetchData();
+    }
+  }, [ colorLoading ,colorData],);
+
+  useEffect(() => {
+    if (!loading) {
+      // Initialize TShirtDesigner
+      console.log(showObjectMenu);
+      console.log(isImportModalOpen);
+      console.log(showObjectMenu);
+      designerRef.current = new TShirtDesigner(data.sort((a, b) => a.z_index - b.z_index), productId, variantId, colorId, colorData);
+      console.log('chạy voooooooo');
+      console.log(designerRef.current);
+      
+      // Thêm callback khi chọn/bỏ chọn đối tượng
+      if (designerRef.current) {
+        designerRef.current.onSelectObject = (hasSelection) => {
+          setShowObjectMenu(hasSelection);
+        };
+
+        const importUpload = async (designs: object[][])  => {
+            console.log('vo toi day roi 1');
+            console.log(designerRef.current);
+            await designerRef.current?.importDesignFromJson(designs);
+        }
+            try {
+              if (param.designInfor instanceof Map) {
+                  
+                  const designs: object[][] = []; 
+                    let index = -1;
+                    // for (const design of param.designInfor.get("designs")){
+                    //     index++;
+                    //     designs[index] = design.designs;
+                    // }
+                    for (const design of param.designInfor.get('designs')){
+                      index++;
+                      designs[index] = design.designs;
+                    }
+                    console.log('kkkkkk');
+                    console.log(designs);
+                    importUpload(designs);
+                }
+            }
+            catch(error){
+                console.log(error);
+            }
+       // }
+      }
+
+      // Initialize modals
+      initializeModals();
+
+      // Thêm xử lý phím tắt
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.ctrlKey && (e.key === 'c' || e.key === 'C' || e.key === 'v' || e.key === 'V')) {
+          e.preventDefault(); // Ngăn chặn hành vi mặc định
+          if (designerRef.current) {
+            if (e.key.toLowerCase() === 'c') {
+              designerRef.current.copySelectedNode();
+            } else if (e.key.toLowerCase() === 'v') {
+              designerRef.current.pasteNode();
+            }
+          }
+        }
+      };
+
+      // Thêm event listener cho phím tắt
+      document.addEventListener('keydown', handleKeyDown);
+
+      // Xử lý sự kiện click cho thumbnail
+      const handleThumbnailClick = (e: Event) => {
+        const target = e.currentTarget as HTMLDivElement;
+        const view = target.getAttribute('data-view');
+        
+        // Cập nhật active state
+        document.querySelectorAll('.thumbnail').forEach(thumb => {
+          thumb.classList.remove('active');
+        });
+        target.classList.add('active');
+        for(const item in sort_data){
+          let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
+          let previewDom = document.getElementById('preview-'+sort_data[item].code);
+          imageDom.style.display = 'none';
+          previewDom!.style.display = 'none';
+        }
+
+        for(const item in sort_data){
+          console.log(sort_data[item].code )
+          let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
+          let previewDom = document.getElementById('preview-'+sort_data[item].code);
+
+          if (view === sort_data[item].code){
+            imageDom.style.display = 'block';
+            previewDom!.style.display = 'block';
+            if (designerRef.current) {
+              designerRef.current.switchToStage(sort_data[item].code);
+            }
+          }
+        }
+      }
+
+      // Thêm event listeners
+      const thumbnails = document.querySelectorAll('.thumbnail');
+      thumbnails.forEach(thumb => {
+        thumb.addEventListener('click', handleThumbnailClick);
+      });
+
+      // Cleanup function
+      return () => {
+        if (designerRef.current) {
+          // Add any cleanup code here if needed
+        }
+        // Remove event listeners
+        thumbnails.forEach(thumb => {
+          thumb.removeEventListener('click', handleThumbnailClick);
+        });
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+     
+    }
+  }, [loading, data]);
+
+  const colors = [
+    '#FFFFFF', '#000000', '#FF0000', '#00FF00', '#0000FF',
+    '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500', '#800080',
+    '#616161', '#f0f0f0', '#5b5b5b', '#222222', '#fc8d74',
+    '#432d26', '#eead91', '#806355', '#382d21', '#faef93',
+    '#aeba5e', '#8aa140', '#1f6522', '#13afa2', '#b8d5d7',
+    '#15aeda', '#a5def8', '#0f77c0', '#3469b7', '#c50404'
+  ];
+
+  const menuWidth = '10vw';
+
+  // if (loading) {
+  //   return <div>Loading...</div>;
+  // }
+
+  return (
+    <>
+      <Box className="w-full">
+        <Box className="relative">
+          <Paper
+            id="rightMenu"
+            elevation={3}
+            sx={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: menuWidth,
+              maxWidth: '100px',
+              backgroundColor: '#18044c',
+              py: 1,
+              px: 0.5,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+            }}
+          >
+            <StyledButton
+              onClick={() => setIsColorModalOpen(true)}
+              id="color"
+            >
+              <i className="fas fa-palette text-base" ></i>
+              <span className="text-[10px]">Colors</span>
+            </StyledButton>
+            <button className="bg-transparent border-none p-1.5 rounded cursor-pointer text-white hover:bg-white/10 hover:translate-x-1 transition-all flex flex-col items-center gap-0.5">
+              <label id="uploadFromPC" className="cursor-pointer flex flex-col items-center gap-0.5">
+                <i className="fas fa-images text-base"></i>
+                <span className="text-[10px]">Images</span>
+                <input
+                  type="file"
+                  id="file-select"
+                  name="file-select"
+                  className="hidden"
+                  accept="image/jpeg"
+                />
+              </label>
+            </button>
+            <button
+              id="addingText"
+              data-modal-target="editorTextModal"
+              data-modal-toggle="editorTextModal"
+              className="bg-transparent border-none p-1.5 rounded cursor-pointer text-white hover:bg-white/10 hover:translate-x-1 transition-all flex flex-col items-center gap-0.5"
+            >
+              <i className="fas fa-font text-base"></i>
+              <span className="text-[10px]">Text</span>
+            </button>
+            <button 
+              type="button" 
+              id="import"
+              onClick={() => setIsImportModalOpen(true)}
+              className="bg-transparent border-none p-1.5 rounded cursor-pointer text-white hover:bg-white/10 hover:translate-x-1 transition-all flex flex-col items-center gap-0.5"
+            >
+              <i className="fas fa-upload text-base"></i>
+              <span className="text-[10px]">Import</span>
+            </button>
+            <button 
+              type="button" 
+              id="export"
+              onClick={() => setIsExportModalOpen(true)}
+              className="bg-transparent border-none p-1.5 rounded cursor-pointer text-white hover:bg-white/10 hover:translate-x-1 transition-all flex flex-col items-center gap-0.5"
+            >
+              <i className="fas fa-download text-base"></i>
+              <span className="text-[10px]">Export</span>
+            </button>
+          </Paper>
+
+          <Box
+            component="section"
+            id="editorImage"
+            sx={{
+              pl: menuWidth,
+              pr: menuWidth,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              minHeight: 'calc(100vh - 45px)',
+            }}
+          >
+            <Box sx={{ position: 'relative', maxWidth: '600px', mx: 'auto' }}>
+            {sort_data.map((item: PrintFaceData, index: number) => {
+              return <Box key={index}>
+                <Box
+                  component="img"
+                  id={item.code + "Image"}
+                  className={index == 0 ? item.code + "Image" : item.code + "Image hidden"}
+                  src={item.image}
+                  alt=""
+                  crossOrigin='anonymous'
+                  sx={{
+                    height: 'auto',
+                    width: 'auto',
+                    maxHeight: '80vh',
+                  }}
+                />
+                <div id={"preview-" + item.code}></div>
+              </Box>
+})}
+
+              
+            </Box>
+          </Box>
+
+          <Paper
+            id="leftMenu"
+            elevation={3}
+            sx={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: menuWidth,
+              maxWidth: '100px',
+              backgroundColor: '#f1edfb',
+              py: 1,
+              px: 0.5,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 0.5,
+              
+            }}
+          >
+            {sort_data.map((item: PrintFaceData, index: number) => (
+  <Box 
+    key={item.code}
+    sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, marginTop: '10px' }}
+  >
+    <Box>
+      <Box
+        className={index === 0 ? "thumbnail active" : "thumbnail"}
+        data-view={item.code}
+        sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: 0, 
+          cursor: 'pointer',
+          marginBottom: '50px'
+        }}
+      >
+        <Box
+          component="img"
+          src={item.image}
+          alt={`${item.code}View`}
+          sx={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            borderRadius: '4px',
+            background: 'white',
+          }}
+        />
+        <Typography 
+          variant="caption" 
+          sx={{ fontSize: '15px', textAlign: 'center', color: 'rgb(55 65 81)' }}
+        >
+          <strong>{item.name}</strong>
+        </Typography>
+      </Box>
+    </Box>
+  </Box>
+))}
+
+            <Button
+                sx={{
+                    backgroundColor: '#322f75',
+                    color: '#ffffff',
+                    '&:hover': {
+                    backgroundColor: '#2b2966',
+                    },
+                    width: '100%',
+                    mt: '20px',
+                    textTransform: 'none',
+                }}
+                onClick={() => {
+                    console.log('Add to Cart clicked');
+                }}
+                >
+                Add to Cart
+                </Button>
+          </Paper>
+        </Box>
+      </Box>
+
+      <Modal
+        open={isColorModalOpen}
+        onClose={() => setIsColorModalOpen(false)}
+        aria-labelledby="colorModalLabel"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Box sx={{
+          backgroundColor: 'white',
+          borderRadius: 1,
+          boxShadow: 24,
+          width: '100%',
+          maxWidth: 500,
+          mx: 2,
+        }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            p: 2,
+            borderBottom: '1px solid',
+            borderColor: 'divider'
+          }}>
+            <Typography variant="h6" id="colorModalLabel">
+              Choose a color
+            </Typography>
+            <IconButton
+              onClick={() => setIsColorModalOpen(false)}
+              sx={{ color: 'text.secondary' }}
+            >
+              <i className="fas fa-times"></i>
+            </IconButton>
+          </Box>
+          <Box sx={{ p: 3 }}>
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(6, 1fr)',
+              gap: 2 
+            }}>
+              {/* {colors.map((color) => (
+                <Box
+                  key={color}
+                  onClick={() => {
+                    if (designerRef.current) {
+                      designerRef.current.changeBackgroundColor(color);
+                      setIsColorModalOpen(false);
+                    }
+                  }}
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    backgroundColor: color,
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s',
+                    '&:hover': {
+                      transform: 'scale(1.1)',
+                    },
+                  }}
+                />
+              ))} */
+
+                Array.from(colorData.entries()).map(([key, value]) => (
+                  <Box
+                    key={key}
+                    data-color={key}
+                    onClick={() => {
+                      if (designerRef.current) {
+                        //designerRef.current.changeBackgroundColor(value.color_value);
+                        // const result = getMetaDtataFromColorVariant(key, colorData)
+                        // setData(result);
+                        updateVariant(key, productId, colorData)
+                        setIsColorModalOpen(false);
+                      }
+                    }}
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      backgroundColor: (value as { color_value: string }).color_value,
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                      '&:hover': {
+                        transform: 'scale(1.1)',
+                      },
+                    }}
+                  />
+                ))
+                
+
+                // colors.map((color) => (
+                //   <Box
+                //     key={color}
+                //     onClick={() => {
+                //       if (designerRef.current) {
+                //         designerRef.current.changeBackgroundColor(color);
+                //         setIsColorModalOpen(false);
+                //       }
+                //     }}
+                //     sx={{
+                //       width: 40,
+                //       height: 40,
+                //       borderRadius: '50%',
+                //       backgroundColor: color,
+                //       cursor: 'pointer',
+                //       transition: 'transform 0.2s',
+                //       '&:hover': {
+                //         transform: 'scale(1.1)',
+                //       },
+                //     }}
+                //   />
+                // ))
+              
+                
+              }
+            </Box>
+          </Box>
+        </Box>
+      </Modal>
+
+      <Modal
+        open={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        aria-labelledby="exportModalLabel"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Box sx={{
+          backgroundColor: 'white',
+          borderRadius: 1,
+          boxShadow: 24,
+          width: '100%',
+          maxWidth: 400,
+          mx: 2,
+        }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            p: 2,
+            borderBottom: '1px solid',
+            borderColor: 'divider'
+          }}>
+            <Typography variant="h6" id="exportModalLabel">
+              Choose Export Type
+            </Typography>
+            <IconButton
+              onClick={() => setIsExportModalOpen(false)}
+              sx={{ color: 'text.secondary' }}
+            >
+              <i className="fas fa-times"></i>
+            </IconButton>
+          </Box>
+          <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <button
+              onClick={() => {
+                if (designerRef.current) {
+                  designerRef.current.exportImages('image');
+                  setIsExportModalOpen(false);
+                }
+              }}
+              className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2"
+            >
+              <i className="fas fa-image"></i>
+              Export as Images
+            </button>
+            <button
+              onClick={() => {
+                if (designerRef.current) {
+                  designerRef.current.exportImages('json');
+                  setIsExportModalOpen(false);
+                }
+              }}
+              className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center justify-center gap-2"
+            >
+              <i className="fas fa-code"></i>
+              Export as JSON
+            </button>
+          </Box>
+        </Box>
+      </Modal>
+
+      {/*
+         <Modal
+        open={isImportModalOpen}
+        onClose={() => {
+          setIsImportModalOpen(false);
+          setImportError(null);
+        }}
+        aria-labelledby="importModalLabel"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Box sx={{
+          backgroundColor: 'white',
+          borderRadius: 1,
+          boxShadow: 24,
+          width: '100%',
+          maxWidth: 400,
+          mx: 2,
+        }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            p: 2,
+            borderBottom: '1px solid',
+            borderColor: 'divider'
+          }}>
+            <Typography variant="h6" id="importModalLabel">
+              Import Design
+            </Typography>
+            <IconButton
+              onClick={() => {
+                setIsImportModalOpen(false);
+                setImportError(null);
+              }}
+              sx={{ color: 'text.secondary' }}
+            >
+              <i className="fas fa-times"></i>
+            </IconButton>
+          </Box>
+          <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+            <input
+              type="file"
+              accept=".json"
+              className="hidden"
+              id="jsonFileInput"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (file && designerRef.current) {
+                  try {
+                    const reader = new FileReader();
+                    reader.onload = async (event) => {
+                      try {
+                        const jsonContent = event.target?.result as string
+                        const designInfo = JSON.parse(jsonContent);
+
+                        console.log(designInfo)
+
+
+                        // await loadProductData(designInfo.productId);
+                        // updateVariant(designInfo.colorValue, designInfo.productId, colorData);
+                       
+
+                        const productId = designInfo.productId
+                        // await loadProductData(productId);
+                        setProductId(prev => JSON.stringify(prev) === JSON.stringify(designInfo.productId) ? prev : designInfo.productId)
+                        setColorId(prev => JSON.stringify(prev) === JSON.stringify(designInfo.colorValue) ? prev :  designInfo.colorValue)
+                        setColorLoading(false);
+                        const designs = [[]];
+                        let index = -1;
+                        for (const design of designInfo.designs){
+                          index++;
+                          designs[index] = design.designs;
+                          
+                        }
+                        await designerRef.current?.importDesignFromJson(designs);
+                        setIsImportModalOpen(false);
+                        setImportError(null);
+                        // await designerRef.current?.importDesignFromJson(event.target?.result as string);
+                        // setIsImportModalOpen(false);
+                        // setImportError(null);
+                      } catch (error) {
+                        setImportError('Invalid design file format');
+                      }
+                    };
+                    reader.readAsText(file);
+                  } catch (error) {
+                    setImportError('Error reading file');
+                  }
+                }
+              }}
+            />
+            <label
+              htmlFor="jsonFileInput"
+              className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <i className="fas fa-file-upload"></i>
+              Choose JSON File
+            </label>
+            {importError && (
+              <Typography color="error" sx={{ textAlign: 'center', mt: 1 }}>
+                {importError}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      </Modal>
+      */}
+      {/* EDITOR TEXT */}
+      <div
+        id="editorTextModal"
+        tabIndex={-1}
+        aria-labelledby="editorTextModalLabel"
+        className="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm"
+        role="dialog"
+      >
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h5 className="text-xl font-semibold text-center" id="editorTextModalLabel">
+                Add Text
+              </h5>
+              <button
+                type="button"
+                className="text-gray-400 hover:text-gray-500"
+                data-modal-hide="editorTextModal"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6" id="editorTextDrawer">
+              <div className="space-y-6">
+                <div>
+                  <textarea 
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    id="textInput"
+                    rows={3}
+                    placeholder="Enter your text here..."
+                  ></textarea>
+                </div>
+
+                <div id="fontColorPickerWrap">
+                  <h5 className="text-lg font-medium mb-3">Text Color</h5>
+                  <div id="fontColorPicker">
+                    <div className="grid grid-cols-10 gap-1">
+                      {colors.map((color) => (
+                        <div
+                          key={color}
+                          className="w-7 h-7 rounded-full cursor-pointer transform hover:scale-110 transition-transform"
+                          style={{ backgroundColor: color }}
+                          data-color={color}
+                          onClick={() => {
+                            if (designerRef.current) {
+                              designerRef.current.changeTextColor(color);
+                              const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
+                              if (textInput) {
+                                textInput.style.color = color;
+                              }
+                            }
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div id="fontStyle">
+                  <h5 className="text-lg font-medium mb-3">Font Style</h5>
+                  <div className="flex justify-center gap-4">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="boldCheck"
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        onChange={(e) => {
+                          if (designerRef.current) {
+                            const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
+                            if (textInput) {
+                              textInput.style.fontWeight = e.target.checked ? 'bold' : 'normal';
+                              designerRef.current.changeFontStyle(e.target.checked ? 'bold' : 'normal');
+                            }
+                          }
+                        }}
+                      />
+                      <span>Bold</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="italicCheck"
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        onChange={(e) => {
+                          if (designerRef.current) {
+                            const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
+                            if (textInput) {
+                              textInput.style.fontStyle = e.target.checked ? 'italic' : 'normal';
+                              designerRef.current.changeFontStyle(e.target.checked ? 'italic' : 'normal');
+                            }
+                          }
+                        }}
+                      />
+                      <span>Italic</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div id="fontFamily">
+                  <h5 className="text-lg font-medium mb-3">Font Family</h5>
+                  <select
+                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    id="chooseFontFamily"
+                    onChange={(e) => {
+                      if (designerRef.current) {
+                        designerRef.current.changeFontFamily(e.target.value);
+                        const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
+                        if (textInput) {
+                          textInput.style.fontFamily = e.target.value;
+                        }
+                      }
+                    }}
+                  >
+                    <option value="Montserrat">Montserrat</option>
+                    <option value="Sans Serif">Sans Serif</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Comic Sans MS">Comic Sans MS</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Trebuchet MS">Trebuchet MS</option>
+                    <option value="Arial Black">Arial Black</option>
+                    <option value="Impact">Impact</option>
+                    <option value="Bookman">Bookman</option>
+                    <option value="Garamond">Garamond</option>
+                    <option value="Palatino">Palatino</option>
+                    <option value="Georgia">Georgia</option>
+                  </select>
+                </div>
+
+                <div className="text-center">
+                  <button 
+                    type="button" 
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    id="submitText"
+                    onClick={() => {
+                      const text = (document.getElementById('textInput') as HTMLTextAreaElement).value.trim();
+                      if (text && designerRef.current) {
+                        designerRef.current.addText(text);
+                        const modalElement = document.getElementById('editorTextModal');
+                        if (modalElement) {
+                          modalElement.classList.add('hidden');
+                        }
+                      }
+                    }}
+                  >
+                    Add Text
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="fixed inset-0 z-50 hidden items-center justify-center" role="status">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+        <span className="sr-only">Loading...</span>
+      </div>
+    </>
+  );
+}
+
+export default DesignPage;

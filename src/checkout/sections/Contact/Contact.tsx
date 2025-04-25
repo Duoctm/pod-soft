@@ -1,97 +1,27 @@
-import React, { type FC, useCallback, useEffect, useState } from "react";
-import { SignedInUser } from "../SignedInUser/SignedInUser";
-import { ResetPassword } from "../ResetPassword/ResetPassword";
-import { useCustomerAttach } from "@/checkout/hooks/useCustomerAttach";
-import { getQueryParams } from "@/checkout/lib/utils/url";
-import { SignIn } from "@/checkout/sections/SignIn/SignIn";
-import { GuestUser } from "@/checkout/sections/GuestUser/GuestUser";
-import { useUser } from "@/checkout/hooks/useUser";
-
-type Section = "signedInUser" | "guestUser" | "signIn" | "resetPassword";
-
-const onlyContactShownSections: Section[] = ["signIn", "resetPassword"];
+import { User } from "@/checkout/hooks/useUserServer";
 
 interface ContactProps {
-	setShowOnlyContact: (value: boolean) => void;
+	user: User | null | undefined;
 }
 
-export const Contact: FC<ContactProps> = ({ setShowOnlyContact }) => {
-	useCustomerAttach();
-	const { user, authenticated } = useUser();
-	const [email, setEmail] = useState(user?.email || "");
 
-	const [passwordResetShown, setPasswordResetShown] = useState(false);
-
-	const selectInitialSection = (): Section => {
-		const shouldShowPasswordReset = passwordResetToken && !passwordResetShown;
-
-		if (shouldShowPasswordReset) {
-			return "resetPassword";
-		}
-
-		return user ? "signedInUser" : "guestUser";
-	};
-
-	const passwordResetToken = getQueryParams().passwordResetToken;
-	const [currentSection, setCurrentSection] = useState<Section>(selectInitialSection());
-
-	const handleChangeSection = (section: Section) => () => {
-		if (onlyContactShownSections.includes(section)) {
-			setShowOnlyContact(true);
-		}
-		setCurrentSection(section);
-	};
-
-	const isCurrentSection = useCallback((section: Section) => currentSection === section, [currentSection]);
-
-	const shouldShowOnlyContact = onlyContactShownSections.includes(currentSection);
-
-	useEffect(() => {
-		if (isCurrentSection("resetPassword")) {
-			setPasswordResetShown(true);
-		}
-	}, [isCurrentSection]);
-
-	useEffect(() => {
-		setShowOnlyContact(shouldShowOnlyContact);
-	}, [currentSection, setShowOnlyContact, shouldShowOnlyContact]);
-
-	useEffect(() => {
-		if (authenticated && currentSection !== "signedInUser") {
-			setCurrentSection("signedInUser");
-		} else if (!authenticated && currentSection === "signedInUser") {
-			setCurrentSection("guestUser");
-		}
-	}, [authenticated, currentSection]);
+export const Contact = ({ user }: ContactProps) => {
 
 	return (
-		<div>
-			{isCurrentSection("guestUser") && (
-				<GuestUser onSectionChange={handleChangeSection("signIn")} onEmailChange={setEmail} email={email} />
-			)}
-
-			{isCurrentSection("signIn") && (
-				<SignIn
-					onSectionChange={handleChangeSection("guestUser")}
-					onSignInSuccess={handleChangeSection("signedInUser")}
-					onEmailChange={setEmail}
-					email={email}
-				/>
-			)}
-
-			{isCurrentSection("signedInUser") && (
-				<SignedInUser
-					onSectionChange={handleChangeSection("guestUser")}
-					onSignOutSuccess={handleChangeSection("guestUser")}
-				/>
-			)}
-
-			{isCurrentSection("resetPassword") && (
-				<ResetPassword
-					onSectionChange={handleChangeSection("signIn")}
-					onResetPasswordSuccess={handleChangeSection("signedInUser")}
-				/>
-			)}
+		<div className="w-full rounded-lg bg-white py-2">
+			<div id="user-info">
+				<div className="mb-3">
+					<p className="text-sm font-medium text-gray-500">User name:</p>
+					<p className="text-lg text-gray-900">
+						{user?.lastName} {user?.firstName}
+					</p>
+				</div>
+				<div>
+					<p className="text-sm font-medium text-gray-500">Email:</p>
+					<p className="text-lg text-gray-900">{user?.email}</p>
+				</div>
+			</div>
 		</div>
+
 	);
 };

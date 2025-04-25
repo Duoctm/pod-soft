@@ -2,7 +2,7 @@ import { invariant } from "ts-invariant";
 import { RootWrapper } from "./pageWrapper";
 
 export const metadata = {
-	title: "Checkout · Saleor Storefront example",
+	title: "Checkout · ZoomPrint",
 };
 
 export default function CheckoutPage({
