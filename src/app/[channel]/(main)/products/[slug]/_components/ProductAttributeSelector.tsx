@@ -1,4 +1,5 @@
 import React from "react";
+import { sortColorsByLuminance } from "../../utils/soft-color";
 
 type ProductAttributeSelectorProps = {
 	name: string;
@@ -14,7 +15,10 @@ export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> =
 	onSelect,
 }) => {
 	const isColor = name.toUpperCase() === "COLOR";
-
+	if (isColor && values.length > 0) {
+		const newColor = [...values];
+		values = sortColorsByLuminance(newColor);
+	}
 	return (
 		<div className="my-6">
 			<h2 className="mb-2 text-sm font-semibold">{name}</h2>
