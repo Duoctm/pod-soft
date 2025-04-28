@@ -52,15 +52,17 @@ export const Summary: FC<SummaryProps> = ({
 					<ChevronDownIcon className="mb-2 group-open:rotate-180" />
 				</summary>
 				<ul className="py-2" data-testid="SummaryProductList">
-					{lines.map((line) => (
-						<SummaryItem line={line} key={line?.id}>
-							{editable ? (
-								<SummaryItemMoneyEditableSection line={line as CheckoutLineFragment} />
-							) : (
-								<SummaryItemMoneySection line={line as OrderLineFragment} />
-							)}
-						</SummaryItem>
-					))}
+					{lines.map((line) => {
+						return (
+							<SummaryItem line={line} key={line?.id}>
+								{editable ? (
+									<SummaryItemMoneyEditableSection line={line as CheckoutLineFragment} />
+								) : (
+									<SummaryItemMoneySection line={line as OrderLineFragment} />
+								)}
+							</SummaryItem>
+						);
+					})}
 				</ul>
 			</details>
 			{editable && (

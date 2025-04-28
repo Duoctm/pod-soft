@@ -24,6 +24,7 @@ const CatalogPage = async ({ params }: PageProps) => {
       variables: { slug: params.slug, channel: params.channel },
       revalidate: 60,
     });
+
     if (!category || !category.products) {
       notFound();
     }

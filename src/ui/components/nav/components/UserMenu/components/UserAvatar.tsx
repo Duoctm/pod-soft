@@ -14,19 +14,19 @@ export const UserAvatar = ({ user }: Props) => {
 	if (user.avatar) {
 		return (
 			<Image
-				className="h-8 w-8 rounded-full border"
-				aria-hidden="true"
+				className="h-8 w-8 rounded-full border border-[#E5E7EB] object-cover"
 				src={user.avatar.url}
-				width={24}
-				height={24}
-				alt=""
+				width={32}
+				height={32}
+				alt="User avatar"
+				aria-hidden="true"
 			/>
 		);
 	}
 
 	return (
 		<span
-			className="flex h-8 w-8 items-center justify-center rounded-full border bg-white text-center text-xs font-bold uppercase"
+			className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E5E7EB] bg-[#FD8C6E] text-xs font-bold uppercase text-white"
 			aria-hidden="true"
 		>
 			{label}

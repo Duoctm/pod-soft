@@ -1,0 +1,71 @@
+fragment CheckoutFragment on Checkout {
+	id
+	email
+	discount {
+		...Money
+	}
+	voucherCode
+	discountName
+	translatedDiscountName
+	giftCards {
+		...GiftCardFragment
+	}
+	channel {
+		id
+		slug
+	}
+	shippingAddress {
+		...AddressFragment
+	}
+	billingAddress {
+		...AddressFragment
+	}
+	authorizeStatus
+	chargeStatus
+	isShippingRequired
+	user {
+		id
+		email
+	}
+	availablePaymentGateways {
+		...PaymentGatewayFragment
+	}
+	deliveryMethod {
+		... on ShippingMethod {
+			id
+		}
+		... on Warehouse {
+			id
+		}
+	}
+	shippingMethods {
+		id
+		name
+		price {
+			...Money
+		}
+		maximumDeliveryDays
+		minimumDeliveryDays
+	}
+	totalPrice {
+		gross {
+			...Money
+		}
+		tax {
+			...Money
+		}
+	}
+	shippingPrice {
+		gross {
+			...Money
+		}
+	}
+	subtotalPrice {
+		gross {
+			...Money
+		}
+	}
+	lines {
+		...CheckoutLineFragment
+	}
+}

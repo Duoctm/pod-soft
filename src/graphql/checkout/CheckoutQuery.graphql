@@ -1,0 +1,5 @@
+query Checkout($id: ID!, $languageCode: LanguageCodeEnum!) {
+	checkout(id: $id) {
+		...CheckoutFragment
+	}
+}

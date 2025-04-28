@@ -1,20 +1,22 @@
 "use client";
 
 import edjsHTML from "editorjs-html";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 
-import { Loader } from "@/ui/atoms/Loader";
+import xss from "xss";
+import { toast, ToastContainer } from "react-toastify";
+import Link from "next/link";
 import { addItem } from "./checkout";
 import { getProductDetails } from "./getProductDetails";
+
 import { NavigationButton } from "./_components/NavigationButton";
 import { ThumbnailGallery } from "./_components/ThumbnailGallery";
 import { ProductTitle } from "./_components/ProductTitle";
 import { ProductDescription } from "./_components/ProductDescription";
 import { ProductAttributeSelector } from "./_components/ProductAttributeSelector";
-import xss from "xss";
-import { toast, ToastContainer } from "react-toastify";
+import { Loader } from "@/ui/atoms/Loader";
 import "react-toastify/dist/ReactToastify.css";
 
 // Initialize the parser once
@@ -95,6 +97,23 @@ interface PageProps {
 	};
 }
 
+interface BlockProps{
+	id: string;
+	type: string;
+	data: {
+		text: string;
+	};
+
+}
+
+
+interface BlocksProps{
+	timne: number;
+	version: string;
+	blocks: BlockProps[];
+}
+
+
 const getSearchKey = (attributes: Attribute[]): string => {
 	return [...attributes]
 		.sort((a, b) => a.attribute.name.localeCompare(b.attribute.name))
@@ -124,7 +143,9 @@ export default function Page({ params }: PageProps) {
 	const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [opstions, setOptions] = useState<{ [key: string]: string }>({});
-	const [_quantity, _setQuantity] = useState(1);
+	const [quantity, _setQuantity] = useState(1);
+	const [selectVariantAttributeId, setSelectVariantAttributeId] = useState<string | null>(null);
+	const atrrubuteValueIds = useRef<Map<string, string>>(new Map());
 	const [sizeQuantities, setSizeQuantities] = useState<{ [size: string]: number }>({});
 	const [variantIds, setVariantIds] = useState<{ [size: string]: string }>({});
 	const sizeValues = Array.from(
@@ -156,7 +177,6 @@ export default function Page({ params }: PageProps) {
 			setError(null);
 			try {
 				const data = await getProductDetails(slug, channel);
-
 				if (!data.product) {
 					notFound();
 				}
@@ -195,7 +215,7 @@ export default function Page({ params }: PageProps) {
 				setLoading(false);
 			}
 		};
-		fetchData();
+		void fetchData();
 	}, [channel, slug]);
 
 	if (error) {
@@ -205,13 +225,41 @@ export default function Page({ params }: PageProps) {
 	const descriptionHtml = useMemo(() => {
 		if (!productData?.product?.description) return null;
 		try {
-			const parsedData = JSON.parse(productData?.product.description);
+			const newData = productData?.product?.description;
+			const parsedData = JSON.parse(newData) as BlocksProps;
+
+			parsedData.blocks.map((block: { data: { text: string } }) => {
+				const removeText = block.data.text.split("\n")[0];
+				block.data.text = removeText;
+			});
+
+			console.log(parsedData);
 			return parser.parse(parsedData);
 		} catch (parseError) {
 			console.error("Error parsing product description:", parseError);
 			return [xss(productData?.product.description)];
 		}
 	}, [productData?.product?.description]);
+
+	const features = useMemo(() => {
+		if (!productData?.product?.description) return null;
+		try {
+			const newData = productData?.product?.description;
+			const parsedData = JSON.parse(newData) as BlocksProps;
+
+			parsedData.blocks.map((block: { data: { text: string } }) => {
+				const removeText = block.data.text.split("\n")[3];
+				block.data.text = removeText;
+			});
+
+			console.log(parsedData);
+			return parser.parse(parsedData);
+		} catch (parseError) {
+			console.error("Error parsing product description:", parseError);
+			return [xss(productData?.product.description)];
+		}
+	}, [productData?.product?.description])
+
 
 	const selectedVariant = useMemo(() => {
 		if (!productData?.product?.variants || !selectedVariantId) {
@@ -318,23 +366,27 @@ export default function Page({ params }: PageProps) {
 	}
 
 	return (
-		<div className="flex min-h-screen flex-col items-center bg-[#f6ede8] py-8">
+		<div className="flex min-h-screen flex-col items-center py-8 font-sans">
 			<ToastContainer position="top-center" />
-			<div className="relative flex w-[90%] max-w-6xl flex-col gap-8 bg-[#f6ede8] p-4 md:flex-row md:p-8">
+			<div className="relative flex w-[95%] max-w-7xl flex-col gap-8 rounded-lg p-4 md:flex-row md:p-8">
 				{/* Image Section */}
 				<div className="w-full md:w-1/2 lg:w-3/5">
-					<div className="relative mx-auto aspect-square w-full max-w-lg overflow-hidden rounded-lg bg-[#f1edfb]">
+					<div className="group relative mx-auto aspect-square w-full max-w-2xl overflow-hidden rounded-lg bg-white">
 						{currentImages.length > 0 ? (
-							<Image
-								width={1080}
-								height={1080}
-								src={currentImages[currentImageIndex]?.url}
-								alt={currentImages[currentImageIndex]?.alt ?? productData?.product?.name}
-								className="h-full w-full object-contain"
-							/>
+							<div className="relative h-full transition-transform duration-300 hover:scale-110">
+								<Image
+									width={1440}
+									height={1440}
+									src={currentImages[currentImageIndex]?.url}
+									alt={currentImages[currentImageIndex]?.alt ?? productData?.product?.name}
+									className="h-full w-full object-contain"
+									quality={100}
+								/>
+								<div className="absolute inset-0 bg-black bg-opacity-0 transition-opacity duration-300 group-hover:bg-opacity-10" />
+							</div>
 						) : (
-							<div className="flex h-full w-full items-center justify-center rounded-lg bg-gray-200 text-gray-500">
-								No Image
+							<div className="flex h-full w-full items-center justify-center rounded-lg bg-gray-100 text-gray-500">
+								No Image Available
 							</div>
 						)}
 						{currentImages.length > 1 && (
@@ -344,95 +396,128 @@ export default function Page({ params }: PageProps) {
 							</>
 						)}
 					</div>
-					{/* Thumbnail section */}
-					<div className="mt-4 flex flex-wrap justify-center gap-2">
+					{/* Enhanced Thumbnail Gallery */}
+					<div className="mt-6 flex flex-wrap justify-center gap-3">
 						<ThumbnailGallery
 							images={currentImages}
 							currentIndex={currentImageIndex}
 							onThumbnailClick={handleThumbnailClick}
 						/>
 					</div>
+					<div className="w-full">
+				<ProductDescription descriptionHtml={descriptionHtml}  title="Descriptions"/>
+			</div>
 				</div>
 
-				{/* Details Section */}
-				<div className="relative flex w-full flex-col rounded-lg bg-[#f6ede8] px-2 text-gray-800 md:w-1/2 md:px-4 lg:w-2/5">
-					{/* Content Wrapper */}
-					<div className="mb-24 flex-grow">
+				{/* Product Details Section */}
+				<div className="relative flex w-full flex-col rounded-lg px-4 md:w-1/2 md:px-6 lg:w-2/5">
+					<div className="mb-24 flex-grow space-y-6">
 						<ProductTitle name={productData?.product?.name} />
-						<ProductDescription descriptionHtml={descriptionHtml} />
+						<ProductDescription descriptionHtml={features} />
 
-						{optionList.map((option) => {
-							return (
+						{/* Interactive Product Options */}
+						<div className="space-y-4">
+							{optionList.map((option) => (
 								<ProductAttributeSelector
 									key={option.name}
 									name={option.name}
 									values={option.values}
 									selectedValue={opstions[option.name]}
 									onSelect={(value) => {
+										setSelectVariantAttributeId(atrrubuteValueIds.current.get(value) || null);
 										return handleAttributeSelect(option.name, value);
 									}}
 								/>
-							);
-						})}
-						<div className="flex flex-wrap gap-2">
-							{sizeValues.map((size) => {
+							))}
+						</div>
+
+						{/* Size Selector with Quantity */}
+						<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+							{sizeValues.map((size, index) => {
 								const isSelected = opstions["SIZE"] === size;
 								const baseClasses =
-									"flex h-9 max-w-[2.5rem] items-center justify-center rounded-md border px-3 text-sm transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 text-black";
+									"relative flex  w-full flex-col items-center justify-evenly rounded-lg border p-1 transition-all duration-200 hover:shadow-sm";
 								const stateClasses = isSelected
-									? "border-blue-500 ring-1 ring-blue ring-offset-2 bg-white"
-									: "border-gray-300 hover:border-gray-500 cursor-not-allowed";
-								const extraClasses = isSelected ? "ring-offset-2" : "";
-
+									? "border-[4px] border-slate-600 bg-white shadow-md"
+									: "border border-gray-200 bg-gray-50 opacity-60";
 								return (
-									<input
-										disabled={!isSelected}
-										value={sizeQuantities[size] ?? 0}
-										onChange={(e) => updateSizeQuantity(size, parseInt(e.target.value) || 0)}
-										max={quantityLimitPerCustomer}
-										className={`${baseClasses} ${stateClasses} ${extraClasses}`}
-									/>
+									<div
+										key={index}
+										className={`${baseClasses} ${stateClasses}`}
+										aria-selected={isSelected}
+										aria-disabled={!isSelected}
+										role="option"
+									>
+										<div className="flex w-full justify-center">
+											<input
+												type="number"
+												disabled={!isSelected}
+												value={sizeQuantities[size] ?? 0}
+												onChange={(e) => updateSizeQuantity(size, parseInt(e.target.value) || 0)}
+												max={quantityLimitPerCustomer}
+												min="0"
+												className="w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+												aria-label={`Quantity for size ${size}`}
+												tabIndex={isSelected ? 0 : -1}
+											/>
+										</div>
+									</div>
 								);
 							})}
 						</div>
-
-						{/* <div className="flex items-center justify-between">
-							<QuantityInput
-								limit={quantityLimitPerCustomer}
-								quantityAvailable={quantityLimitPerCustomer}
-								quantity={quantity}
-								setQuantity={setQuantity}
-							/>
-						</div> */}
 					</div>
-					{/* Action Buttons Container */}
-					<div className="absolute bottom-4 right-4 flex items-center justify-end gap-4 rounded">
+
+					{/* Action Buttons */}
+					<div className="absolute bottom-4 right-4 flex items-center gap-4">
 						<button
-							className="rounded-lg bg-[#39377a] px-6 py-3 text-center font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#39377a] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+							className="transform rounded-lg bg-white px-6 py-3 text-base font-semibold text-black shadow-lg transition-all duration-300 hover:scale-105 hover:bg-slate-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#FD8C6E] focus:ring-offset-2 disabled:opacity-50"
 							disabled={
 								!Object.entries(sizeQuantities).some(([size, quantity]) => quantity > 0 && variantIds[size])
 							}
-							onClick={() => {
+							onClick={async () => {
 								const itemsToAdd = getVariantsToAdd(variantIds, sizeQuantities);
-								itemsToAdd.forEach(({ variantId, quantity }) => {
+								itemsToAdd.forEach(async ({ variantId, quantity }) => {
+									const errorNotification = (message: string) => {
+										toast.error(message);
+										setTimeout(function () {
+											window.location.href = `/${channel}/login`;
+										}, 2000);
+									};
 									if (quantity > quantityLimitPerCustomer) {
-										toast.error("Quantity exceeds available");
+										toast.error("Quantity exceeds available limit");
 										return;
 									}
-									console.log(variantId, quantity);
-
-									addItem(params, variantId, quantity);
+									const result = await addItem(params, variantId, quantity);
+									if (result?.error) {
+										errorNotification(`Please log in to place an order.`);
+										return;
+									}
 									toast.success("Product added to cart");
 								});
 							}}
 						>
 							Add to Cart
 						</button>
-						<button className="rounded-lg bg-[#39377a] px-6 py-3 text-center font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#39377a] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-							Design
-						</button>
+						<Link href={`/${channel}/design/${productData?.product?.id}/${selectVariantAttributeId}`}>
+							<button
+								className="transform rounded-lg bg-slate-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-slate-800/90 focus:outline-none focus:ring-2 focus:ring-[#8C3859] focus:ring-offset-2 disabled:opacity-50"
+								onClick={() => {
+									localStorage.setItem(
+										"cart",
+										JSON.stringify({
+											params: params,
+											selectedVariantId: selectedVariantId,
+											quantity: quantity,
+										}),
+									);
+								}}
+							>
+								Customize Design
+							</button>
+						</Link>
 					</div>
 				</div>
+
 			</div>
 		</div>
 	);

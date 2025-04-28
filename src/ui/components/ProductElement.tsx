@@ -44,8 +44,6 @@ export function ProductElement({
 									stop: product?.pricing?.priceRange?.stop?.gross,
 								})}
 							</p>
-
-
 						</div>
 					</div>
 				</div>

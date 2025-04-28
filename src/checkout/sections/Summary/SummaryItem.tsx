@@ -11,7 +11,7 @@ interface SummaryItemProps {
 }
 
 export const SummaryItem = ({ line, children }: SummaryItemProps) => {
-	const { productName, productImage } = getSummaryLineProps(line);
+	const { productName, productImage } = getSummaryLineProps(line as CheckoutLineFragment);
 
 	const attributesText = useSummaryLineLineAttributesText(line);
 

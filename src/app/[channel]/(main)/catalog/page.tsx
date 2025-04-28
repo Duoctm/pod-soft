@@ -1,9 +1,9 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import clsx from "clsx";
 import { executeGraphQL } from "@/lib/graphql";
 import { CategoryListDocument } from "@/gql/graphql";
+
 interface CatalogPageProps {
 	params: {
 		channel: string;
@@ -13,61 +13,67 @@ interface CatalogPageProps {
 async function CatalogPage({ params }: CatalogPageProps) {
 	const { channel } = params;
 
- 
-	const {categories} = await executeGraphQL(CategoryListDocument, {
+	const { categories } = await executeGraphQL(CategoryListDocument, {
 		variables: {
 			first: 50,
 		},
-		revalidate: 60, // Cache for 60 seconds
-	})
-	console.log(categories)
+		revalidate: 60,
+	});
 
-
-	console.log(categories?.edges)
 	if (!categories?.edges.length) {
-		return <div className="flex h-[50vh] items-center justify-center">loading....</div>;
+		return (
+			<div className="flex h-screen items-center justify-center bg-white">
+				<div className="animate-bounce text-2xl text-emerald-400">Loading Collections...</div>
+			</div>
+		);
 	}
 
 	return (
-		<div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-			<h1 className="mb-6 ml-[1%] text-left text-2xl font-bold sm:mb-8 sm:text-3xl">Select your product:</h1>
+		<div className="min-h-screen bg-white py-16">
+			<div className="container mx-auto px-4">
+				<h1 className="mb-16 text-center text-5xl font-extrabold text-gray-800 animate-fade-in">
+					<span className="text-gray-800">
+						Explore Collections
+					</span>
+				</h1>
 
-			<div
-				className={clsx(
-					"grid justify-items-center gap-6 sm:gap-10 lg:gap-20",
-					"grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
-				)}
-			>
-				{categories.edges.map((collection) => (
-					<Link
-						key={collection.node.id}
-						href={`/${channel}/catalog/${collection.node.slug}`}
-						className="w-full max-w-[320px] transition-transform duration-300 hover:scale-105"
-					>
-						<div className="relative flex w-full cursor-pointer flex-col items-center">
-							<div className="relative z-10 mx-auto h-[250px] w-full sm:h-[336px]">
-								{collection.node.backgroundImage?.url ? (
-									<Image
-										src={collection.node.backgroundImage.url}
-										alt={collection.node.backgroundImage.alt || collection.node.name}
-										fill
-										className="rounded-md object-cover bg-center"
-										sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-										priority={true}
-									/>
-								) : (
-									<div className="flex h-full w-full items-center justify-center rounded-md bg-gray-200">
-										<span className="text-gray-400">No image</span>
-									</div>
-								)}
+				<div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
+					{categories.edges.map((collection) => (
+						<Link
+							key={collection.node.id}
+							href={`/${channel}/catalog/${collection.node.slug}`}
+							className="group block"
+						>
+							<div className="relative overflow-hidden rounded-2xl bg-gray-100 shadow-lg transition-all duration-500 hover:scale-105">
+								<div className="aspect-square relative">
+									{collection.node.backgroundImage?.url ? (
+										<>
+											<Image
+												src={collection.node.backgroundImage.url}
+												alt={collection.node.backgroundImage.alt || collection.node.name}
+												fill
+												className="object-cover brightness-90 transition-all duration-700 group-hover:brightness-100 group-hover:scale-110"
+												sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+												priority={true}
+											/>
+											<div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+										</>
+									) : (
+										<div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+											<span className="text-xl text-gray-500">No image available</span>
+										</div>
+									)}
+								</div>
+								<div className="absolute bottom-0 left-0 right-0 p-6">
+									<h2 className="text-2xl font-bold text-white">
+										{collection.node.name}
+									</h2>
+									<div className="mt-2 h-1 w-12 bg-emerald-400 transition-all duration-300 group-hover:w-24" />
+								</div>
 							</div>
-
-							<div className="-mt-[200px] flex h-[280px] w-full flex-col items-center justify-end rounded-lg bg-[#a2a0b8] p-4 pt-16 shadow hover:shadow-xl sm:-mt-[290px] sm:h-[360px]">
-								<h2 className="text-md text-center font-semibold text-white">{collection.node.name}</h2>
-							</div>
-						</div>
-					</Link>
-				))}
+						</Link>
+					))}
+				</div>
 			</div>
 		</div>
 	);

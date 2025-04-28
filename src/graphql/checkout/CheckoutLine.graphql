@@ -1,0 +1,55 @@
+fragment CheckoutLineFragment on CheckoutLine {
+	id
+	quantity
+	totalPrice {
+		gross {
+			currency
+			amount
+		}
+	}
+	unitPrice {
+		gross {
+			...Money
+		}
+	}
+	undiscountedUnitPrice {
+		...Money
+	}
+	variant {
+		attributes(variantSelection: ALL) {
+			values {
+				name
+				dateTime
+				boolean
+				translation(languageCode: $languageCode) {
+					name
+				}
+			}
+		}
+		id
+		name
+		translation(languageCode: $languageCode) {
+			name
+		}
+		product {
+			name
+			translation(languageCode: $languageCode) {
+				language {
+					code
+				}
+				id
+				name
+			}
+			media {
+				alt
+				type
+				url(size: 72)
+			}
+		}
+		media {
+			alt
+			type
+			url(size: 72)
+		}
+	}
+}

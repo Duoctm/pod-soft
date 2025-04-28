@@ -1,83 +1,128 @@
-import React from "react";
+import { useEffect, useState, useMemo } from "react";
+import { type FormikHelpers } from "formik";
+import { toast } from "react-toastify";
+import { Title } from "@/checkout/components/Title";
+import { getFormattedMoney } from "@/checkout/lib/utils/money";
+import { DeliveryMethodsSkeleton } from "@/checkout/sections/DeliveryMethods/DeliveryMethodsSkeleton";
+import { type User } from "@/checkout/hooks/useUserServer";
+import { type Checkout } from "@/checkout/graphql";
+import { useFormContext } from "@/checkout/hooks/useForm";
+import { updateDeliveryMethod } from "@/checkout/hooks/checkoutDeliveryMethodUpdate";
+// CheckoutDeliveryMethodUpdateMutationVariables
 
-interface ShippingMethod {
-	id: string;
-	active: boolean;
-	description: string | null;
-	name: string;
-	price: {
-		amount: number;
-		currency: string;
-	};
+export interface Address {
+	firstName: string;
+	lastName: string;
+	streetAddress1: string;
+	streetAddress2: string | null;
+	city: string;
+	countryArea: string;
+	zipCode: string;
+	country: string;
+	phoneNumber: string;
+	company: string | null;
 }
 
-interface CustomDeliveryMethodsSectionProps {
-	shippingMethods: ShippingMethod[];
-	selectedMethodId: string | null;
-	onMethodSelect: (methodId: string) => void;
-	apiError?: string | null; // Prop remains
+interface FormValues {
+	shippingAddress: Address;
+	billingAddress: Address;
+	useShippingAsBilling: boolean;
 }
 
-const formatPrice = (price: { amount: number; currency: string }) => {
-	if (price.amount === 0) {
-		return "Free";
-	}
-	return new Intl.NumberFormat("en-US", {
-		style: "currency",
-		currency: price.currency,
-	}).format(price.amount);
+type DeliveryMethodsProps = {
+	user: User | null;
+	checkout: Checkout | null;
+	handleSubmitAddress: (
+		values: FormValues,
+		{ setSubmitting, setFieldError }: FormikHelpers<FormValues>,
+	) => Promise<void>;
 };
 
-export const CustomDeliveryMethodsSection: React.FC<CustomDeliveryMethodsSectionProps> = ({
-	shippingMethods,
-	selectedMethodId,
-	onMethodSelect,
-	apiError, // Prop remains
-}) => {
-	const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-		onMethodSelect(event.target.value);
+export const DeliveryMethods = ({ user, checkout, handleSubmitAddress }: DeliveryMethodsProps) => {
+	const shippingMethods = checkout?.shippingMethods || [];
+	const shippingAddress = checkout?.shippingAddress || null;
+	// const deliveryMethodId = checkout?.deliveryMethod?.id || null;
+	const { values, setSubmitting, setFieldError } = useFormContext<FormValues>();
+	const [isRequireUpdateAddress, setIsRequireUpdateAddress] = useState(false);
+	const [checkoutDeliveryMethodId, setCheckoutDeliveryMethodId] = useState<string>(() => {
+		if (checkout?.deliveryMethod) {
+			return checkout.deliveryMethod.id;
+		}
+		return "";
+	});
+
+	const deliveryMethod = useMemo(() => {
+		return shippingMethods.find((method) => method.id === checkoutDeliveryMethodId);
+	}, [checkoutDeliveryMethodId, shippingMethods]);
+
+	useEffect(() => {
+		if (values.shippingAddress.country !== shippingAddress?.country.code) {
+			setIsRequireUpdateAddress(true);
+		} else {
+			setIsRequireUpdateAddress(false);
+		}
+	}, [values.shippingAddress.country, shippingAddress?.country.code]);
+
+	const getSubtitle = ({ min, max }: { min?: number | null; max?: number | null }) => {
+		if (!min || !max) {
+			return undefined;
+		}
+
+		return `${min}-${max} business days`;
 	};
 
-	const selectedMethod = shippingMethods?.find((method) => method.id === selectedMethodId);
+	const handleChangeDeliveryMethod = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+		setCheckoutDeliveryMethodId(e.target.value);
+		await handleSubmitAddress(values, { setSubmitting, setFieldError } as FormikHelpers<FormValues>);
+		const updateDeliveryMethodUpdateResult = await updateDeliveryMethod({
+			id: checkout?.id || "",
+			deliveryMethodId: e.target.value,
+		});
+		if (updateDeliveryMethodUpdateResult?.checkoutDeliveryMethodUpdate?.errors.length) {
+			const error = updateDeliveryMethodUpdateResult?.checkoutDeliveryMethodUpdate?.errors[0];
+			toast.error(error.message);
+		} else {
+			toast.success("Delivery method updated successfully");
+		}
+	};
 
-	const isLoading = !shippingMethods;
-	const isEmpty = !isLoading && shippingMethods.length === 0;
+	if (!checkout?.isShippingRequired) {
+		return null;
+	}
 
 	return (
-		<div className="px-4 py-4 sm:px-0">
-			<label htmlFor="delivery-method-select" className="mb-1 block text-sm font-medium text-gray-700">
-				Delivery Method *
-			</label>
-			<select
-				id="delivery-method-select"
-				name="deliveryMethod"
-				value={selectedMethodId || ""}
-				onChange={handleSelectChange}
-				disabled={isLoading || isEmpty}
-				className={`w-full rounded-md border px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm ${
-					isLoading || isEmpty ? "cursor-not-allowed bg-gray-100" : ""
-				} ${apiError ? "border-red-500" : "border-gray-300"}`}
-			>
-				<option value="" disabled>
-					{isLoading
-						? "Loading methods..."
-						: isEmpty
-							? "No methods available"
-							: "Select a delivery method..."}
-				</option>
-				{shippingMethods?.map((method) => (
-					<option key={method.id} value={method.id}>
-						{method.name}
-					</option>
-				))}
-			</select>
-			{apiError && <div className="mt-1 text-sm text-red-600">{apiError}</div>}
-
-			{selectedMethod && !apiError && (
-				<p className="text-md mt-2 text-gray-600">
-					<strong className="pr-2 text-gray-950">Price:</strong>
-					{formatPrice(selectedMethod.price)}
-				</p>
+		<div className="py-4" data-testid="deliveryMethods">
+			<Title className="mb-2">Delivery methods</Title>
+			{!user && !checkout && <DeliveryMethodsSkeleton />}
+			{(user && !shippingAddress) || isRequireUpdateAddress ? (
+				<p>Please fill in shipping address to see available shipping methods</p>
+			) : (
+				<>
+					<select
+						id="delivery-method-select"
+						name="deliveryMethod"
+						value={checkoutDeliveryMethodId}
+						onChange={handleChangeDeliveryMethod}
+						disabled={!shippingMethods.length}
+						className={`w-full rounded-md border px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm`}
+					>
+						<option value="" disabled>
+							Select delivery method
+						</option>
+						{shippingMethods?.map((method) => (
+							<option key={method.id} value={method.id}>
+								{method.name} - {getFormattedMoney(method.price)}
+							</option>
+						))}
+					</select>
+					<p className="my-2 text-sm text-gray-900">
+						<strong>Delivery time:</strong>{" "}
+						{getSubtitle({
+							min: deliveryMethod?.minimumDeliveryDays,
+							max: deliveryMethod?.maximumDeliveryDays,
+						})}
+					</p>
+				</>
 			)}
 		</div>
 	);

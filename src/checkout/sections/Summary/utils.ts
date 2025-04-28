@@ -10,18 +10,13 @@ export const getThumbnailFromLine = (line: CheckoutLineFragment) =>
 	line.variant.media?.find(({ type }) => type === "IMAGE") ||
 	line.variant.product.media?.find(({ type }) => type === "IMAGE");
 
-export const getSummaryLineProps = (line: OrderLineFragment | CheckoutLineFragment) =>
-	isCheckoutLine(line)
-		? {
-				variantName: line.variant.translation?.name || line.variant.name,
-				productName: line.variant.product.translation?.name || line.variant.product.name,
-				productImage: getThumbnailFromLine(line),
-		  }
-		: {
-				variantName: line.variantName,
-				productName: line.productName,
-				productImage: line.thumbnail,
-		  };
+export const getSummaryLineProps = (line: CheckoutLineFragment) => {
+	return {
+		variantName: line?.variant?.name,
+		productName: line?.variant?.product?.name,
+		productImage: getThumbnailFromLine(line),
+	};
+};
 
 export const useSummaryLineLineAttributesText = (line: CheckoutLineFragment | OrderLineFragment): string => {
 	const parsedValues =

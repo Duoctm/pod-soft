@@ -23,8 +23,6 @@ export default async function Page({ params }: { params: { channel: string } }) 
 			<Printing/>
 			<Comprehensive/>
 			<Trusted/> */}
-
-
 			<Promotion></Promotion>
 			<GetStarted></GetStarted>
 			<BusinessProcess></BusinessProcess>

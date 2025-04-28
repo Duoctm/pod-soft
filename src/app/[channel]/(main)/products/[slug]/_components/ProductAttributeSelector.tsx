@@ -1,5 +1,5 @@
 import React from "react";
-import { sortColorsByLuminance } from "../../utils/soft-color";
+import { sortColorsByLuminance } from "../utils/soft-color";
 
 type ProductAttributeSelectorProps = {
 	name: string;
@@ -31,7 +31,7 @@ export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> =
 
 					const baseClasses =
 						"flex h-9 max-w-[2.5rem] items-center justify-center rounded-md border px-3 text-sm transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 text-black";
-					const colorStyle = isColor ? { backgroundColor: colorCode || "#f9fafb" } : {};
+					const colorStyle = isColor ? { backgroundColor: colorCode || "#f9fafb", borderRadius: "100%" } : {};
 					const stateClasses = isSelected
 						? "border-black ring-1 ring-black ring-offset-1"
 						: "border-gray-300 hover:border-gray-500";

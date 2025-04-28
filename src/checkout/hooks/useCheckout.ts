@@ -4,10 +4,9 @@ import { type Checkout, useCheckoutQuery } from "@/checkout/graphql";
 import { extractCheckoutIdFromUrl } from "@/checkout/lib/utils/url";
 import { useCheckoutUpdateStateActions } from "@/checkout/state/updateStateStore";
 
-export const useCheckout = ({ pause = false } = {}) => {
+export const useCheckout = ({ pause = false, loadingCheckout = true } = {}) => {
 	const id = useMemo(() => extractCheckoutIdFromUrl(), []);
 	const { setLoadingCheckout } = useCheckoutUpdateStateActions();
-
 	const [{ data, fetching, stale }, refetch] = useCheckoutQuery({
 		variables: { id, languageCode: "EN_US" },
 		pause: pause,
@@ -17,6 +16,6 @@ export const useCheckout = ({ pause = false } = {}) => {
 
 	return useMemo(
 		() => ({ checkout: data?.checkout as Checkout, fetching: fetching || stale, refetch }),
-		[data?.checkout, fetching, refetch, stale],
+		[data?.checkout, fetching, refetch, stale, loadingCheckout],
 	);
 };

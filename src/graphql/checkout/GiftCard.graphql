@@ -1,0 +1,7 @@
+fragment GiftCardFragment on GiftCard {
+	displayCode
+	id
+	currentBalance {
+		...Money
+	}
+}

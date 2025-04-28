@@ -1,5 +1,7 @@
 import { invariant } from "ts-invariant";
+import Image from "next/image";
 import { RootWrapper } from "./pageWrapper";
+import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
 
 export const metadata = {
 	title: "Checkout · ZoomPrint",
@@ -20,9 +22,11 @@ export default function CheckoutPage({
 		<div className="min-h-dvh bg-white">
 			<section className="mx-auto flex min-h-dvh max-w-7xl flex-col p-8">
 				<div className="flex items-center font-bold">
-					<a aria-label="homepage" href="/">
-						ACME
-					</a>
+					<div className="flex items-center font-bold">
+						<LinkWithChannel aria-label="homepage" href="/" className="flex items-center gap-2">
+							<Image src="/images/logo-image.png" alt="SwiftPod Logo" width={70} height={70} priority />
+						</LinkWithChannel>
+					</div>
 				</div>
 				<h1 className="mt-8 text-3xl font-bold text-neutral-900">Checkout</h1>
 

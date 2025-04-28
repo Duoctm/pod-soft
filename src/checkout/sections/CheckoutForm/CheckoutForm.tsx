@@ -1,135 +1,236 @@
-import { Suspense } from "react";
-import { AddressForm } from "./CustomUserShippingAddressSection";
-import { BillingAddressForm } from "./CustomUserBillingAddressSection";
-import { CustomDeliveryMethodsSection } from "./CustomDeliveryMethodsSection";
-import { useCheckout } from "@/checkout/hooks/useCheckout";
-import { Contact } from "@/checkout/sections/Contact";
-import { ContactSkeleton } from "@/checkout/sections/Contact/ContactSkeleton";
-import { DeliveryMethodsSkeleton } from "@/checkout/sections/DeliveryMethods/DeliveryMethodsSkeleton";
-import { AddressSectionSkeleton } from "@/checkout/components/AddressSectionSkeleton";
-import { Divider } from "@/checkout/components";
-import { type User, type Country } from "@/checkout/hooks/useUserServer";
-import { type AddressFormData } from "@/checkout/views/Checkout"; 
+import React, { useEffect, useMemo } from "react";
+import { Form, Field, ErrorMessage, useFormikContext } from "formik";
+import { getCountryList } from "@/checkout/hooks/useCountryList";
+import { useAddressFormUtils } from "@/checkout/components/AddressForm/useAddressFormUtils";
+import { type CountryCode } from "@/gql/graphql";
+// import { toast, ToastContainer } from "react-toastify";
 
-interface ShippingMethod {
-	id: string;
-	active: boolean;
-	description: string | null;
+// --- Reusable Input Field Component ---
+interface InputFieldProps {
+	label: string;
 	name: string;
-	price: {
-		amount: number;
-		currency: string;
-	};
+	type?: string;
+	placeholder?: string;
+	required?: boolean;
+	as?: "input" | "select" | "textarea";
+	children?: React.ReactNode;
 }
 
-interface CheckoutFormProps {
-	user: User | null | undefined;
-	countriesData: Country[] | null;
+const InputField: React.FC<InputFieldProps> = ({
+	label,
+	name,
+	type = "text",
+	placeholder,
+	required,
+	as = "input",
+	children,
+}) => (
+	<div className="mb-4">
+		<label htmlFor={name} className="mb-1 block text-sm font-medium text-gray-700">
+			{label} {required && <span className="text-red-500">*</span>}
+		</label>
+		<Field
+			as={as}
+			id={name}
+			name={name}
+			type={type}
+			placeholder={placeholder}
+			className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+		>
+			{children}
+		</Field>
+		<ErrorMessage name={name} component="div" className="mt-1 text-xs text-red-500" />
+	</div>
+);
+
+interface Address {
+	firstName: string;
+	lastName: string;
+	streetAddress1: string;
+	streetAddress2: string;
+	city: string;
+	zipCode: string;
+	country: string;
+	phoneNumber: string;
+	company: string;
+}
+
+interface FormValues {
+	shippingAddress: Address;
+	billingAddress: Address;
 	useShippingAsBilling: boolean;
-	availableShippingMethods: ShippingMethod[];
-	selectedShippingMethodId: string | null;
-	initialShippingValues?: AddressFormData | null;
-	initialBillingValues?: AddressFormData | null;
-	onShippingAddressChange: (values: AddressFormData | null, isValid: boolean) => void;
-	onBillingAddressChange: (values: AddressFormData | null, isValid: boolean) => void;
-	onCheckboxChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-	onShippingMethodSelect: (methodId: string) => void;
-	shippingApiFieldErrors?: Record<string, string> | null;
-	billingApiFieldErrors?: Record<string, string> | null;
-	deliveryMethodApiError?: string | null; // Prop remains
 }
 
-export const CheckoutForm = ({
-	user,
-	countriesData,
-	useShippingAsBilling,
-	availableShippingMethods,
-	selectedShippingMethodId,
-	initialShippingValues,
-	initialBillingValues,
-	onShippingAddressChange,
-	onBillingAddressChange,
-	onCheckboxChange,
-	onShippingMethodSelect,
-	shippingApiFieldErrors,
-	billingApiFieldErrors,
-	deliveryMethodApiError, // Prop remains
-}: CheckoutFormProps) => {
-	const { checkout } = useCheckout();
+interface CountryArea {
+	raw?: string | null;
+	verbose?: string | null;
+	__typename: "ChoiceValue";
+}
+
+function filterUniqueCountryAreas(countryAreas: CountryArea[]): CountryArea[] {
+	const uniqueCountryAreas: CountryArea[] = []; // Mảng chứa kết quả cuối cùng
+	const seenRawValues = new Set<string>(); // Set để lưu các giá trị 'raw' đã gặp
+
+	for (const countryArea of countryAreas) {
+		if (!seenRawValues.has(countryArea.raw)) {
+			if (countryArea.raw) {
+				seenRawValues.add(countryArea.raw);
+				uniqueCountryAreas.push(countryArea);
+			}
+		}
+	}
+
+	return uniqueCountryAreas;
+}
+
+type AddressCheckoutFormProps = {
+	slug: string;
+};
+
+// --- Main Address Form Component ---
+export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }) => {
+	const { values } = useFormikContext<FormValues>();
+	const [countries, setCountries] = React.useState<{ code: string; country: string }[]>([]);
+	const { countryAreaChoices } = useAddressFormUtils(values.shippingAddress.country as CountryCode);
+	const countryAreas = useMemo(() => {
+		return filterUniqueCountryAreas(countryAreaChoices as CountryArea[]);
+	}, [countryAreaChoices]);
+
+	useEffect(() => {
+		let isMounted = true;
+		if (slug) {
+			const fetchCountries = async () => {
+				try {
+					const data = await getCountryList({ slug });
+					if (isMounted) {
+						setCountries(data.map(({ country, code }) => ({ code, country })));
+					}
+				} catch (error) {
+					console.error("Failed to fetch countries:", error);
+					if (isMounted) setCountries([]);
+				}
+			};
+			void fetchCountries();
+		}
+		return () => {
+			isMounted = false;
+		};
+	}, [slug]);
 
 	return (
-		<div className="flex flex-col items-end">
-			<div className="flex w-full flex-col rounded">
-				<Divider />
-				<Suspense fallback={<ContactSkeleton />}>
-					<Contact user={user} />
-				</Suspense>
-				{checkout?.isShippingRequired && (
-					<Suspense fallback={<AddressSectionSkeleton />}>
-						<Divider />
-						<div className="py-4" data-testid="shippingAddressSection">
-							<AddressForm
-								initialValues={initialShippingValues}
-								onAddressChange={onShippingAddressChange}
-								countriesData={countriesData}
-								apiErrors={shippingApiFieldErrors}
-							/>
-						</div>
-						<Divider />
-						<div className="px-4 py-4 sm:px-0">
-							<label className="flex cursor-pointer items-center space-x-2">
-								<input
-									type="checkbox"
-									checked={useShippingAsBilling}
-									onChange={onCheckboxChange}
-									className="h-4 w-4 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 focus:ring-offset-0"
-								/>
-								<span className="select-none text-sm text-gray-700">
-									Use shipping address as billing address
-								</span>
-							</label>
-						</div>
-						<Divider />
-						{!useShippingAsBilling && (
-							<div className="py-4" data-testid="billingAddressSection">
-								<BillingAddressForm
-									initialValues={initialBillingValues}
-									onBillingAddressChange={onBillingAddressChange}
-									countriesData={countriesData}
-									apiErrors={billingApiFieldErrors}
-								/>
-							</div>
-						)}
-					</Suspense>
-				)}
-				<Divider />
-				<Suspense fallback={<DeliveryMethodsSkeleton />}>
-					<CustomDeliveryMethodsSection
-						shippingMethods={availableShippingMethods}
-						selectedMethodId={selectedShippingMethodId}
-						onMethodSelect={onShippingMethodSelect}
-						apiError={deliveryMethodApiError} // Prop remains
+		<div className="mx-auto mt-4 max-w-2xl rounded-lg bg-white">
+			<Form>
+				{/* --- Shipping Address --- */}
+				<section className="mb-6">
+					<h2 className="mb-4 text-xl font-semibold text-gray-800">Shipping Address</h2>
+					{/* In a real app, this would be a searchable dropdown */}
+					<InputField label="Country" name="shippingAddress.country" required as="select">
+						<option value="" disabled>
+							Select a country
+						</option>
+						{countries.map((country) => (
+							<option key={country.code} value={country.code}>
+								{country.country}
+							</option>
+						))}
+					</InputField>
+					<InputField label="State" name="shippingAddress.countryArea" required as="select">
+						<option value="" disabled>
+							Select a state
+						</option>
+						{countryAreas.map((countryArea) => (
+							<option key={countryArea.raw} value={countryArea.raw || ""}>
+								{countryArea.verbose}
+							</option>
+						))}
+					</InputField>
+					<div className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+						<InputField label="First name" name="shippingAddress.firstName" required />
+						<InputField label="Last name" name="shippingAddress.lastName" required />
+					</div>
+					<InputField label="Company" name="shippingAddress.company" />
+					<InputField label="Street address" name="shippingAddress.streetAddress1" required />
+					<InputField label="Street address (continue)" name="shippingAddress.streetAddress2" />
+					<div className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+						<InputField label="City" name="shippingAddress.city" required />
+						<InputField label="Zip code" name="shippingAddress.zipCode" required />
+					</div>
+					<InputField
+						label="Phone number"
+						name="shippingAddress.phoneNumber"
+						type="tel"
+						required
+						placeholder="+1234567890"
 					/>
-				</Suspense>
-			</div>
+				</section>
+
+				{/* --- Use Shipping as Billing Checkbox --- */}
+				<div className="mb-6">
+					<label className="flex items-center text-sm text-gray-700">
+						<Field
+							type="checkbox"
+							name="useShippingAsBilling"
+							className="mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+						/>
+						Use shipping address as billing address
+					</label>
+					<ErrorMessage name="useShippingAsBilling" component="div" className="mt-1 text-xs text-red-500" />
+				</div>
+
+				{/* --- Billing Address (Conditional) --- */}
+				{!values.useShippingAsBilling && (
+					<section className="mb-6 border-t border-gray-200 pt-6">
+						<h2 className="mb-4 text-xl font-semibold text-gray-800">Billing Address</h2>
+						{/* In a real app, this would be a searchable dropdown */}
+						<InputField label="Country" name="billingAddress.country" required as="select">
+							<option value="" disabled>
+								Select a country
+							</option>
+							{countries.map((country) => (
+								<option key={country.code} value={country.code}>
+									{country.country}
+								</option>
+							))}
+						</InputField>
+						<InputField label="State" name="billingAddress.countryArea" required as="select">
+							<option value="" disabled>
+								Select a state
+							</option>
+							{countryAreas.map((countryArea) => (
+								<option key={countryArea.raw} value={countryArea.raw || ""}>
+									{countryArea.verbose}
+								</option>
+							))}
+						</InputField>
+						<div className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+							<InputField label="First name" name="billingAddress.firstName" required />
+							<InputField label="Last name" name="billingAddress.lastName" required />
+						</div>
+						<InputField label="Company" name="billingAddress.company" />
+						<InputField label="Street address" name="billingAddress.streetAddress1" required />
+						<InputField label="Street address (continue)" name="billingAddress.streetAddress2" />
+						<div className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+							<InputField label="City" name="billingAddress.city" required />
+							<InputField label="Zip code" name="billingAddress.zipCode" required />
+						</div>
+						<InputField
+							label="Phone number"
+							name="billingAddress.phoneNumber"
+							type="tel"
+							required
+							placeholder="+1234567890"
+						/>
+					</section>
+				)}
+				<div className="my-2 flex justify-end">
+					<button
+						type="submit"
+						className="flex w-fit justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+					>
+						Save Address
+					</button>
+				</div>
+			</Form>
 		</div>
 	);
 };
-
-export const CheckoutFormSkeleton = () => (
-	<div className="flex flex-col items-end">
-		<div className="flex w-full flex-col rounded">
-			<Divider />
-			<Suspense fallback={<ContactSkeleton />}>
-				<ContactSkeleton />
-			</Suspense>
-			<Suspense fallback={<AddressSectionSkeleton />}>
-				<AddressSectionSkeleton />
-			</Suspense>
-			<Divider />
-			<Suspense fallback={<DeliveryMethodsSkeleton />}>
-				<DeliveryMethodsSkeleton />
-			</Suspense>
-		</div>
-	</div>
-);

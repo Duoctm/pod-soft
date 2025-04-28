@@ -14,10 +14,16 @@ const validationSchema = Yup.object({
 	firstName: Yup.string().required("First name is required"),
 	lastName: Yup.string().required("Last name is required"),
 	email: Yup.string().email("Invalid email").required("Email is required"),
-	password: Yup.string().min(8, "Password must be at least 8 characters").required("Password is required"),
+	password: Yup.string()
+		.min(8, "Password must be at least 8 characters")
+		.matches(/[a-z]/, "Password must contain at least one lowercase letter")
+		.matches(/[A-Z]/, "Password must contain at least one uppercase letter")
+		.matches(/\d/, "Password must contain at least one number")
+		.matches(/[@$!%*?&#]/, "Password must contain at least one special character")
+		.required("Password is required"),
 	confirmPassword: Yup.string()
-		.oneOf([Yup.ref('password')], 'Passwords must match')
-		.required('Confirm password is required'),
+		.oneOf([Yup.ref("password")], "Passwords must match")
+		.required("Confirm password is required"),
 });
 
 export default function RegisterForm() {
@@ -25,7 +31,7 @@ export default function RegisterForm() {
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const router = useRouter();
-	
+
 	useEffect(() => {
 		setIsClient(true);
 	}, []);
@@ -123,7 +129,7 @@ export default function RegisterForm() {
 					)}
 				</div>
 
-				<div className="mb-2 relative">
+				<div className="relative mb-2">
 					<input
 						type={showPassword ? "text" : "password"}
 						placeholder="Password"
@@ -147,7 +153,7 @@ export default function RegisterForm() {
 					)}
 				</div>
 
-				<div className="mb-4 relative">
+				<div className="relative mb-4">
 					<input
 						type={showConfirmPassword ? "text" : "password"}
 						placeholder="Confirm Password"

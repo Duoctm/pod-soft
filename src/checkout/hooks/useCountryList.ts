@@ -1,6 +1,6 @@
-'use server'
+"use server";
 import { executeGraphQL } from "@/lib/graphql";
-import { CountryListDocument, CountryListQueryVariables } from "@/gql/graphql";
+import { CountryListDocument, type CountryListQueryVariables, type CountryListQuery } from "@/gql/graphql";
 
 export interface Country {
     __typename?: "CountryDisplay";
@@ -12,12 +12,15 @@ export interface CountryList {
     countries: Country[];
 }
 
-interface UseCountryListOptions {
+export interface UseCountryListOptions {
     slug: string;
 }
 
-export const useCountryList = async ({ slug }: UseCountryListOptions) => {
-    'use server'
-    const { channel } = await executeGraphQL(CountryListDocument, { cache: "no-cache", variables: { slug } as CountryListQueryVariables });
+export const getCountryList = async ({ slug }: UseCountryListOptions) => {
+    "use server";
+    const { channel } = await executeGraphQL<CountryListQuery, CountryListQueryVariables>(CountryListDocument, {
+        cache: "no-cache",
+        variables: { slug } as CountryListQueryVariables,
+    });
     return channel?.countries ?? [];
-}
+};
