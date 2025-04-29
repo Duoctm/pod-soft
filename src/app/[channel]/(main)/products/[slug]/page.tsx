@@ -144,8 +144,8 @@ export default function Page({ params }: PageProps) {
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [opstions, setOptions] = useState<{ [key: string]: string }>({});
 	const [quantity, _setQuantity] = useState(1);
-	const [selectVariantAttributeId, setSelectVariantAttributeId] = useState<string | null>(null);
-	const atrrubuteValueIds = useRef<Map<string, string>>(new Map());
+	const [selectColorAttributeValueId, setSelectColorAttributeValueId] = useState<string | null>(null);
+	const attributeValueIds = useRef<Map<string, string>>(new Map());
 	const [sizeQuantities, setSizeQuantities] = useState<{ [size: string]: number }>({});
 	const [variantIds, setVariantIds] = useState<{ [size: string]: string }>({});
 	const sizeValues = Array.from(
@@ -202,11 +202,14 @@ export default function Page({ params }: PageProps) {
 					defaultVariant = data.product.variants[0] as ProductVariant;
 				}
 				setSelectedVariantId(() => defaultVariant?.id || null);
+				setSelectColorAttributeValueId(defaultVariant?.attributes[0].values[0].id ?? null)
+
 				const optionValue: { [key: string]: string } = {};
 				defaultVariant?.attributes.sort(commpareFunc).map((attr) => {
 					const key = attr.attribute.name.toUpperCase();
 					const value = attr.values.map((v) => v.name).join("");
 					optionValue[key] = value;
+					//atrrubuteValueIds.current.set(value, attr.values[0].id)
 				});
 				setOptions(() => optionValue);
 			} catch (err: any) {
@@ -311,9 +314,11 @@ export default function Page({ params }: PageProps) {
 				const key = attribute.name.toUpperCase();
 				if (!map.has(key)) map.set(key, new Set());
 				values.forEach((v) => map.get(key)?.add(v.name));
+				if (key == "COLOR"){
+					values.forEach((v) => attributeValueIds.current.set(v.name, v.id));
+				}
 			});
 		});
-
 		return Array.from(map.entries()).map(([name, valueSet]) => ({
 			name,
 			values: Array.from(valueSet.values()),
@@ -424,7 +429,8 @@ export default function Page({ params }: PageProps) {
 									values={option.values}
 									selectedValue={opstions[option.name]}
 									onSelect={(value) => {
-										setSelectVariantAttributeId(atrrubuteValueIds.current.get(value) || null);
+										
+										setSelectColorAttributeValueId(attributeValueIds.current.get(value)|| null);
 										return handleAttributeSelect(option.name, value);
 									}}
 								/>
@@ -498,7 +504,7 @@ export default function Page({ params }: PageProps) {
 						>
 							Add to Cart
 						</button>
-						<Link href={`/${channel}/design/${productData?.product?.id}/${selectVariantAttributeId}`}>
+						<Link href={`/${channel}/design/1/${productData?.product?.id}/${selectColorAttributeValueId}`}>
 							<button
 								className="transform rounded-lg bg-slate-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-slate-800/90 focus:outline-none focus:ring-2 focus:ring-[#8C3859] focus:ring-offset-2 disabled:opacity-50"
 								onClick={() => {

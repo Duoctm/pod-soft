@@ -1,7 +1,9 @@
-"use client"
-// import DesignPage from "./component/DesignPage";
-//import json from "./test.json"
-//import {DesignInfo} from "./utils/type"
+"use client";
+
+import { useEffect, useState } from "react";
+import DesignPage from "./component/DesignPage";
+import { DesignInfo } from "./utils/type";
+
 interface PageProps {
   params: {
     slug: string[];
@@ -11,22 +13,48 @@ interface PageProps {
 
 function Page({ params }: PageProps) {
   const { slug = [] } = params;
-  console.log(slug)
+  const type = Number(decodeURIComponent(slug[0]));
+  const productId = decodeURIComponent(slug[1]);
+  const colorId = decodeURIComponent(slug[2]);
 
-  // const productId = decodeURIComponent(slug[0]);
-  // const colorId = decodeURIComponent(slug[1]);
-  //const colorDataMap = new Map<string, object>(Object.entries(json)) as DesignInfo;
+  const [colorDataMap, setColorDataMap] = useState<DesignInfo | null>(null);   
+
+
+  useEffect(() => {
+    if (type === 2) {
+      const json =  localStorage.getItem("designInfor") 
+      // setJsonDesign(json)
+      // // console.log('component mount', json);
+      // //const data = JSON.parse(json) as DesignInfo
+      //     console.log(json)
+      
+      if (json) {
+        try {
+          const jsonObject = JSON.parse(json) as DesignInfo | null; 
+          // const map = new Map<string, object>(Object.entries(jsonObject));
+          setColorDataMap(jsonObject)
+
+        } catch (error) {
+          console.error("Lỗi khi parse hoặc tạo Map từ localStorage:", error);
+        }
+      }
+    }
+  }, [type]);
+
   return (
-    <div>
-      Imcoming soon
-    </div>
+    <>
+    <DesignPage
+      productId={productId}
+      colorId={colorId}
+      designInfor={colorDataMap}
+      channel={params.channel}
+      typeDesign={type}
+      />
 
-    // <DesignPage 
-    //   productId={productId}
-    //   colorId={colorId}
-    //   designInfor={null} 
-    // />
-  )
+     
+
+      </>
+  );
 }
 
 export default Page;

@@ -1,7 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
-import { RegisterAccountDocument } from "@/gql/graphql";
+import {  RegisterAccountDocument } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
 
 type RegisterData = {
@@ -22,11 +21,11 @@ type RegisterResult = {
 
 export async function registerAccount(data: RegisterData): Promise<RegisterResult> {
 	try {
-		const headersList = headers();
-		const protocol = headersList.get("x-forwarded-proto") || "http"; // Xác định http/https
-		const host = headersList.get("host"); // Lấy host ví dụ localhost:3000 hoặc mysite.com
+ 
 
-		const redirectUrl = `${protocol}://${host}/default-channel/account-confirm`; // 👈 Tự build URL từ request
+
+	 
+	 
 
 		const { accountRegister } = await executeGraphQL(RegisterAccountDocument, {
 			variables: {
@@ -34,11 +33,12 @@ export async function registerAccount(data: RegisterData): Promise<RegisterResul
 				password: data.password,
 				firstName: data.firstName,
 				lastName: data.lastName,
-				redirectUrl,
+				redirectUrl: `${process.env.NEXT_PUBLIC_STOREFRONT_URL}/default-channel/account-confirm`,
 				channel: "default-channel",
 			},
 		});
 
+		// Check for errors from the GraphQL response
 		if (accountRegister?.errors && accountRegister.errors.length > 0) {
 			return {
 				success: false,
@@ -49,12 +49,14 @@ export async function registerAccount(data: RegisterData): Promise<RegisterResul
 			};
 		}
 
+		// Registration successful
 		return {
 			success: true,
 		};
 	} catch (error) {
 		console.error("❌ Register action failed:", error);
 
+		// Return a generic error
 		return {
 			success: false,
 			errors: [{ message: "Registration failed due to server error" }],

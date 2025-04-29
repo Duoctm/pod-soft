@@ -34,6 +34,7 @@ const GET_PRODUCT_DETAIL = gql`
 }
 `;
 
+
 const UPDATE_META_DATA = gql`
  mutation UpdateCheckoutLineMetadata($id: ID!, $input: [MetadataInput!]!) {
   updateMetadata(id: $id, input: $input) {
@@ -288,7 +289,6 @@ async function updateCheckoutLineMetadata(id: string, metadata: { key: string; v
     throw error;
   }
 }
-
 
 
 export {fetchProductDetail, getMetaDtataFromColorVariant, getVariantIdFromColorVariant, uploadImage, updateCheckoutLineMetadata};

@@ -1,24 +1,24 @@
 import Konva from 'konva';
 import $ from 'jquery';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import {PrintFaceData, DesignInfo} from './type'
-import {uploadImage} from './data'
+import { PrintFaceData, DesignInfo } from '../utils/type'
+import { uploadImage } from '../utils/data'
 interface StageConfig {
   stage: Konva.Stage | null;
   layer: Konva.Layer | null;
   selectedNode: Konva.Node | null;
   borderDiv: HTMLDivElement | null;
-  lastPOsitionNode: { x: number; y: number } | null;
+  //lastPositionNode: { x: number; y: number } | null;
 }
 
 class TShirtDesigner {
 
-  private data : PrintFaceData[];
-  private productId : string;
-  private colorValue: string;
-  private variantId: string | null;
+  public data: PrintFaceData[];
+  private productId: string;
+  public colorValue: string;
+  public variantId: string | null;
   private colorData: Map<string, object>;
-  private stages: StageConfig[] = [];
+  public stages: StageConfig[] = [];
 
   private currentStage: StageConfig;
   private textColor: string = '#000000';
@@ -29,7 +29,7 @@ class TShirtDesigner {
   private clipboard: Konva.Node | null = null;
   public onSelectObject: ((hasSelection: boolean) => void) | null = null;
 
-  private updateStagePosition(stageConfig: StageConfig, faceData: PrintFaceData, image: HTMLImageElement) {
+  public updateStagePosition(stageConfig: StageConfig, faceData: PrintFaceData, image: HTMLImageElement) {
     if (!stageConfig.stage || !stageConfig.borderDiv) return;
 
     const imageWidth = image.offsetWidth;
@@ -38,9 +38,11 @@ class TShirtDesigner {
 
     const oldWidth = stageConfig.stage.width();
     const oldHeight = stageConfig.stage.height();
+    //console.log('stageConfig cu', oldWidth, oldHeight)
 
     const stageWidth = imageWidth * faceData.width; //imageWidth * 0.35;
     const stageHeight = imageHeight * faceData.height;//imageHeight * 0.4;
+    //console.log('stageConfig moi', stageWidth, stageHeight);
     const stageX = imageRect.left + (faceData.position.x * imageWidth); //imageRect.left + (imageWidth - stageWidth) / 2;
     const stageY = imageRect.top + (faceData.position.y * imageHeight); //imageRect.top + (imageHeight - stageHeight) / 2 - 50;
 
@@ -64,39 +66,58 @@ class TShirtDesigner {
 
     // Cập nhật vị trí và kích thước của tất cả các đối tượng trong stage
     if (stageConfig.layer && oldWidth > 0 && oldHeight > 0) {
-        // Tính tỷ lệ thay đổi kích thước
-        const scaleX = stageWidth / oldWidth;
-        const scaleY = stageHeight / oldHeight;
+      // Tính tỷ lệ thay đổi kích thước
+      const scaleX = stageWidth / oldWidth;
+      const scaleY = stageHeight / oldHeight;
 
-        stageConfig.layer.children.forEach((node) => {
-            if (node instanceof Konva.Transformer) return;
+      stageConfig.layer.children.forEach((node) => {
+        if (node instanceof Konva.Transformer) return;
 
-            // Lưu vị trí và kích thước tương đối
-            const relativeX = node.x() / oldWidth;
-            const relativeY = node.y() / oldHeight;
-            
-            // Cập nhật vị trí mới dựa trên tỷ lệ
-            node.x(relativeX * stageWidth);
-            node.y(relativeY * stageHeight);
+        // Lưu vị trí và kích thước tương đối
+        const relativeX = node.x() / oldWidth;
+        const relativeY = node.y() / oldHeight;
 
-            // Nếu là text node, điều chỉnh kích thước font
-            if (node instanceof Konva.Text) {
-                const newFontSize = node.fontSize() * Math.min(scaleX, scaleY);
-                node.fontSize(newFontSize);
-                const nodeWidth = node.width();
-                if (typeof nodeWidth === 'number') {
-                    node.width(nodeWidth * scaleX);
-                }
-            }
-            // Nếu là image node, điều chỉnh kích thước
-            else if (node instanceof Konva.Image) {
-                node.width(node.width() * scaleX);
-                node.height(node.height() * scaleY);
-            }
-        });
 
-        // Vẽ lại layer
-        stageConfig.layer.draw();
+
+        // Cập nhật vị trí mới dựa trên tỷ lệ
+
+        node.x(relativeX * stageWidth);
+        node.y(relativeY * stageHeight);
+
+
+
+        // Nếu là text node, điều chỉnh kích thước font
+        if (node instanceof Konva.Text) {
+          // const nodeWidth = node.width();
+          // const nodeHeight = node.height();
+          node.width(node.width() * scaleX);
+          node.height(node.height() * scaleY);
+          node.fontSize(node.fontSize() * scaleX)
+          node.offsetX(node.width() / 2);
+          node.offsetY(node.height() / 2);
+
+          //   if (typeof nodeWidth === 'number') {
+          //     node.scaleX(nodeWidth * scaleX);
+          //     node.scaleY(nodeHeight * scaleY);
+          //     node.offsetX(node.width()/2);
+          //     node.offsetY(node.height()/2);
+          //  }
+        }
+        // Nếu là image node, điều chỉnh kích thước
+        else if (node instanceof Konva.Image) {
+          node.width(node.width() * scaleX);
+          node.height(node.height() * scaleY);
+          node.offsetX(node.width() / 2);
+          node.offsetY(node.height() / 2);
+          node.setAttr('rotationOfLastWidth', node.width());
+          node.setAttr('rotationOfLastHeight', node.height());
+        }
+
+      });
+
+      // Vẽ lại layer
+      stageConfig.layer.draw();
+
     }
 
     if (stageConfig.selectedNode !== null) {
@@ -104,89 +125,111 @@ class TShirtDesigner {
     }
   }
 
-  constructor(data : PrintFaceData[], productId: string, variantId: string | null, colorValue: string, colorData: Map<string, object>) {
+  public updateStagePositions = () => {
+    //for (const item in this.data) {
+    let index = -1;
+    for (const item in this.data) {
+      if (this.stages[item] == this.currentStage) {
+        index = parseInt(item);
+        break;
+      }
+    }
+    if (index != -1) {
+      const imageDom = document.getElementById(this.data[index].code + "Image") as HTMLImageElement;
+      if (imageDom) {
+        this.updateStagePosition(this.currentStage, this.data[index], imageDom);
+      }
+    }
+    //}
+
+    // let domImage = document.getElementById(this.data[0].code + "Image") as HTMLImageElement;
+    // console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas', this.stages[0]);
+    // this.updateStagePosition(this.stages[0], this.data[0], domImage);
+
+
+  };
+
+  constructor(data: PrintFaceData[], productId: string, variantId: string | null, colorValue: string, colorData: Map<string, object>) {
     this.data = data;
     this.productId = productId;
     this.colorValue = colorValue;
     this.variantId = variantId;
     this.colorData = colorData;
-    for (const item in this.data){
-        this.stages[item] = {
-            stage: null,
-            layer: null,
-            selectedNode: null,
-            borderDiv: null,
-            lastPOsitionNode: null
-          };
+    for (const item in this.data) {
+      this.stages[item] = {
+        stage: null,
+        layer: null,
+        selectedNode: null,
+        borderDiv: null,
+        //lastPositionNode: null
+      };
     }
     this.currentStage = this.stages[0];
     this.initializeStages();
     this.initializeGlobalEventListeners();
 
-    console.log('helolohelolohelolo');
-    console.log(this.colorData)
-    
+
 
     // Thêm event listener cho window resize và scroll
-    const updateStagePositions = () => {
-      for (const item in data) {
-        const imageDom = document.getElementById(data[item].code+ "Image") as HTMLImageElement;
-        if (imageDom) {
-          this.updateStagePosition(this.stages[item], this.data[item], imageDom);
-        }
-      }
-    };
+    // const updateStagePositions = () => {
+    //   for (const item in data) {
+    //     const imageDom = document.getElementById(data[item].code+ "Image") as HTMLImageElement;
+    //     if (imageDom) {
+    //       this.updateStagePosition(this.stages[item], this.data[item], imageDom);
+    //     }
+    //   }
+    // };
 
-    window.addEventListener('resize', updateStagePositions);
-    window.addEventListener('scroll', updateStagePositions, true);
+    window.addEventListener('resize', this.updateStagePositions);
+    window.addEventListener('scroll', this.updateStagePositions, true);
   }
 
   private initializeStages() {
     const doms: HTMLImageElement[] = [];
     for (const item in this.data) {
-        const imageDom = document.getElementById(this.data[item].code+ "Image") as HTMLImageElement;
-        if (imageDom) {
-            doms.push(imageDom);
-        }
+      const imageDom = document.getElementById(this.data[item].code + "Image") as HTMLImageElement;
+      if (imageDom) {
+        doms.push(imageDom);
+      }
     }
 
     const initStages = () => {
-        
-      if (doms.length > 0){
-        
+
+      if (doms.length > 0) {
+
         doms.forEach((item, index) => {
           console.log(item);
-            this.setupStage(this.stages[index], this.data[index], doms[index], 'preview-' + this.data[index].code);
-            if (index === 0) {
-                this.stages[index].stage!.container().style.display = 'block';
-                this.currentStage = this.stages[index];
-            }
-            else {
-                this.stages[index].stage!.container().style.display = 'none';
-            }
+          this.setupStage(this.stages[index], this.data[index], doms[index], 'preview-' + this.data[index].code);
+          if (index === 0) {
+            this.stages[index].stage!.container().style.display = 'block';
+            this.currentStage = this.stages[index];
+          }
+          else {
+            this.stages[index].stage!.container().style.display = 'none';
+          }
 
-            
+
 
         })
-        
+
       }
     };
 
     let imagesLoaded = 0;
     const onImageLoad = () => {
-        imagesLoaded++;
-        console.log('Image loaded:', imagesLoaded); // Debug log
-        if (imagesLoaded === 2) {
-            initStages();
-        }
+      imagesLoaded++;
+
+      if (imagesLoaded === 2) {
+        initStages();
+      }
     };
     doms.forEach((item, index) => {
       console.log(item);
-        if (doms[index].complete) {
-            onImageLoad();
-            } else {
-            doms[index].onload = onImageLoad;
-        }
+      if (doms[index].complete) {
+        onImageLoad();
+      } else {
+        doms[index].onload = onImageLoad;
+      }
 
 
     })
@@ -253,32 +296,32 @@ class TShirtDesigner {
 
     const previewContainer = document.getElementById(containerId);
     if (previewContainer) {
-        previewContainer.style.position = 'fixed';
-        previewContainer.style.left = `${stageX}px`;
-        previewContainer.style.top = `${stageY}px`;
-        previewContainer.style.zIndex = '1';
-        previewContainer.style.pointerEvents = 'auto';
+      previewContainer.style.position = 'fixed';
+      previewContainer.style.left = `${stageX}px`;
+      previewContainer.style.top = `${stageY}px`;
+      previewContainer.style.zIndex = '1';
+      previewContainer.style.pointerEvents = 'auto';
     }
 
     // Khởi tạo stage
     stageConfig.stage = new Konva.Stage({
-        container: containerId,
-        width: stageWidth,
-        height: stageHeight,
+      container: containerId,
+      width: stageWidth,
+      height: stageHeight,
     });
 
     stageConfig.layer = new Konva.Layer();
     stageConfig.stage.add(stageConfig.layer);
 
-    stageConfig.lastPOsitionNode = {
-      x: -1,
-      y: -1
-    }
+    // stageConfig.lastPositionNode = {
+    //   x: -1,
+    //   y: -1
+    // }
 
     this.initializeStageEventListeners(stageConfig);
-    
+
     stageConfig.layer.draw();
-    console.log('Stage setup complete for:', containerId); 
+
   }
 
   public switchToStage(side: string) {
@@ -295,30 +338,30 @@ class TShirtDesigner {
     this.currentStage.selectedNode = null;
 
     for (const item in this.data) {
-        const domImage = document.getElementById(this.data[item].code + "Image") as HTMLImageElement;
-        if (this.data[item].code === side) {
-            this.currentStage = this.stages[item];
-            if (domImage){
-                this.updateStagePosition(this.currentStage, this.data[item], domImage);
-                console.log('Stage position updated for:', side);
-            }
-            if (this.currentStage.stage) {
-                const container = this.currentStage.stage.container();
-                container.style.display = 'block';
-                container.style.zIndex = '1';
-                container.style.pointerEvents = 'auto';
-                
-                if (this.currentStage.layer) {
-                  this.currentStage.layer.draw();
-                }
-            }
-            domImage.style.display = 'block';
-            domImage.style.zIndex = '0';
+      const domImage = document.getElementById(this.data[item].code + "Image") as HTMLImageElement;
+      if (this.data[item].code === side) {
+        this.currentStage = this.stages[item];
+        if (domImage) {
+          this.updateStagePosition(this.currentStage, this.data[item], domImage);
+
         }
-        else{
-            domImage.style.display = 'none';
-            domImage.style.zIndex = '0';
+        if (this.currentStage.stage) {
+          const container = this.currentStage.stage.container();
+          container.style.display = 'block';
+          container.style.zIndex = '1';
+          container.style.pointerEvents = 'auto';
+
+          if (this.currentStage.layer) {
+            this.currentStage.layer.draw();
+          }
         }
+        domImage.style.display = 'block';
+        domImage.style.zIndex = '0';
+      }
+      else {
+        domImage.style.display = 'none';
+        domImage.style.zIndex = '0';
+      }
     }
 
     // Reset selection state
@@ -328,25 +371,25 @@ class TShirtDesigner {
 
   }
 
-  private clearBorderNode(stageConfig: StageConfig){
+  private clearBorderNode(stageConfig: StageConfig) {
     stageConfig.selectedNode = null;
-    stageConfig.lastPOsitionNode = {
-      x: -1,
-      y: -1
-    }
+    // stageConfig.lastPositionNode = {
+    //   x: -1,
+    //   y: -1
+    // }
     document.querySelectorAll('.border-node').forEach(el => el.remove());
   }
 
   private showBorderNode(node: Konva.Node, stageConfig: StageConfig) {
     this.clearBorderNode(stageConfig);
-  
-    stageConfig.lastPOsitionNode = { x: node.x(), y: node.y() };
+
+    //stageConfig.lastPositionNode = { x: node.x(), y: node.y() };
     stageConfig.selectedNode = node;
-  
+
     const stageContainer = stageConfig.stage!.container();
     const rectDiv = document.createElement('div');
     document.body.appendChild(rectDiv);
-  
+
     const rotatePoint = (px: number, py: number, cx: number, cy: number, angle: number) => {
       const radians = (Math.PI / 180) * angle;
       const cos = Math.cos(radians);
@@ -357,7 +400,7 @@ class TShirtDesigner {
       const y = dx * sin + dy * cos + cy;
       return { x, y };
     };
-  
+
     const createIconWrapper = (iconClass: string, positionStyle: Partial<CSSStyleDeclaration>, onClick: (e: MouseEvent) => void): HTMLElement => {
       const wrapper = document.createElement('div');
       Object.assign(wrapper.style, {
@@ -376,40 +419,60 @@ class TShirtDesigner {
         zIndex: '11',
         ...positionStyle
       });
-      
-  
+
+
       const icon = document.createElement('i');
       icon.className = iconClass;
       icon.style.fontSize = '12px';
       icon.style.color = '#444';
-  
+
       wrapper.appendChild(icon);
       wrapper.onclick = onClick;
-  
+
       return wrapper;
     };
-  
+
     const deleteIcon = createIconWrapper('fas fa-times', { left: '-22px', top: '-22px' }, (e) => {
       e.stopPropagation();
       this.deleteSelectedNode(stageConfig);
       this.clearBorderNode(stageConfig);
     });
-  
+
     const copyIcon = createIconWrapper('fas fa-copy', { left: '-22px', bottom: '-22px' }, (e) => {
       e.stopPropagation();
       this.clipboard = stageConfig.selectedNode!.clone();
       const clone = this.clipboard!.clone();
+
       clone.x(node.x());
       clone.y(node.y());
+
+      if ((node.x() + node.offsetX() + 10) < stageConfig.stage!.width()) {
+        clone.x(node.x() + 10);
+      }
+      else if ((node.x() + node.offsetX() - 10) > 0) {
+        clone.x(node.x() - 10);
+      }
+
+      if ((node.y() + node.offsetY() + 10) < stageConfig.stage!.height()) {
+        clone.y(node.y() + 10);
+      }
+      else if ((node.y() + node.offsetY() - 10) > 0) {
+        clone.y(node.y() - 10);
+      }
+
+
+
       clone.draggable(true);
       stageConfig.layer!.add(clone);
       stageConfig.layer!.draw();
+
+      this.showBorderNode(clone, stageConfig);
       if (this.onSelectObject) this.onSelectObject(true);
     });
-  
-    const resizeIcon = createIconWrapper('fas fa-arrows-alt-h', { right: '-22px', bottom: '-22px' }, () => {});
+
+    const resizeIcon = createIconWrapper('fas fa-arrows-alt-h', { right: '-22px', bottom: '-22px' }, () => { });
     resizeIcon.firstElementChild!.setAttribute('style', 'transform: rotate(45deg); font-size: 12px; color: #444;');
-  
+
     resizeIcon.addEventListener('mousedown', (e: MouseEvent) => {
       e.stopPropagation();
       const stage = stageConfig.stage!;
@@ -420,34 +483,53 @@ class TShirtDesigner {
       const initialHeight = node.height();
 
       stageConfig.borderDiv!.style.display = 'block';
-  
+
       const onMouseMove = (moveEvent: MouseEvent) => {
         const deltaX = moveEvent.clientX - startX;
         const deltaY = moveEvent.clientY - startY;
-        node.width(initialWidth + deltaX);
-        node.height(initialHeight + deltaY);
-        const bounds = node.getClientRect();
-        if(bounds.x < stage.x() || bounds.x == stage.x()){
-          node.width((node.offsetX() - stage.x()) * 2);
+
+        const clone = node.clone();
+        clone.width(initialWidth + deltaX);
+        clone.height(initialHeight + deltaY);
+        const cloneBounds = clone.getClientRect();
+        if (node instanceof Konva.Image) {
+          if (cloneBounds.x >= stage.x() && cloneBounds.x + cloneBounds.width <= stage.width() && cloneBounds.y >= stage.y() && cloneBounds.y + cloneBounds.height <= stage.height()) {
+            node.width(initialWidth + deltaX);
+            node.height(initialHeight + deltaY);
+          }
+          // else{
+          //   const bounds = node.getClientRect();
+          //   if(bounds.x < stage.x()){
+          //     node.width((node.x() - stage.x()) * 2);
+          //   }
+
+          //   if(bounds.x + bounds.width > stage.width()){
+          //     node.width((stage.width() - (stage.width() - node.x())) * 2);
+          //   }
+
+          //   if(bounds.y <= stage.y()){
+          //     node.height((node.y() - stage.y()) * 2);
+          //   }
+          //   if(bounds.y + bounds.height > stage.height()){
+          //     node.height((stage.height() - (stage.height() - node.y())) * 2);
+          //   }
+          // }
         }
-        
-        if(bounds.x + bounds.width > stage.width() || bounds.x + bounds.width == stage.width()){
-          node.width((stage.width() - (stage.width() - node.offsetX())) * 2);
+        else if (node instanceof Konva.Text) {
+          if (cloneBounds.x >= stage.x() && cloneBounds.x + cloneBounds.width <= stage.width() && cloneBounds.y >= stage.y() && cloneBounds.y + cloneBounds.height <= stage.height()) {
+            node.fontSize(initialWidth + deltaX);
+          }
+          else {
+
+          }
         }
 
-        if(bounds.y < stage.y() || bounds.y == stage.y()){
-          node.height((node.offsetY() - stage.y()) * 2);
-        }
-        if(bounds.y + bounds.height > stage.height() || bounds.y + bounds.height == stage.height()){
-          node.height((stage.height() - (stage.height() - node.offsetY())) * 2);
-        }
-
-        if (bounds.width > stage.width()) {
-          node.width(stage.width() - 1);
-        }
-        if (bounds.height > stage.height()) {
-          node.height(stage.height() - 1);
-        }
+        // if (bounds.width > stage.width()) {
+        //   node.width(stage.width() - 1);
+        // }
+        // if (bounds.height > stage.height()) {
+        //   node.height(stage.height() - 1);
+        // }
         node.offsetX(node.width() / 2);
         node.offsetY(node.height() / 2);
         node.setAttr('rotationOfLastWidth', node.width());
@@ -455,7 +537,7 @@ class TShirtDesigner {
         updateBorderDiv();
         layer.draw();
       };
-  
+
       const onMouseUp = () => {
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
@@ -465,11 +547,11 @@ class TShirtDesigner {
 
         stageConfig.borderDiv!.style.pointerEvents = 'none';
       };
-  
+
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp);
     });
-  
+
     const rotateIcon = createIconWrapper('fas fa-redo', {}, (/*e*/) => {
       // e.stopPropagation();
       // node.rotation(node.rotation() + 15);
@@ -477,70 +559,98 @@ class TShirtDesigner {
       // updateBorderDiv();
       // stageConfig.layer!.draw();
     });
-    
+
 
     rotateIcon.addEventListener('mousedown', (e: MouseEvent) => {
       e.stopPropagation();
       const stage = stageConfig.stage!;
       const rect = stage.container().getBoundingClientRect();
-    
+
       // Tâm của node (trên màn hình)
       const centerX = rect.left + node.x();
       const centerY = rect.top + node.y();
-    
+
       // Góc giữa chuột và tâm khi bắt đầu
       const startAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
       const initialRotation = node.rotation();
 
       stageConfig.borderDiv!.style.display = 'block';
-    
+
       const onMouseMove = (moveEvent: MouseEvent) => {
         const currentAngle = Math.atan2(moveEvent.clientY - centerY, moveEvent.clientX - centerX);
         const deltaAngle = (currentAngle - startAngle) * (180 / Math.PI);
-    
+
         const newRotation = initialRotation + deltaAngle;
         node.rotation(newRotation);
 
-        node.width(parseFloat(node.getAttr('rotationOfLastWidth')));
-        node.height(parseFloat(node.getAttr('rotationOfLastHeight')));
 
-       const bounds = node.getClientRect();
-        if(bounds.x < stage.x() || bounds.x == stage.x()){
-          const scale = node.offsetX()/ (node.offsetX() - bounds.x);
-          node.width(node.width() * scale - 1);
-          node.height(node.height() * scale - 1);
+
+        // const scale = parseFloat(node.getAttr('rotationOfLastHeight')) / parseFloat(node.getAttr('rotationOfLastWidth'));
+
+        const bounds = node.getClientRect();
+        const defaultWidth = parseFloat(node.getAttr('rotationOfLastWidth'));
+        const defaultHeight = parseFloat(node.getAttr('rotationOfLastHeight'));
+        const tempNode = node.clone();
+        tempNode.width(defaultWidth);
+        tempNode.height(defaultHeight);
+        const tempBounds = tempNode.getClientRect();
+        if (tempBounds.x >= stage.x() && tempBounds.x + tempBounds.width <= stage.width() && tempBounds.y >= stage.y() && tempBounds.y + tempBounds.height <= stage.height()) {
+          console.log('dung chuan');
+          node.width(defaultWidth);
+          node.height(defaultHeight);
         }
-        
-        if(bounds.x + bounds.width > stage.width() || bounds.x + bounds.width == stage.width()){
-          // const oldWidth = node.width();
-          // node.width((stage.width() - (stage.width() - node.offsetX())) * 2);
-          // const scale = node.width() / oldWidth;
-          // node.height(node.height() * scale);
+        else {
+          if (bounds.x < 0) {
+            const scale = node.x() / (node.x() - bounds.x)
+            node.width(node.width() * scale);
+            node.height(node.height() * scale);
+          }
 
-          const scale = (stage.width() - (stage.width() -  node.offsetX()))/ ( bounds.x - node.offsetX());
-          node.width(node.width() * scale - 1);
-          node.height(node.height() * scale - 1);
+          if (bounds.x + bounds.width > stage.width()) {
+            // Tính khoảng cách dư thừa giữa phần bên phải của node và stage
+            const excessWidth = (bounds.x + bounds.width) - stage.width();
+
+            // Tính tỷ lệ thu nhỏ để node nằm vừa trong stage
+            const scale = (bounds.width - excessWidth) / bounds.width;
+
+            // Áp dụng scale để thay đổi kích thước node
+            node.width(node.width() * scale);
+            node.height(node.height() * scale);
+          }
+
+          if (bounds.y < 0) {
+            // Tính tỷ lệ thu nhỏ cho chiều dọc
+            const scale = node.y() / (node.y() - bounds.y);
+
+            // Áp dụng scale cho chiều rộng và chiều cao của node
+            node.width(node.width() * scale);
+            node.height(node.height() * scale);
+          }
+
+          // Kiểm tra nếu phần dưới của node vượt quá chiều cao của stage
+          if (bounds.y + bounds.height > stage.height()) {
+            // Tính khoảng cách dư thừa giữa phần dưới của node và stage
+            const excessHeight = (bounds.y + bounds.height) - stage.height();
+
+            // Tính tỷ lệ thu nhỏ cho chiều dọc
+            const scale = (bounds.height - excessHeight) / bounds.height;
+
+            // Áp dụng scale cho chiều rộng và chiều cao của node
+            node.width(node.width() * scale);
+            node.height(node.height() * scale);
+          }
         }
 
-        // while(bounds.y < stage.y() || bounds.y == stage.y()){
-        //   const oldHeight = node.height();
-        //   node.height((node.offsetY() - stage.y()) * 2);
-        //   const scale = node.height() / oldHeight;
-        //   node.width(node.width() * scale);
-        // }
-        // while(bounds.y + bounds.height > stage.height() || bounds.y + bounds.height == stage.height()){
-        //   const oldHeight = node.height();
-        //   node.height((stage.height() - (stage.height() - node.offsetY())) * 2);
-        //   const scale = node.height() / oldHeight;
-        //   node.width(node.width() * scale);
-        // }
 
-
-        rotateIcon.style.transform = `rotate(${newRotation}deg)`;
+        node.offsetX(node.width() / 2);
+        node.offsetY(node.height() / 2);
         updateBorderDiv();
         stageConfig.layer!.draw();
+
+        rotateIcon.style.transform = `rotate(${newRotation}deg)`;
+
       };
-    
+
       const onMouseUp = () => {
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
@@ -549,34 +659,37 @@ class TShirtDesigner {
         resizeIcon.style.pointerEvents = 'none';
 
         stageConfig.borderDiv!.style.pointerEvents = 'none';
+
+        node.setAttr('rotationOfLastWidth', node.width());
+        node.setAttr('rotationOfLastHeight', node.height());
       };
-    
+
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp);
     });
-    
-    
-  
+
+
+
     const updateBorderDiv = () => {
       const bounds = node.getClientRect();
       const rotation = node.rotation();
       const stageRect = stageContainer.getBoundingClientRect();
-  
+
       rectDiv.className = 'border-node';
       rectDiv.style.position = 'fixed';
-      rectDiv.style.border = '2px dashed grey';
+      rectDiv.style.border = '2px dashed black';
       rectDiv.style.pointerEvents = 'none';
       rectDiv.style.zIndex = '10';
-      rectDiv.style.left = `${bounds.x + stageRect.x}px`;
-      rectDiv.style.top = `${bounds.y + stageRect.y}px`;
-      rectDiv.style.width = `${bounds.width - 1}px`;
-      rectDiv.style.height = `${bounds.height - 1}px`;
-  
+      rectDiv.style.left = `${bounds.x + stageRect.x - 0.5}px`;
+      rectDiv.style.top = `${bounds.y + stageRect.y + 0.5}px`;
+      rectDiv.style.width = `${bounds.width - 2}px`;
+      rectDiv.style.height = `${bounds.height - 3}px`;
+
       // Tính vị trí icon xoay
-      const centerX = node.x() ;
-      const centerY = node.y() ;
+      const centerX = node.x();
+      const centerY = node.y();
       const iconOffsetX = node.x() - rotateIcon.offsetWidth / 2;
-      const iconOffsetY = node.y()-100;
+      const iconOffsetY = node.y() - 100;
       const { x: iconX, y: iconY } = rotatePoint(
         iconOffsetX,
         iconOffsetY,
@@ -584,24 +697,24 @@ class TShirtDesigner {
         centerY,
         rotation
       );
-  
+
       rotateIcon.style.position = 'fixed';
       rotateIcon.style.left = `${iconX + stageRect.x}px`;
-      rotateIcon.style.top = `${iconY +stageRect.y}px`;
+      rotateIcon.style.top = `${iconY + stageRect.y}px`;
       rotateIcon.style.transform = `rotate(${rotation}deg)`;
     };
-  
+
     // // Lắng nghe xoay để update border và icon
     // node.on('transform', () => {
     //   updateBorderDiv();
     // });
-  
+
     // Append icons
     rectDiv.appendChild(deleteIcon);
     rectDiv.appendChild(copyIcon);
     rectDiv.appendChild(resizeIcon);
     rectDiv.appendChild(rotateIcon);
-  
+
     updateBorderDiv();
     return rectDiv;
   }
@@ -615,66 +728,83 @@ class TShirtDesigner {
 
     // Xử lý drag events
     layer.on('dragstart', () => {
-        if (stageConfig.borderDiv) {
-            stageConfig.borderDiv.style.display = 'block';
-        }
+      if (stageConfig.borderDiv) {
+        stageConfig.borderDiv.style.display = 'block';
+      }
     });
 
     layer.on('dragend', () => {
-        if (stageConfig.borderDiv) {
-            stageConfig.borderDiv.style.display = 'none';
-        }
-        
+      if (stageConfig.borderDiv) {
+        stageConfig.borderDiv.style.display = 'none';
+      }
+
     });
 
     layer.on('dragmove', (e) => {
-        const boud = e.target.getClientRect(); 
-        const node = e.target;
-        if (boud.x > 0 && boud.y > 0 && (boud.x + boud.width) < stage.width() && (boud.y + boud.height) < stage.height()) {
-          const pos = node.position();
-          this.showBorderNode(node, stageConfig);
-          stageConfig.lastPOsitionNode!.x = pos.x;
-          stageConfig.lastPOsitionNode!.y = pos.y;
-        }
-        else{
-          if (stageConfig.lastPOsitionNode?.x != -1 && stageConfig.lastPOsitionNode?.y != -1) {
-            const newX = stageConfig.lastPOsitionNode?.x ?? 0;
-            const newY = stageConfig.lastPOsitionNode?.y ?? 0;
-            node.x(newX);
-            node.y(newY);
-          }
-        }
-        node.offsetX(node.width() / 2); 
-        node.offsetY(node.height() / 2);
-
-        console.log('x', node.x(), 'y', node.y(), 'w', node.width(), 'h', node.height());
+      const node = e.target;
+      node.setAttr('lastPositionX', node.x());
+      node.setAttr('lastPositionY', node.y());
+      node.offsetX(node.width() / 2);
+      node.offsetY(node.height() / 2);
+      this.showBorderNode(node, stageConfig);
     });
 
     // Xử lý selection
-    stage.on('click tap', (e) => {
-        if (e.target === stage) {
-            stageConfig.selectedNode = null;
-            if (this.onSelectObject) {
-                this.onSelectObject(false);
-            }
-            if (this.currentStage.borderDiv) {
-              
-              this.currentStage.borderDiv.style.display = 'none';
-            }
-            this.clearBorderNode(this.currentStage);
-            
-            return;
-        }
+    // stage.on('click tap', (e) => {
+    //     if (e.target === stage) {
+    //         stageConfig.selectedNode = null;
+    //         if (this.onSelectObject) {
+    //             this.onSelectObject(false);
+    //         }
+    //         if (this.currentStage.borderDiv) {
 
+    //           this.currentStage.borderDiv.style.display = 'none';
+    //         }
+    //         this.clearBorderNode(this.currentStage);
+
+    //         return;
+    //     }
+
+    //     const clickedNode = e.target;
+    //     this.showBorderNode(clickedNode, stageConfig);
+    //     if (this.onSelectObject) {
+    //         this.onSelectObject(true);
+    //     }
+    // });    
+
+
+    stage.on('click tap', (e) => {
+      if (e.target === stage) {
+        stageConfig.selectedNode = null;
+        if (this.onSelectObject) {
+          this.onSelectObject(false);
+        }
+        if (this.currentStage.borderDiv) {
+          this.currentStage.borderDiv.style.display = 'none';
+        }
+        this.clearBorderNode(this.currentStage);
+      } else {
         const clickedNode = e.target;
         this.showBorderNode(clickedNode, stageConfig);
         if (this.onSelectObject) {
-            this.onSelectObject(true);
+          this.onSelectObject(true);
         }
-        
+      }
     });
-    
-    
+
+    window.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (!(target instanceof HTMLCanvasElement) || !target.closest('.konvajs-content')) {
+        stageConfig.selectedNode = null;
+        if (this.onSelectObject) {
+          this.onSelectObject(false);
+        }
+        if (this.currentStage.borderDiv) {
+          this.currentStage.borderDiv.style.display = 'none';
+        }
+        this.clearBorderNode(this.currentStage);
+      }
+    });
   }
 
   private deleteSelectedNode(stageConfig: StageConfig) {
@@ -687,8 +817,8 @@ class TShirtDesigner {
 
   public changeBackgroundColor(color: string) {
     this.backgroundColor = color;
-    for(const item in this.data){
-        $('#' + this.data[item].code +'Image').css('background-color', color);
+    for (const item in this.data) {
+      $('#' + this.data[item].code + 'Image').css('background-color', color);
     }
   }
 
@@ -697,15 +827,15 @@ class TShirtDesigner {
       console.error('Current stage or layer is not initialized');
       return;
     }
-
+    this.clearBorderNode(this.currentStage);
     // Cập nhật kích thước stage trước khi thêm hình ảnh
     let image = null;
     let indexItem = -1.0;
-    for (const item in this.data){
-        if (this.currentStage == this.stages[item]){
-            image = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
-            indexItem = parseFloat(item);
-          }
+    for (const item in this.data) {
+      if (this.currentStage == this.stages[item]) {
+        image = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
+        indexItem = parseFloat(item);
+      }
     }
     if (image) {
       this.updateStagePosition(this.currentStage, this.data[indexItem], image);
@@ -718,20 +848,20 @@ class TShirtDesigner {
         // Đảm bảo stage có kích thước hợp lệ
         const stageWidth = this.currentStage.stage!.width();
         const stageHeight = this.currentStage.stage!.height();
-        
+
         if (stageWidth <= 0 || stageHeight <= 0) {
           console.error('Invalid stage dimensions:', stageWidth, stageHeight);
           return;
         }
 
-        const maxWidth = stageWidth * 0.8;  
+        const maxWidth = stageWidth * 0.8;
         const maxHeight = stageHeight * 0.8;
-        
+
         let scale = 1;
         if (img.width > maxWidth || img.height > maxHeight) {
           scale = Math.min(maxWidth / img.width, maxHeight / img.height);
         }
-        
+
         const x = stageWidth / 2;
         const y = stageHeight / 2;
 
@@ -748,7 +878,39 @@ class TShirtDesigner {
         imgNode.offsetY(imgNode.height() / 2);
 
         imgNode.setAttr('rotationOfLastWidth', imgNode.width());
-        imgNode.setAttr('rotationOfLastHeight', imgNode.height());
+        imgNode.setAttr('rotationOfLastHeight', imgNode.height());//lastPositionNode
+
+        imgNode.setAttr('lastPositionX', imgNode.x());
+        imgNode.setAttr('lastPositionY', imgNode.y());
+
+        imgNode.dragBoundFunc(function (pos) {
+          const stage = imgNode.getStage();
+          const stageWidth = stage!.width();
+          const stageHeight = stage!.height();
+
+          const tempNode = imgNode.clone();
+          tempNode.position(pos);
+          const bounds = tempNode.getClientRect();
+
+          let newX = pos.x;
+          let newY = pos.y;
+
+          if (bounds.x < 0) {
+            newX = pos.x - bounds.x;
+          }
+          if (bounds.x + bounds.width > stageWidth) {
+            newX = pos.x - (bounds.x + bounds.width - stageWidth);
+          }
+          if (bounds.y < 0) {
+            newY = pos.y - bounds.y;
+          }
+          if (bounds.y + bounds.height > stageHeight) {
+            newY = pos.y - (bounds.y + bounds.height - stageHeight);
+          }
+
+          return { x: newX, y: newY };
+        });
+
 
 
         this.currentStage.layer!.add(imgNode);
@@ -764,7 +926,9 @@ class TShirtDesigner {
       console.error('Current stage or layer is not initialized');
       return;
     }
-
+    this.clearBorderNode(this.currentStage);
+    //const stageWidth = this.currentStage.stage!.width();
+    //const stageHeight = this.currentStage.stage!.height();
     const textNode = new Konva.Text({
       text: text,
       x: this.currentStage.stage.width() / 2,
@@ -785,6 +949,37 @@ class TShirtDesigner {
 
     textNode.setAttr('rotationOfLastWidth', textNode.width());
     textNode.setAttr('rotationOfLastHeight', textNode.height());
+
+    textNode.setAttr('lastPositionX', textNode.x());
+    textNode.setAttr('lastPositionY', textNode.y());
+
+    textNode.dragBoundFunc(function (pos) {
+      const stage = textNode.getStage();
+      const stageWidth = stage!.width();
+      const stageHeight = stage!.height();
+
+      const tempNode = textNode.clone();
+      tempNode.position(pos);
+      const bounds = tempNode.getClientRect();
+
+      let newX = pos.x;
+      let newY = pos.y;
+
+      if (bounds.x < 0) {
+        newX = pos.x - bounds.x;
+      }
+      if (bounds.x + bounds.width > stageWidth) {
+        newX = pos.x - (bounds.x + bounds.width - stageWidth);
+      }
+      if (bounds.y < 0) {
+        newY = pos.y - bounds.y;
+      }
+      if (bounds.y + bounds.height > stageHeight) {
+        newY = pos.y - (bounds.y + bounds.height - stageHeight);
+      }
+
+      return { x: newX, y: newY };
+    });
 
     this.currentStage.layer.add(textNode);
     this.currentStage.layer.draw();
@@ -830,12 +1025,12 @@ class TShirtDesigner {
       const canvas = document.createElement('canvas');
       canvas.width = image.naturalWidth;
       canvas.height = image.naturalHeight;
-  
+
       const ctx = canvas.getContext('2d');
       if (!ctx) return reject(new Error('Canvas context not available'));
-  
+
       ctx.drawImage(image, 0, 0);
-  
+
       canvas.toBlob((blob) => {
         if (blob) {
           const file = new File([blob], fileName, { type: blob.type });
@@ -852,18 +1047,18 @@ class TShirtDesigner {
     const arr = base64.split(',');
     const mimeMatch = arr[0].match(/:(.*?);/);
     const mime = mimeMatch ? mimeMatch[1] : 'image/png';
-  
-    const bstr = atob(arr[1]); 
+
+    const bstr = atob(arr[1]);
     const n = bstr.length;
     const u8arr = new Uint8Array(n);
-  
+
     for (let i = 0; i < n; i++) {
       u8arr[i] = bstr.charCodeAt(i);
     }
-  
+
     return new File([u8arr], fileName, { type: mime });
   }
-  
+
 
   public async exportDesignToJson(): Promise<string> {
     const getStageInfo = async (stageConfig: StageConfig) => {
@@ -877,8 +1072,7 @@ class TShirtDesigner {
             const file = this.base64ToFile(imageElement.src, 'image.png');
             try {
               const response = await uploadImage(file);
-              console.log('chay chay chay');
-              console.log(response);
+
               design.push({
                 type: 'image',
                 src: response.file.cloudinary_url,
@@ -923,11 +1117,10 @@ class TShirtDesigner {
           }
         }
       }
-      console.log('buggggg');
-      console.log(design);
+
       return design;
     };
-    
+
     const designs: any[] = [];
 
     for (const item in this.stages) {
@@ -957,7 +1150,7 @@ class TShirtDesigner {
       colorData: Object.fromEntries(this.colorData),
       faces: this.data,
       backgroundColor: this.backgroundColor,
-      designs : designs,
+      designs: designs,
     };
 
     return JSON.stringify(designInfo, null, 2);
@@ -967,17 +1160,17 @@ class TShirtDesigner {
     if (!stageConfig.stage || !stageConfig.layer) return '';
 
 
-    for(const item in this.data){
-        const stageContainerDom = document.getElementById('preview-' + this.data[item].code) as HTMLImageElement;
-        const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
-        if (side == this.data[item].code){
-            imageDom.style.display = 'block';
-            if (stageContainerDom) stageContainerDom.style.display = 'block';
-        }
-        else{
-            imageDom.style.display = 'none';
-            if (stageContainerDom) stageContainerDom.style.display = 'none';
-        }
+    for (const item in this.data) {
+      const stageContainerDom = document.getElementById('preview-' + this.data[item].code) as HTMLImageElement;
+      const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
+      if (side == this.data[item].code) {
+        imageDom.style.display = 'block';
+        if (stageContainerDom) stageContainerDom.style.display = 'block';
+      }
+      else {
+        imageDom.style.display = 'none';
+        if (stageContainerDom) stageContainerDom.style.display = 'none';
+      }
     }
 
     const tempCanvas = document.createElement('canvas');
@@ -1008,7 +1201,7 @@ class TShirtDesigner {
     const stageCanvas = document.createElement('canvas');
     // stageCanvas.width = 1000; 
     // stageCanvas.height = 1000;
-    stageCanvas.width = stageWidth; 
+    stageCanvas.width = stageWidth;
     stageCanvas.height = stageHeight;
     const stageCtx = stageCanvas.getContext('2d');
     // if (stageCtx) {
@@ -1023,68 +1216,68 @@ class TShirtDesigner {
 
     const nodes = Array.from(stageConfig.layer.children);
     for (const node of nodes) {
-        if (node instanceof Konva.Transformer) continue;
+      if (node instanceof Konva.Transformer) continue;
 
-        if (node instanceof Konva.Text) {
-          stageCtx.save();
+      if (node instanceof Konva.Text) {
+        stageCtx.save();
 
-          // Thiết lập font như Konva
-          stageCtx.font = `${node.fontStyle()} ${node.attrs.fontWeight || 'normal'} ${node.fontSize()}px ${node.fontFamily()}`;
-          stageCtx.fillStyle = node.fill() as string;
-          stageCtx.textAlign = node.align() as CanvasTextAlign;
-          stageCtx.textBaseline = 'middle'; // Cho căn theo chiều dọc giống Konva (giữa baseline)
-          
+        // Thiết lập font như Konva
+        stageCtx.font = `${node.fontStyle()} ${node.attrs.fontWeight || 'normal'} ${node.fontSize()}px ${node.fontFamily()}`;
+        stageCtx.fillStyle = node.fill() as string;
+        stageCtx.textAlign = node.align() as CanvasTextAlign;
+        stageCtx.textBaseline = 'middle'; // Cho căn theo chiều dọc giống Konva (giữa baseline)
+
+        const x = node.x();
+        const y = node.y();
+        //const offsetX = node.offsetX();
+        //const offsetY = node.offsetY();
+
+        stageCtx.translate(x, y);
+        stageCtx.rotate(node.rotation() * Math.PI / 180);
+        stageCtx.scale(node.scaleX(), node.scaleY());
+
+        // Vẽ chữ tại tâm
+        stageCtx.fillText(node.text(), 0, 0);
+
+        stageCtx.restore();
+
+      } else if (node instanceof Konva.Image) {
+        const nodeImage = node.image();
+        if (nodeImage) {
           const x = node.x();
           const y = node.y();
-          //const offsetX = node.offsetX();
-          //const offsetY = node.offsetY();
-          
+          const rotation = node.rotation();
+          const scaleX = node.scaleX();
+          const scaleY = node.scaleY();
+          const width = node.width();
+          const height = node.height();
+          const offsetX = node.offsetX();
+          const offsetY = node.offsetY();
+
+          stageCtx.save();
+
+          // Dịch gốc tọa độ về vị trí của node
           stageCtx.translate(x, y);
-          stageCtx.rotate(node.rotation() * Math.PI / 180);
-          stageCtx.scale(node.scaleX(), node.scaleY());
-          
-          // Vẽ chữ tại tâm
-          stageCtx.fillText(node.text(), 0, 0);
-          
+
+          // Xoay theo góc node (đổi sang radian)
+          stageCtx.rotate((rotation * Math.PI) / 180);
+
+          // Scale node
+          stageCtx.scale(scaleX, scaleY);
+
+          // Vẽ ảnh, trừ offset để căn theo tâm
+          stageCtx.drawImage(
+            nodeImage,
+            -offsetX,
+            -offsetY,
+            width,
+            height
+          );
+
           stageCtx.restore();
-          
-        } else if (node instanceof Konva.Image) {
-          const nodeImage = node.image();
-          if (nodeImage) {
-            const x = node.x();
-            const y = node.y();
-            const rotation = node.rotation();
-            const scaleX = node.scaleX();
-            const scaleY = node.scaleY();
-            const width = node.width();
-            const height = node.height();
-            const offsetX = node.offsetX();
-            const offsetY = node.offsetY();
-          
-            stageCtx.save();
-          
-            // Dịch gốc tọa độ về vị trí của node
-            stageCtx.translate(x, y);
-          
-            // Xoay theo góc node (đổi sang radian)
-            stageCtx.rotate((rotation * Math.PI) / 180);
-          
-            // Scale node
-            stageCtx.scale(scaleX, scaleY);
-          
-            // Vẽ ảnh, trừ offset để căn theo tâm
-            stageCtx.drawImage(
-              nodeImage,
-              -offsetX,
-              -offsetY,
-              width,
-              height
-            );
-          
-            stageCtx.restore();
-          }
-          
         }
+
+      }
     }
 
     if (nodes.length > 0) {
@@ -1092,18 +1285,18 @@ class TShirtDesigner {
       const finalHeight = stageHeight * scale;
 
       ctx.drawImage(
-          stageCanvas,
-          0, 0, finalWidth, finalHeight, 
-          offsetX, offsetY, stageWidth * scaleX, stageHeight * scaleY
+        stageCanvas,
+        0, 0, finalWidth, finalHeight,
+        offsetX, offsetY, stageWidth * scaleX, stageHeight * scaleY
       );
     }
 
     return tempCanvas.toDataURL('image/png');
-};
+  };
 
   public async exportImages(type: 'image' | 'json' = 'image') {
     if (type === 'json') {
-      console.log('Exporting design to JSON');
+
       const jsonContent = await this.exportDesignToJson();
       const blob = new Blob([jsonContent], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -1116,34 +1309,33 @@ class TShirtDesigner {
       URL.revokeObjectURL(url);
       return;
     }
-    console.log('Exporting design to image');
+
 
     const downloadImage = (dataURL: string, filename: string) => {
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = dataURL;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = dataURL;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     };
-    
-    for (const item in this.data){
-        const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
-        const itemDataURL = await this.exportStage(this.stages[item], imageDom, this.data[item].code);
-        if (itemDataURL){
-            downloadImage(itemDataURL, this.data[item].name + '.png');
-        }
+
+    for (const item in this.data) {
+      const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
+      const itemDataURL = await this.exportStage(this.stages[item], imageDom, this.data[item].code);
+      if (itemDataURL) {
+        downloadImage(itemDataURL, this.data[item].name + '.png');
+      }
     }
   }
 
-  public async importDesignFromJson(/*jsonContent: string*/designs:object[][]) {
+  public async importDesignFromJson(/*jsonContent: string*/designs: object[][]) {
     try {
       // const designInfo: DesignInfo = JSON.parse(jsonContent) as DesignInfo;
       // console.log(designInfo);
-  
+
       //this.changeBackgroundColor(designInfo.backgroundColor);
-      
-      const importToStage = async (stageConfig: StageConfig, data:  object[]) => {
+      const importToStage = async (stageConfig: StageConfig, data: object[]) => {
         if (!stageConfig.stage || !stageConfig.layer) {
           console.error('Stage or layer not initialized');
           return;
@@ -1166,7 +1358,7 @@ class TShirtDesigner {
               img.onerror = reject;
               img.src = (obj as any).src;
             });
-        
+
             const imgNode = new Konva.Image({
               image: img,
               x: (obj as any).x,
@@ -1180,7 +1372,43 @@ class TShirtDesigner {
               offsetY: (obj as any).offset_y,
               draggable: true,
             });
-        
+
+            imgNode.setAttr('lastPositionX', imgNode.x());
+            imgNode.setAttr('lastPositionY', imgNode.y());
+            imgNode.setAttr('rotationOfLastWidth', imgNode.width());
+            imgNode.setAttr('rotationOfLastHeight', imgNode.height());
+            //const stage = stageConfig.stage as Konva.Stage;
+            imgNode.dragBoundFunc(function (pos) {
+              const stage = imgNode.getStage();
+              const stageWidth = stage!.width();
+              const stageHeight = stage!.height();
+
+              const tempNode = imgNode.clone();
+              tempNode.position(pos);
+              const bounds = tempNode.getClientRect();
+
+              let newX = pos.x;
+              let newY = pos.y;
+
+              if (bounds.x < 0) {
+                newX = pos.x - bounds.x;
+              }
+              if (bounds.x + bounds.width > stageWidth) {
+                newX = pos.x - (bounds.x + bounds.width - stageWidth);
+              }
+              if (bounds.y < 0) {
+                newY = pos.y - bounds.y;
+              }
+              if (bounds.y + bounds.height > stageHeight) {
+                newY = pos.y - (bounds.y + bounds.height - stageHeight);
+              }
+
+              return { x: newX, y: newY };
+            });
+
+
+
+
             stageConfig.layer.add(imgNode);
           } else if ((obj as any).type == 'text') {
             const textNode = new Konva.Text({
@@ -1200,26 +1428,63 @@ class TShirtDesigner {
               offsetY: (obj as any).offset_y,
               draggable: true,
             });
-        
+
+            textNode.setAttr('lastPositionX', textNode.x());
+            textNode.setAttr('lastPositionY', textNode.y());
+            textNode.setAttr('rotationOfLastWidth', textNode.width());
+            textNode.setAttr('rotationOfLastHeight', textNode.height());
+
+            //const stageWidth = stageConfig.stage.width();
+            //const stageHeight = stageConfig.stage.height();
+
+            textNode.dragBoundFunc(function (pos) {
+              const stage = textNode.getStage();
+              const stageWidth = stage!.width();
+              const stageHeight = stage!.height();
+
+              const tempNode = textNode.clone();
+              tempNode.position(pos);
+              const bounds = tempNode.getClientRect();
+
+              let newX = pos.x;
+              let newY = pos.y;
+
+              if (bounds.x < 0) {
+                newX = pos.x - bounds.x;
+              }
+              if (bounds.x + bounds.width > stageWidth) {
+                newX = pos.x - (bounds.x + bounds.width - stageWidth);
+              }
+              if (bounds.y < 0) {
+                newY = pos.y - bounds.y;
+              }
+              if (bounds.y + bounds.height > stageHeight) {
+                newY = pos.y - (bounds.y + bounds.height - stageHeight);
+              }
+
+              return { x: newX, y: newY };
+            });
+
             stageConfig.layer.add(textNode);
           }
         }
-        
+
 
         stageConfig.layer.draw();
       };
 
-      for(const item in this.data){
+      for (const item in this.data) {
+
         const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
-        if (imageDom){
-            this.updateStagePosition(this.stages[item], this.data[item], imageDom);
+        if (imageDom) {
+          this.updateStagePosition(this.stages[item], this.data[item], imageDom);
         }
         await importToStage(this.stages[item], designs[item]);
       }
-    
-      for(const item in this.data){
-        if (this.stages[item] == this.currentStage){
-            this.switchToStage(this.data[item].code)
+
+      for (const item in this.data) {
+        if (this.stages[item] == this.currentStage) {
+          this.switchToStage(this.data[item].code)
         }
       }
 
@@ -1231,25 +1496,25 @@ class TShirtDesigner {
 
   public copySelectedNode() {
     if (!this.currentStage.selectedNode) return;
-    
+
     this.clipboard = this.currentStage.selectedNode.clone();
-    console.log('Node copied to clipboard');
+
   }
 
   public pasteNode() {
     if (!this.clipboard || !this.currentStage.layer) return;
 
     const clone = this.clipboard.clone();
-    
+
     clone.x(clone.x() + 20);
     clone.y(clone.y() + 20);
-    
+
     clone.draggable(true);
-    
+
     this.currentStage.layer.add(clone);
     this.currentStage.layer.draw();
-    
-    console.log('Node pasted from clipboard');
+
+
   }
 }
 

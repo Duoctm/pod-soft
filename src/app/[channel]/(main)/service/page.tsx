@@ -90,7 +90,7 @@ const services = [
 	},
 	{
 		title: "Silk Screening",
-		image: "/images/screen.webp",
+		image: "/images/silk_screening.jpg",
 		features: [
 			"Facility for any sized order",
 			"High-end M&R 8 and 12 head machines",
@@ -108,7 +108,7 @@ const services = [
 	},
 	{
 		title: "Hard Goods",
-		image: "/images/sublimation.webp",
+		image: "/images/hard_goods.jpg",
 		features: ["Premium drinkware options", "Mimaki and Grando machines", "Professional finishing"],
 	},
 	{
@@ -118,7 +118,7 @@ const services = [
 	},
 	{
 		title: "Canvas Print",
-		image: "/images/branding-slide-1.webp",
+		image: "/images/canvas.png",
 		features: ["Latex HP printers", "Vibrant colors", "Durable materials"],
 	},
 ];

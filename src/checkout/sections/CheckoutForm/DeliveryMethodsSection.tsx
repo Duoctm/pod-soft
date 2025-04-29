@@ -8,26 +8,7 @@ import { type User } from "@/checkout/hooks/useUserServer";
 import { type Checkout } from "@/checkout/graphql";
 import { useFormContext } from "@/checkout/hooks/useForm";
 import { updateDeliveryMethod } from "@/checkout/hooks/checkoutDeliveryMethodUpdate";
-// CheckoutDeliveryMethodUpdateMutationVariables
-
-export interface Address {
-	firstName: string;
-	lastName: string;
-	streetAddress1: string;
-	streetAddress2: string | null;
-	city: string;
-	countryArea: string;
-	zipCode: string;
-	country: string;
-	phoneNumber: string;
-	company: string | null;
-}
-
-interface FormValues {
-	shippingAddress: Address;
-	billingAddress: Address;
-	useShippingAsBilling: boolean;
-}
+import { type FormValues } from "@/checkout/lib/utils/type";
 
 type DeliveryMethodsProps = {
 	user: User | null;
@@ -35,13 +16,13 @@ type DeliveryMethodsProps = {
 	handleSubmitAddress: (
 		values: FormValues,
 		{ setSubmitting, setFieldError }: FormikHelpers<FormValues>,
+		inAddressForm: boolean,
 	) => Promise<void>;
 };
 
 export const DeliveryMethods = ({ user, checkout, handleSubmitAddress }: DeliveryMethodsProps) => {
 	const shippingMethods = checkout?.shippingMethods || [];
 	const shippingAddress = checkout?.shippingAddress || null;
-	// const deliveryMethodId = checkout?.deliveryMethod?.id || null;
 	const { values, setSubmitting, setFieldError } = useFormContext<FormValues>();
 	const [isRequireUpdateAddress, setIsRequireUpdateAddress] = useState(false);
 	const [checkoutDeliveryMethodId, setCheckoutDeliveryMethodId] = useState<string>(() => {
@@ -73,7 +54,7 @@ export const DeliveryMethods = ({ user, checkout, handleSubmitAddress }: Deliver
 
 	const handleChangeDeliveryMethod = async (e: React.ChangeEvent<HTMLSelectElement>) => {
 		setCheckoutDeliveryMethodId(e.target.value);
-		await handleSubmitAddress(values, { setSubmitting, setFieldError } as FormikHelpers<FormValues>);
+		await handleSubmitAddress(values, { setSubmitting, setFieldError } as FormikHelpers<FormValues>, false);
 		const updateDeliveryMethodUpdateResult = await updateDeliveryMethod({
 			id: checkout?.id || "",
 			deliveryMethodId: e.target.value,

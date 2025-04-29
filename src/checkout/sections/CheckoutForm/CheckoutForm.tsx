@@ -3,7 +3,24 @@ import { Form, Field, ErrorMessage, useFormikContext } from "formik";
 import { getCountryList } from "@/checkout/hooks/useCountryList";
 import { useAddressFormUtils } from "@/checkout/components/AddressForm/useAddressFormUtils";
 import { type CountryCode } from "@/gql/graphql";
-// import { toast, ToastContainer } from "react-toastify";
+import { type FormValues, type CountryArea } from "@/checkout/lib/utils/type";
+
+// Filter function to filter unique country areas based on the raw value
+function filterUniqueCountryAreas(countryAreas: CountryArea[]): CountryArea[] {
+	const uniqueCountryAreas: CountryArea[] = [];
+	const seenRawValues = new Set<string>();
+
+	for (const countryArea of countryAreas) {
+		if (!seenRawValues.has(countryArea.raw)) {
+			if (countryArea.raw) {
+				seenRawValues.add(countryArea.raw);
+				uniqueCountryAreas.push(countryArea);
+			}
+		}
+	}
+
+	return uniqueCountryAreas;
+}
 
 // --- Reusable Input Field Component ---
 interface InputFieldProps {
@@ -42,46 +59,6 @@ const InputField: React.FC<InputFieldProps> = ({
 		<ErrorMessage name={name} component="div" className="mt-1 text-xs text-red-500" />
 	</div>
 );
-
-interface Address {
-	firstName: string;
-	lastName: string;
-	streetAddress1: string;
-	streetAddress2: string;
-	city: string;
-	zipCode: string;
-	country: string;
-	phoneNumber: string;
-	company: string;
-}
-
-interface FormValues {
-	shippingAddress: Address;
-	billingAddress: Address;
-	useShippingAsBilling: boolean;
-}
-
-interface CountryArea {
-	raw?: string | null;
-	verbose?: string | null;
-	__typename: "ChoiceValue";
-}
-
-function filterUniqueCountryAreas(countryAreas: CountryArea[]): CountryArea[] {
-	const uniqueCountryAreas: CountryArea[] = []; // Mảng chứa kết quả cuối cùng
-	const seenRawValues = new Set<string>(); // Set để lưu các giá trị 'raw' đã gặp
-
-	for (const countryArea of countryAreas) {
-		if (!seenRawValues.has(countryArea.raw)) {
-			if (countryArea.raw) {
-				seenRawValues.add(countryArea.raw);
-				uniqueCountryAreas.push(countryArea);
-			}
-		}
-	}
-
-	return uniqueCountryAreas;
-}
 
 type AddressCheckoutFormProps = {
 	slug: string;

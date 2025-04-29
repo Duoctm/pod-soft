@@ -23,82 +23,12 @@ import { AddressCheckoutForm } from "@/checkout/sections/CheckoutForm";
 import { type Country, type UseCountryListOptions, getCountryList } from "@/checkout/hooks/useCountryList";
 import { Contact } from "@/checkout/sections/Contact";
 import { Divider } from "@/checkout/components";
-import { DeliveryMethods } from "@/checkout/sections/CheckoutForm/CustomDeliveryMethodsSection";
+import { DeliveryMethods } from "@/checkout/sections/CheckoutForm/DeliveryMethodsSection";
 import { updateShippingAddress } from "@/checkout/hooks/useShippingAddressUpdate";
 import { updateBillingAddress } from "@/checkout/hooks/useBillingAddressUpdate";
 import { checkoutCompleteServerFunc } from "@/checkout/hooks/useCheckoutCompleteServer";
-
-// Regex for validation messages
-const noUnsafeCharsMessage = "Input contains invalid characters (< or >)";
-const phoneRegex = /^[\d +().-]{10,20}$/;
-const invalidPhoneMessage = "Invalid phone number format";
-const zipCodeRegex = /^[a-zA-Z0-9 -]{1,20}$/;
-const invalidZipCodeMessage = "Invalid zip code format";
-
-// Validation schema for address fields
-const AddressSchema = Yup.object().shape({
-	firstName: Yup.string()
-		.trim()
-		.required("First name is required")
-		.max(100, "First name cannot exceed 100 characters")
-		.matches(/^[^<>]*$/, noUnsafeCharsMessage),
-
-	lastName: Yup.string()
-		.trim()
-		.required("Last name is required")
-		.max(100, "Last name cannot exceed 100 characters")
-		.matches(/^[^<>]*$/, noUnsafeCharsMessage),
-
-	streetAddress1: Yup.string()
-		.trim()
-		.required("Street address is required")
-		.max(256, "Street address cannot exceed 256 characters")
-		.matches(/^[^<>]*$/, noUnsafeCharsMessage),
-
-	streetAddress2: Yup.string()
-		.trim()
-		.nullable()
-		.max(256, "Street address (continue) cannot exceed 256 characters")
-		.matches(/^[^<>]*$/, noUnsafeCharsMessage),
-
-	city: Yup.string()
-		.trim()
-		.required("City is required")
-		.max(100, "City cannot exceed 100 characters")
-		.matches(/^[^<>]*$/, noUnsafeCharsMessage),
-
-	zipCode: Yup.string()
-		.trim()
-		.required("Zip code is required")
-		.max(20, "Zip code cannot exceed 20 characters")
-		.matches(zipCodeRegex, invalidZipCodeMessage),
-
-	countryArea: Yup.string()
-		.trim()
-		.required("State is required")
-		.max(100, "State cannot exceed 100 characters")
-		.matches(/^[^<>]*$/, noUnsafeCharsMessage),
-
-	country: Yup.string()
-		.trim()
-		.required("Country is required")
-		.min(2, "Country is required")
-		.max(100, "Country name too long")
-		.matches(/^[^<>]*$/, noUnsafeCharsMessage),
-
-	phoneNumber: Yup.string()
-		.trim()
-		.required("Phone number is required")
-		.min(10, "Phone number must be at least 10 characters")
-		.max(20, "Phone number cannot exceed 20 characters")
-		.matches(phoneRegex, invalidPhoneMessage),
-
-	company: Yup.string()
-		.trim()
-		.nullable()
-		.max(150, "Company name cannot exceed 150 characters")
-		.matches(/^[^<>]*$/, noUnsafeCharsMessage),
-});
+import { AddressSchema } from "@/checkout/lib/utils/validate";
+import { type Address, type FormValues } from "@/checkout/lib/utils/type";
 
 // Define the shape for the entire checkout form
 const CheckoutSchema = Yup.object().shape({
@@ -112,20 +42,7 @@ const CheckoutSchema = Yup.object().shape({
 	}),
 });
 
-// --- TypeScript Interfaces ---
-export interface Address {
-	firstName: string;
-	lastName: string;
-	streetAddress1: string;
-	streetAddress2: string | null;
-	city: string;
-	countryArea: string;
-	zipCode: string;
-	country: string;
-	phoneNumber: string;
-	company: string | null;
-}
-
+// --- Helper function to map Formik address data to API address data ---
 const mapFormDataToApiAddress = (address: Address): AddressInput => {
 	return {
 		firstName: address.firstName,
@@ -171,11 +88,21 @@ const mapApiFieldToFormikField = (apiField: string, addressType: "shipping" | "b
 	}
 };
 
-export interface FormValues {
-	shippingAddress: Address;
-	billingAddress: Address;
-	useShippingAsBilling: boolean;
-}
+// --- Compare two addresses for equality ---
+const compareAddress = (shippingAddress: ApiAddress, billingAddress: ApiAddress): boolean => {
+	return (
+		shippingAddress.firstName === billingAddress.firstName &&
+		shippingAddress.lastName === billingAddress.lastName &&
+		shippingAddress.streetAddress1 === billingAddress.streetAddress1 &&
+		shippingAddress.streetAddress2 === billingAddress.streetAddress2 &&
+		shippingAddress.city === billingAddress.city &&
+		shippingAddress.postalCode === billingAddress.postalCode &&
+		shippingAddress.country.code === billingAddress.country.code &&
+		shippingAddress.phone === billingAddress.phone &&
+		shippingAddress.companyName === billingAddress.companyName &&
+		shippingAddress.countryArea === billingAddress.countryArea
+	);
+};
 
 export const Checkout = () => {
 	const [user, setUser] = useState<User | null>(null);
@@ -195,6 +122,7 @@ export const Checkout = () => {
 
 	const [countries, setCountries] = useState<{ code: string; country: string }[]>([]);
 
+	// --- Fetch User Data ---
 	useEffect(() => {
 		let isMounted = true;
 		setLoadingUser(true);
@@ -205,7 +133,6 @@ export const Checkout = () => {
 					setUser(data);
 				}
 			} catch (error) {
-				// Bổ sung thông báo lỗi cho người dùng nếu cần
 				window.location.href = "/";
 			} finally {
 				if (isMounted) {
@@ -219,6 +146,7 @@ export const Checkout = () => {
 		};
 	}, []);
 
+	// --- Fetch Checkout Data ---
 	useEffect(() => {
 		let isMounted = true;
 		setLoadingCheckout(true);
@@ -230,7 +158,6 @@ export const Checkout = () => {
 					setCheckout(data.checkout as CheckoutType);
 				}
 			} catch (error) {
-				// Bổ sung thông báo lỗi cho người dùng nếu cần
 				window.location.href = "/";
 			} finally {
 				if (isMounted) {
@@ -244,6 +171,7 @@ export const Checkout = () => {
 		};
 	}, [checkoutId, date]);
 
+	// --- Fetching countries based on the channel slug ---
 	useEffect(() => {
 		let isMounted = true;
 		if (checkout?.channel?.slug) {
@@ -267,8 +195,8 @@ export const Checkout = () => {
 
 	// --- Formik Setup ---
 	// --- Initializing Formik with default values ---
+	// NOTE: Default US
 	const getDefaultAddressFormData = (countriesData: Country[] | null): Address => {
-		// NOTE: Default US
 		const defaultCountryCode = countriesData && countriesData.length > 0 ? "US" : "US";
 		return {
 			country: defaultCountryCode,
@@ -303,21 +231,6 @@ export const Checkout = () => {
 			phoneNumber: address.phone || defaults.phoneNumber,
 			countryArea: address.countryArea || defaults.countryArea,
 		};
-	};
-
-	const compareAddress = (shippingAddress: ApiAddress, billingAddress: ApiAddress): boolean => {
-		return (
-			shippingAddress.firstName === billingAddress.firstName &&
-			shippingAddress.lastName === billingAddress.lastName &&
-			shippingAddress.streetAddress1 === billingAddress.streetAddress1 &&
-			shippingAddress.streetAddress2 === billingAddress.streetAddress2 &&
-			shippingAddress.city === billingAddress.city &&
-			shippingAddress.postalCode === billingAddress.postalCode &&
-			shippingAddress.country.code === billingAddress.country.code &&
-			shippingAddress.phone === billingAddress.phone &&
-			shippingAddress.companyName === billingAddress.companyName &&
-			shippingAddress.countryArea === billingAddress.countryArea
-		);
 	};
 
 	const initialValues = useMemo(() => {
@@ -357,8 +270,10 @@ export const Checkout = () => {
 	const handleSubmit = async (
 		values: FormValues,
 		{ setSubmitting, setFieldError }: FormikHelpers<FormValues>,
+		inAddressForm = true,
 	) => {
 		setSubmitting(true);
+
 		let hasErrors = false;
 
 		// --- Update Shipping Address ---
@@ -420,7 +335,9 @@ export const Checkout = () => {
 
 		if (!hasErrors) {
 			update();
-			toast.success("Addresses updated successfully!");
+			if (inAddressForm) {
+				toast.success("Addresses updated successfully!");
+			}
 		}
 
 		setSubmitting(false);
@@ -444,7 +361,15 @@ export const Checkout = () => {
 					toast.error(error.message);
 				});
 			} else {
-				window.location.href = "/";
+				const notification = (message: string) => {
+					toast.success(message, {
+						position: "top-center",
+					});
+					setTimeout(function () {
+						window.location.href = `/${checkout.channel.slug}/orders`;
+					}, 2000);
+				};
+				notification("The order has been placed successfully!");
 			}
 		}
 	};

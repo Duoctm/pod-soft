@@ -5,12 +5,14 @@ import { executeGraphQL } from "@/lib/graphql";
 import { CheckoutAddLineDocument, CurrentUserDocument } from "@/gql/graphql";
 import * as Checkout from "@/lib/checkout";
 import { redirect } from "next/navigation";
+import {updateCheckoutLineMetadata} from "./data"
 
 
-export default async function addItem(
+export async function addItem(
     params: { slug: string; channel: string },
     selectedVariantID: string | null,
-    quantity: number
+    quantity: number,
+    metadata: string
   ) {
     "use server";
   
@@ -52,10 +54,29 @@ export default async function addItem(
   
     // Lấy id của cart từ kết quả trả về
     const checkoutLineId = result?.checkoutLinesAdd?.checkout?.lines?.[0]?.id;
+
+     await updateCheckoutLineMetadata(checkoutLineId ?? "", [{
+                            key: "design",
+                            value: metadata,
+                          }]);
   
     revalidatePath("/cart");
   
     // Trả về checkoutId từ cart
-    return checkoutLineId; // Trả về checkoutId
+    //return checkoutLineId; // Trả về checkoutId
   }
   
+
+
+  export async function UpdateDesign(
+    checkoutLineId: string,
+    metadata: string
+  ) {
+    "use server";
+  
+    await updateCheckoutLineMetadata(checkoutLineId ?? "", [{
+      key: "design",
+      value: metadata,
+    }]);
+  
+  }

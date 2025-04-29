@@ -4,6 +4,7 @@ import { DeleteLineButton } from "./DeleteLineButton";
 import * as Checkout from "@/lib/checkout";
 import { formatMoney, getHrefForVariant } from "@/lib/utils";
 import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
+import { ViewDesignButton } from "./ViewDesignButton";
 
 export const metadata = {
 	title: "Shopping Cart - ZoomPrint",
@@ -14,6 +15,7 @@ export default async function Page({ params }: { params: { channel: string } }) 
 	const checkoutId = Checkout.getIdFromCookies(params.channel);
 
 	const checkout = await Checkout.find(checkoutId);
+	
 
 	if (!checkout || checkout.lines.length < 1) {
 		return (
@@ -76,8 +78,10 @@ export default async function Page({ params }: { params: { channel: string } }) 
 								</div>
 								<div className="flex justify-between">
 									<div className="text-sm font-bold">Qty: {item.quantity}</div>
+									<ViewDesignButton  lineId={item.id} checkout={checkoutId} />
 									<DeleteLineButton checkoutId={checkoutId} lineId={item.id} />
-								</div>
+								</div> 
+
 							</div>
 						</li>
 					))}

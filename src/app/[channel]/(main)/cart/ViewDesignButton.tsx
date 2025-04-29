@@ -1,0 +1,26 @@
+'use client'; // Bắt buộc ở ngay dòng đầu tiên
+import {fetchCheckoutLineMetadata} from './data';
+type ViewDesignButtonProps = {
+    lineId: string;
+    checkout: any,
+};
+
+export function ViewDesignButton({ lineId, checkout }: ViewDesignButtonProps) {
+   // const router = useRouter();
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        const metadata = await fetchCheckoutLineMetadata(checkout, lineId) as any; // 👈 ép kiểu tại đây
+      
+        localStorage.setItem('designInfor', JSON.stringify(metadata));
+        localStorage.setItem('cartId', lineId);
+        window.location.replace(`design/2/${metadata.productId}/${metadata.colorValue}`);
+      }}
+      
+      className="rounded border border-neutral-300 px-3 py-1 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+    >
+      View Design
+    </button>
+  );
+}
