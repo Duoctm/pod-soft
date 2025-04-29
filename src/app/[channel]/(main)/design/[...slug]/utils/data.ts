@@ -1,38 +1,40 @@
-import { request, gql } from "graphql-request";
-import { PrintFaceData } from "./type";
+import { request, gql, GraphQLClient } from "graphql-request";
+import { PrintFaceData } from './type'
 
 const endpoint = process.env.NEXT_PUBLIC_SALEOR_API_URL as unknown as string;
+const SALEOR_API_URL = process.env.NEXT_PUBLIC_SALEOR_API_URL as string;
 
 const GET_PRODUCT_DETAIL = gql`
   query GetProductDetails($id: ID!, $channel: String!) {
-  product(id: $id, channel: $channel) {
-    id
-    name
-    variants {
+    product(id: $id, channel: $channel) {
       id
       name
-      sku
-      attributes {
-        attribute {
-          id
-          name
-          slug
+      variants {
+        id
+        name
+        sku
+        attributes {
+          attribute {
+            id
+            name
+            slug
+          }
+          values {
+            id
+            name
+            slug
+            value
+          }
         }
-        values {
-          id
-          name
-          slug
+        metadata {
+          key
           value
         }
       }
-      metadata {
-        key
-        value
-      }
     }
   }
-}
 `;
+
 
 
 const UPDATE_META_DATA = gql`
@@ -51,8 +53,6 @@ const UPDATE_META_DATA = gql`
     }
   }
 }
-
-
 `
 
 // const GET_PRODUCT_VARIANT = gql`
@@ -86,12 +86,12 @@ const UPLOAD_IMAGE = gql`
       `;
 
 // const fetchProductVariantData = async () => {
-  
+
 //   const rawData = await request(endpoint, GET_PRODUCT_VARIANT, {
 //     id: "UHJvZHVjdFZhcmlhbnQ6ODk3",
 //     channel: "default-channel",
 //   });//UHJvZHVjdFZhcmlhbnQ6NDU4MA==
- 
+
 
 //   const data: PrintFaceData[] = [];
 
@@ -128,15 +128,52 @@ const UPLOAD_IMAGE = gql`
 
 // };
 
+interface ProductDetail {
+  product: {
+    id: string;
+    name: string;
+    variants: {
+      id: string;
+      name: string;
+      sku: string;
+      attributes: {
+        attribute: {
+          id: string;
+          name: string;
+          slug: string;
+        };
+        values: {
+          id: string;
+          name: string;
+          slug: string;
+          value: string;
+        }[];
+      }[];
+      metadata: {
+        key: string;
+        value: string;
+      }[];
+    }[];
+  };
+}
+
+
 const fetchProductDetail = async (productId: string) => {
   const listColorVariant = new Map<string, object>();
-  
+
   try {
+    console.log('hahgahahahahahaha');
+    const client = new GraphQLClient(SALEOR_API_URL);
+
     // Gửi request và nhận dữ liệu
-    const rawData: unknown = await request(endpoint, GET_PRODUCT_DETAIL, {
+    const rawData = await client.request<ProductDetail>(GET_PRODUCT_DETAIL, {
       id: productId,
-      channel: "default-channel",
-    });
+      channel: 'default-channel', // Có thể thay đổi channel nếu cần
+    })
+
+
+
+
 
     // Kiểm tra xem rawData có phải là một object và có trường 'product'
     if (rawData && typeof rawData === 'object' && 'product' in rawData) {
@@ -144,7 +181,7 @@ const fetchProductDetail = async (productId: string) => {
 
       const variants = product.variants;
       for (const variant of variants) {
-        const metaData = variant.metadata?.find((item : any) => item.key === "custom_json");
+        const metaData = variant.metadata?.find((item: any) => item.key === "custom_json");
 
         if (metaData != null) {
           const colorValue = variant.attributes?.[0]?.values?.[0]?.name.split("-")[1] || '';
@@ -189,7 +226,7 @@ const getMetaDtataFromColorVariant = (colorId: string, listColorVariant: Map<str
     const metadata = (colorVariant as any).meta_data;
     const config = metadata;
     const data: PrintFaceData[] = [];
-   
+
     if (config && config.value) {
       try {
         const correctedValue = config.value.replace(/'/g, '"');
@@ -213,10 +250,10 @@ const getMetaDtataFromColorVariant = (colorId: string, listColorVariant: Map<str
         console.error("Error parsing JSON:", error);
       }
     }
-    
+
     return data;
   } else {
-  
+
     return []; // Trả về mảng rỗng nếu không tìm thấy dữ liệu
   }
 }
@@ -291,4 +328,4 @@ async function updateCheckoutLineMetadata(id: string, metadata: { key: string; v
 }
 
 
-export {fetchProductDetail, getMetaDtataFromColorVariant, getVariantIdFromColorVariant, uploadImage, updateCheckoutLineMetadata};
+export { fetchProductDetail, getMetaDtataFromColorVariant, getVariantIdFromColorVariant, uploadImage, updateCheckoutLineMetadata };

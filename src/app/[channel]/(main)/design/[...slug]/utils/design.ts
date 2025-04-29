@@ -2,7 +2,7 @@ import Konva from 'konva';
 import $ from 'jquery';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { PrintFaceData, DesignInfo } from '../utils/type'
-import { uploadImage } from '../utils/data'
+import { uploadImage } from '../utils/test'
 interface StageConfig {
   stage: Konva.Stage | null;
   layer: Konva.Layer | null;
@@ -230,8 +230,6 @@ class TShirtDesigner {
       } else {
         doms[index].onload = onImageLoad;
       }
-
-
     })
   }
 
@@ -595,7 +593,6 @@ class TShirtDesigner {
         tempNode.height(defaultHeight);
         const tempBounds = tempNode.getClientRect();
         if (tempBounds.x >= stage.x() && tempBounds.x + tempBounds.width <= stage.width() && tempBounds.y >= stage.y() && tempBounds.y + tempBounds.height <= stage.height()) {
-          console.log('dung chuan');
           node.width(defaultWidth);
           node.height(defaultHeight);
         }
@@ -1071,6 +1068,7 @@ class TShirtDesigner {
             const imageElement = node.image() as HTMLImageElement;
             const file = this.base64ToFile(imageElement.src, 'image.png');
             try {
+
               const response = await uploadImage(file);
 
               design.push({

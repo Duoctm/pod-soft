@@ -29,7 +29,6 @@ export const OrderConfirmation = () => {
 					totalPrice={order?.total}
 					subtotalPrice={order?.subtotal}
 					editable={false}
-					update={() => { }}
 				/>
 			</Suspense>
 		</main>

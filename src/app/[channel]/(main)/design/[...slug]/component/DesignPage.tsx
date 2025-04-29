@@ -7,8 +7,9 @@ import { initializeModals } from '../utils/modal';
 import { Typography, IconButton, Box, Paper, Modal, Button  } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {DesignInfo, PrintFaceData} from '..//utils/type';
-import {fetchProductDetail, getMetaDtataFromColorVariant, getVariantIdFromColorVariant} from '../utils/data'
+import {/*fetchProductDetail, */getMetaDtataFromColorVariant, getVariantIdFromColorVariant} from '../utils/data'
 import {addItem, UpdateDesign} from '../utils/checkout'
+import {fetchProductDetail} from '../utils/test'
 
 const StyledButton = styled(IconButton)(() => ({
   backgroundColor: 'transparent',
@@ -427,7 +428,10 @@ function DesignPage( param : DesignPageProps) {
                     };
                     
                     if (designerRef.current != null) {
+                      
                       const metaData = await designerRef.current.exportDesignToJson();
+                      console.log('hehehehehehehe');
+                      console.log(metaData);
                       await addItem(cartItem.params, cartItem.selectedVariantId, cartItem.quantity, metaData);
                       localStorage.removeItem('cart');
                       //window.location.replace(/${param.channel}/cart);
