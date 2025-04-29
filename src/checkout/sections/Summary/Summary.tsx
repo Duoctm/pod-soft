@@ -19,6 +19,7 @@ import { SummaryItemMoneySection } from "@/checkout/sections/Summary/SummaryItem
 import { type GrossMoney, type GrossMoneyWithTax } from "@/checkout/lib/globalTypes";
 
 interface SummaryProps {
+	id: string;
 	editable?: boolean;
 	lines: SummaryLine[];
 	totalPrice?: GrossMoneyWithTax;
@@ -27,9 +28,11 @@ interface SummaryProps {
 	voucherCode?: string | null;
 	discount?: MoneyType | null;
 	shippingPrice: GrossMoney;
+	update: () => void;
 }
 
 export const Summary: FC<SummaryProps> = ({
+	id,
 	editable = true,
 	lines,
 	totalPrice,
@@ -38,6 +41,7 @@ export const Summary: FC<SummaryProps> = ({
 	voucherCode,
 	shippingPrice,
 	discount,
+	update,
 }) => {
 	return (
 		<div
@@ -56,7 +60,7 @@ export const Summary: FC<SummaryProps> = ({
 						return (
 							<SummaryItem line={line} key={line?.id}>
 								{editable ? (
-									<SummaryItemMoneyEditableSection line={line as CheckoutLineFragment} />
+									<SummaryItemMoneyEditableSection line={line as CheckoutLineFragment} id={id} update={update} />
 								) : (
 									<SummaryItemMoneySection line={line as OrderLineFragment} />
 								)}
@@ -67,7 +71,7 @@ export const Summary: FC<SummaryProps> = ({
 			</details>
 			{editable && (
 				<>
-					<PromoCodeAdd />
+					<PromoCodeAdd id={id} />
 					<Divider />
 				</>
 			)}
@@ -75,6 +79,7 @@ export const Summary: FC<SummaryProps> = ({
 				<SummaryMoneyRow label="Subtotal" money={subtotalPrice?.gross} ariaLabel="subtotal price" />
 				{voucherCode && (
 					<SummaryPromoCodeRow
+						id={id}
 						editable={editable}
 						promoCode={voucherCode}
 						ariaLabel="voucher"
@@ -83,11 +88,13 @@ export const Summary: FC<SummaryProps> = ({
 						negative
 					/>
 				)}
-				{giftCards.map(({ currentBalance, displayCode, id }) => (
+				
+				{giftCards.map(({ currentBalance, displayCode, id : grif_id}) => (
 					<SummaryPromoCodeRow
-						key={id}
+						key={grif_id}
+						id={id}
 						editable={editable}
-						promoCodeId={id}
+						promoCodeId={grif_id}
 						ariaLabel="gift card"
 						label={`Gift Card: •••• •••• ${displayCode}`}
 						money={currentBalance}

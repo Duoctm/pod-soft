@@ -407,7 +407,7 @@ export const Checkout = () => {
 							</div>
 						</div>
 						<div className="order-1 bg-gray-50 px-4 py-10 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 lg:py-16">
-							<Suspense fallback={<SummarySkeleton />}>{checkout && <Summary {...checkout} />}</Suspense>
+							<Suspense fallback={<SummarySkeleton />}>{checkout && <Summary {...checkout} update={update} />}</Suspense>
 						</div>
 					</div>
 				)}

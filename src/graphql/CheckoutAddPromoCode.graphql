@@ -1,0 +1,16 @@
+mutation AddPromoCodeToCheckout($promoCode: String!, $checkoutId: ID!) {
+	checkoutAddPromoCode(promoCode: $promoCode, id: $checkoutId) {
+		checkout {
+			id
+			lines {
+				id
+				quantity
+			}
+		}
+		errors {
+			field
+			message
+			code
+		}
+	}
+}

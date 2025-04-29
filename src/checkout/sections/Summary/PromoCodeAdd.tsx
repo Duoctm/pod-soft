@@ -1,55 +1,64 @@
-import clsx from "clsx";
-import React, { type FC } from "react";
-import { Button } from "@/checkout/components/Button";
-import { TextInput } from "@/checkout/components/TextInput";
-import { useCheckoutAddPromoCodeMutation } from "@/checkout/graphql";
-import { type Classes } from "@/checkout/lib/globalTypes";
-import { useFormSubmit } from "@/checkout/hooks/useFormSubmit";
-import { FormProvider } from "@/checkout/hooks/useForm/FormProvider";
-import { useForm } from "@/checkout/hooks/useForm";
+import { addPromodeCode } from "@/checkout/hooks/useAddPromoddeCode";
+import React, { FormEvent, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-interface PromoCodeFormData {
-	promoCode: string;
-}
+export const PromoCodeAdd = ({ id }: { id: string }) => {
+	const [voucherCode, setVoucherCode] = useState("");
 
-export const PromoCodeAdd: FC<Classes> = ({ className }) => {
-	const [, checkoutAddPromoCode] = useCheckoutAddPromoCodeMutation();
+	const handleSubmit = async (e: FormEvent) => {
+		e.preventDefault();
+		if (!voucherCode.trim()) return;
 
-	const onSubmit = useFormSubmit<PromoCodeFormData, typeof checkoutAddPromoCode>({
-		scope: "checkoutAddPromoCode",
-		onSubmit: checkoutAddPromoCode,
-		parse: ({ promoCode, languageCode, checkoutId }) => ({
-			promoCode,
-			checkoutId,
-			languageCode,
-		}),
-		onSuccess: ({ formHelpers: { resetForm } }) => resetForm(),
-	});
-
-	const form = useForm<PromoCodeFormData>({
-		onSubmit,
-		initialValues: { promoCode: "" },
-	});
-	const {
-		values: { promoCode },
-	} = form;
-
-	const showApplyButton = promoCode.length > 0;
+		try {
+			const result = await addPromodeCode(voucherCode, id);
+			// Handle successful promo code application
+			console.log(result?.success);
+			if (result?.success == false) {
+				const errors = result?.data;
+				if (errors.length > 0) {
+					errors.map((err: any) => {
+						toast.error(err.message);
+					});
+					return;
+				} else {
+					toast.error("In valid promode code");
+				}
+			}
+			if (result?.success) {
+				toast.success("Promo code applied successfully!");
+				setVoucherCode("");
+			}
+		} catch (error) {
+			// Handle error
+			console.error("Failed to apply promo code:", error);
+		}
+	};
 
 	return (
-		<FormProvider form={form}>
-			<div className={clsx("relative my-4", className)}>
-				<TextInput required={false} name="promoCode" label="Add gift card or discount code" />
-				{showApplyButton && (
-					<Button
-						className="absolute bottom-2.5 right-3"
-						variant="tertiary"
-						ariaLabel="apply"
-						label="Apply"
-						type="submit"
-					/>
-				)}
+		<form onSubmit={handleSubmit}>
+			<ToastContainer />
+			<label htmlFor="voucher_input" className="mb-2 block text-sm font-medium text-gray-700">
+				Enter voucher code:
+			</label>
+			<div className="flex items-center space-x-2">
+				<input
+					type="text"
+					id="voucher_input"
+					name="voucher_input"
+					value={voucherCode}
+					onChange={(e) => setVoucherCode(e.target.value)}
+					placeholder="Enter your code..."
+					className="flex-grow rounded-md border border-gray-300 px-4 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+				/>
+
+				<button
+					type="submit"
+					className="inline-flex justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition duration-150 ease-in-out hover:bg-gray-800 focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2"
+				>
+					Apply
+				</button>
 			</div>
-		</FormProvider>
+		</form>
 	);
 };

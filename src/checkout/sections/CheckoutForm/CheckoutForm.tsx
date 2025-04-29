@@ -98,6 +98,7 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 
 					const filteredCountryAreas = filterUniqueCountryAreas(data?.countryAreaChoices as CountryArea[]);
 					setCountryAreas(filteredCountryAreas);
+				 
 				} catch (error) {
 					console.error("Failed to fetch address validation rules:", error);
 				}
@@ -109,7 +110,7 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 		return () => {
 			isMounted = false;
 		};
-	}, [slug]);
+	}, [slug, values.shippingAddress.country]);
 
 	return (
 		<div className="mx-auto mt-4 max-w-2xl rounded-lg bg-white">
