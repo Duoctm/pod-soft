@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo } from "react";
+"use client";
+import React, { useEffect } from "react";
 import { Form, Field, ErrorMessage, useFormikContext } from "formik";
 import { getCountryList } from "@/checkout/hooks/useCountryList";
-import { useAddressFormUtils } from "@/checkout/components/AddressForm/useAddressFormUtils";
 import { type CountryCode } from "@/gql/graphql";
 import { type FormValues, type CountryArea } from "@/checkout/lib/utils/type";
+import { getAddressValidationRules } from "@/checkout/hooks/useAddressValidation";
 
 // Filter function to filter unique country areas based on the raw value
 function filterUniqueCountryAreas(countryAreas: CountryArea[]): CountryArea[] {
@@ -68,10 +69,13 @@ type AddressCheckoutFormProps = {
 export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }) => {
 	const { values } = useFormikContext<FormValues>();
 	const [countries, setCountries] = React.useState<{ code: string; country: string }[]>([]);
-	const { countryAreaChoices } = useAddressFormUtils(values.shippingAddress.country as CountryCode);
-	const countryAreas = useMemo(() => {
-		return filterUniqueCountryAreas(countryAreaChoices as CountryArea[]);
-	}, [countryAreaChoices]);
+	// const { countryAreaChoices  } = useAddressFormUtils(values.shippingAddress.country as CountryCode);
+	const [countryAreas, setCountryAreas] = React.useState<CountryArea[]>([]);
+
+	// const countryAreas = useMemo(() => {
+
+	// 	return filterUniqueCountryAreas(countryAreaChoices as CountryArea[]);
+	// }, [countryAreaChoices]);
 
 	useEffect(() => {
 		let isMounted = true;
@@ -87,7 +91,20 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 					if (isMounted) setCountries([]);
 				}
 			};
+
+			const fetchAddressValidationRules = async () => {
+				try {
+					const { data } = await getAddressValidationRules(values.shippingAddress.country as CountryCode);
+
+					const filteredCountryAreas = filterUniqueCountryAreas(data?.countryAreaChoices as CountryArea[]);
+					setCountryAreas(filteredCountryAreas);
+				} catch (error) {
+					console.error("Failed to fetch address validation rules:", error);
+				}
+			};
+
 			void fetchCountries();
+			void fetchAddressValidationRules();
 		}
 		return () => {
 			isMounted = false;

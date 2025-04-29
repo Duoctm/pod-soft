@@ -46,7 +46,7 @@ export const useAddressFormUtils = (countryCode: CountryCode = defaultCountry) =
 	const [{ data }] = useAddressValidationRulesQuery({
 		variables: { countryCode },
 	});
-
+	
 	const validationRules = data?.addressValidationRules as ValidationRulesFragment;
 
 	const { countryAreaType, postalCodeType, cityType } = validationRules || {};
