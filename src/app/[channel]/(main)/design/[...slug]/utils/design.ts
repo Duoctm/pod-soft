@@ -1,8 +1,8 @@
 import Konva from 'konva';
 import $ from 'jquery';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import { PrintFaceData, DesignInfo } from '../utils/type'
-import { uploadImage } from '../utils/test'
+import { PrintFaceData, DesignInfo } from '../utils/type';
+import { uploadImage } from './data';
 interface StageConfig {
   stage: Konva.Stage | null;
   layer: Konva.Layer | null;
@@ -28,6 +28,55 @@ class TShirtDesigner {
   private backgroundColor: string = '#ffffff';
   private clipboard: Konva.Node | null = null;
   public onSelectObject: ((hasSelection: boolean) => void) | null = null;
+  private menuIndexSetter: React.Dispatch<React.SetStateAction<0 | 1 | 2 | 3 | 4 | 5 | 6>>;
+  private resizeWidthSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
+  private resizeHeightSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
+  private rotationAngleSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
+  private fontSizeSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
+
+  public setMenu() {
+    if (this.currentStage.selectedNode != null) {
+      if (this.currentStage.selectedNode instanceof Konva.Image) {
+        this.menuIndexSetter(5);
+      }
+      else if (this.currentStage.selectedNode instanceof Konva.Text) {
+        this.menuIndexSetter(6);
+      }
+    }
+  }
+
+  public getWHROfNode() {
+    if (this.currentStage.selectedNode != null) {
+      this.resizeWidthSetter(parseInt(this.currentStage.selectedNode.width().toString()));
+      this.resizeHeightSetter(parseInt(this.currentStage.selectedNode.height().toString()));
+      this.rotationAngleSetter(parseInt(this.currentStage.selectedNode.rotation().toString()));
+    }
+  }
+
+  public resetWHROfNode() {
+    if (this.currentStage.selectedNode != null) {
+      this.resizeWidthSetter(0);
+      this.resizeHeightSetter(0);
+      this.rotationAngleSetter(0);
+    }
+  }
+
+  public getRSOfNode() {
+    if (this.currentStage.selectedNode != null) {
+      const node = this.currentStage.selectedNode as Konva.Text;
+      this.fontSizeSetter(node.fontSize());
+      this.rotationAngleSetter(this.currentStage.selectedNode.rotation());
+    }
+  }
+
+  public resetRSOfNode() {
+    if (this.currentStage.selectedNode != null) {
+      this.fontSizeSetter(0);
+      this.rotationAngleSetter(0);
+    }
+  }
+
+
 
   public updateStagePosition(stageConfig: StageConfig, faceData: PrintFaceData, image: HTMLImageElement) {
     if (!stageConfig.stage || !stageConfig.borderDiv) return;
@@ -126,7 +175,6 @@ class TShirtDesigner {
   }
 
   public updateStagePositions = () => {
-    //for (const item in this.data) {
     let index = -1;
     for (const item in this.data) {
       if (this.stages[item] == this.currentStage) {
@@ -149,12 +197,23 @@ class TShirtDesigner {
 
   };
 
-  constructor(data: PrintFaceData[], productId: string, variantId: string | null, colorValue: string, colorData: Map<string, object>) {
+  constructor(data: PrintFaceData[], productId: string, variantId: string | null, colorValue: string, colorData: Map<string, object>,
+    menuIndexSetter: React.Dispatch<React.SetStateAction<0 | 1 | 2 | 3 | 4 | 5 | 6>>,
+    resizeWidthSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
+    resizeHeightSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
+    rotationAngleSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
+    fontSizeSetter: React.Dispatch<React.SetStateAction<number | undefined>>
+  ) {
     this.data = data;
     this.productId = productId;
     this.colorValue = colorValue;
     this.variantId = variantId;
     this.colorData = colorData;
+    this.menuIndexSetter = menuIndexSetter;
+    this.resizeWidthSetter = resizeWidthSetter;
+    this.resizeHeightSetter = resizeHeightSetter;
+    this.rotationAngleSetter = rotationAngleSetter;
+    this.fontSizeSetter = fontSizeSetter;
     for (const item in this.data) {
       this.stages[item] = {
         stage: null,
@@ -180,8 +239,14 @@ class TShirtDesigner {
     //   }
     // };
 
-    window.addEventListener('resize', this.updateStagePositions);
-    window.addEventListener('scroll', this.updateStagePositions, true);
+    window.addEventListener('resize', () => {
+      this.updateStagePositions();
+      this.setMenu();
+    });
+    window.addEventListener('scroll', () => {
+      this.updateStagePositions();
+      this.setMenu();
+    }, true);
   }
 
   private initializeStages() {
@@ -258,14 +323,14 @@ class TShirtDesigner {
 
     // Handle deletion
     $('#delete').on('click', () => {
-      this.deleteSelectedNode(this.currentStage);
+      this.deleteSelectedNode(/*this.currentStage*/);
       //this.clearBorderNode(this.currentStage);
     });
 
     // Handle keyboard shortcuts for deletion only
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        this.deleteSelectedNode(this.currentStage);
+        this.deleteSelectedNode(/*this.currentStage*/);
       }
     });
   }
@@ -370,7 +435,10 @@ class TShirtDesigner {
   }
 
   private clearBorderNode(stageConfig: StageConfig) {
-    stageConfig.selectedNode = null;
+    if (stageConfig.selectedNode != null) {
+      this.menuIndexSetter(0);
+      stageConfig.selectedNode = null;
+    }
     // stageConfig.lastPositionNode = {
     //   x: -1,
     //   y: -1
@@ -378,10 +446,39 @@ class TShirtDesigner {
     document.querySelectorAll('.border-node').forEach(el => el.remove());
   }
 
-  private showBorderNode(node: Konva.Node, stageConfig: StageConfig) {
-    this.clearBorderNode(stageConfig);
+  public copySelectedNode() {
+    const node = this.currentStage.selectedNode as Konva.Node;
+    const stageConfig = this.currentStage;
+    const clone = node!.clone();
+    if ((node.x() + node.offsetX() + 10) < stageConfig.stage!.width()) {
+      clone.x(node.x() + 10);
+    }
+    else if ((node.x() + node.offsetX() - 10) > 0) {
+      clone.x(node.x() - 10);
+    }
 
-    //stageConfig.lastPositionNode = { x: node.x(), y: node.y() };
+    if ((node.y() + node.offsetY() + 10) < stageConfig.stage!.height()) {
+      clone.y(node.y() + 10);
+    }
+    else if ((node.y() + node.offsetY() - 10) > 0) {
+      clone.y(node.y() - 10);
+    }
+
+
+
+    clone.draggable(true);
+    stageConfig.layer!.add(clone);
+    stageConfig.layer!.draw();
+
+
+    this.showBorderNode(clone, stageConfig);
+    if (this.onSelectObject) this.onSelectObject(true);
+
+
+  }
+
+  private setNodeBoder(node: Konva.Node, stageConfig: StageConfig) {
+    this.clearBorderNode(stageConfig);
     stageConfig.selectedNode = node;
 
     const stageContainer = stageConfig.stage!.container();
@@ -432,40 +529,13 @@ class TShirtDesigner {
 
     const deleteIcon = createIconWrapper('fas fa-times', { left: '-22px', top: '-22px' }, (e) => {
       e.stopPropagation();
-      this.deleteSelectedNode(stageConfig);
-      this.clearBorderNode(stageConfig);
+      this.deleteSelectedNode(/*stageConfig*/);
+      // this.clearBorderNode(stageConfig);
     });
 
     const copyIcon = createIconWrapper('fas fa-copy', { left: '-22px', bottom: '-22px' }, (e) => {
       e.stopPropagation();
-      this.clipboard = stageConfig.selectedNode!.clone();
-      const clone = this.clipboard!.clone();
-
-      clone.x(node.x());
-      clone.y(node.y());
-
-      if ((node.x() + node.offsetX() + 10) < stageConfig.stage!.width()) {
-        clone.x(node.x() + 10);
-      }
-      else if ((node.x() + node.offsetX() - 10) > 0) {
-        clone.x(node.x() - 10);
-      }
-
-      if ((node.y() + node.offsetY() + 10) < stageConfig.stage!.height()) {
-        clone.y(node.y() + 10);
-      }
-      else if ((node.y() + node.offsetY() - 10) > 0) {
-        clone.y(node.y() - 10);
-      }
-
-
-
-      clone.draggable(true);
-      stageConfig.layer!.add(clone);
-      stageConfig.layer!.draw();
-
-      this.showBorderNode(clone, stageConfig);
-      if (this.onSelectObject) this.onSelectObject(true);
+      this.copySelectedNode();
     });
 
     const resizeIcon = createIconWrapper('fas fa-arrows-alt-h', { right: '-22px', bottom: '-22px' }, () => { });
@@ -494,40 +564,22 @@ class TShirtDesigner {
           if (cloneBounds.x >= stage.x() && cloneBounds.x + cloneBounds.width <= stage.width() && cloneBounds.y >= stage.y() && cloneBounds.y + cloneBounds.height <= stage.height()) {
             node.width(initialWidth + deltaX);
             node.height(initialHeight + deltaY);
+            this.getWHROfNode();
           }
-          // else{
-          //   const bounds = node.getClientRect();
-          //   if(bounds.x < stage.x()){
-          //     node.width((node.x() - stage.x()) * 2);
-          //   }
-
-          //   if(bounds.x + bounds.width > stage.width()){
-          //     node.width((stage.width() - (stage.width() - node.x())) * 2);
-          //   }
-
-          //   if(bounds.y <= stage.y()){
-          //     node.height((node.y() - stage.y()) * 2);
-          //   }
-          //   if(bounds.y + bounds.height > stage.height()){
-          //     node.height((stage.height() - (stage.height() - node.y())) * 2);
-          //   }
-          // }
         }
         else if (node instanceof Konva.Text) {
           if (cloneBounds.x >= stage.x() && cloneBounds.x + cloneBounds.width <= stage.width() && cloneBounds.y >= stage.y() && cloneBounds.y + cloneBounds.height <= stage.height()) {
-            node.fontSize(initialWidth + deltaX);
-          }
-          else {
+            if (startX < moveEvent.clientX) {
+              node.fontSize(node.fontSize() + 1);
+            }
+            else {
+              node.fontSize(node.fontSize() - 1);
+            }
+            this.getRSOfNode();
 
           }
         }
 
-        // if (bounds.width > stage.width()) {
-        //   node.width(stage.width() - 1);
-        // }
-        // if (bounds.height > stage.height()) {
-        //   node.height(stage.height() - 1);
-        // }
         node.offsetX(node.width() / 2);
         node.offsetY(node.height() / 2);
         node.setAttr('rotationOfLastWidth', node.width());
@@ -645,6 +697,12 @@ class TShirtDesigner {
         stageConfig.layer!.draw();
 
         rotateIcon.style.transform = `rotate(${newRotation}deg)`;
+        if (node instanceof Konva.Text) {
+          this.getRSOfNode();
+        }
+        else if (node instanceof Konva.Image) {
+          this.getWHROfNode();
+        }
 
       };
 
@@ -677,10 +735,10 @@ class TShirtDesigner {
       rectDiv.style.border = '2px dashed black';
       rectDiv.style.pointerEvents = 'none';
       rectDiv.style.zIndex = '10';
-      rectDiv.style.left = `${bounds.x + stageRect.x - 0.5}px`;
-      rectDiv.style.top = `${bounds.y + stageRect.y + 0.5}px`;
-      rectDiv.style.width = `${bounds.width - 2}px`;
-      rectDiv.style.height = `${bounds.height - 3}px`;
+      rectDiv.style.left = `${bounds.x + stageRect.x}px`;
+      rectDiv.style.top = `${bounds.y + stageRect.y}px`;
+      rectDiv.style.width = `${bounds.width}px`;
+      rectDiv.style.height = `${bounds.height}px`;
 
       // Tính vị trí icon xoay
       const centerX = node.x();
@@ -713,7 +771,13 @@ class TShirtDesigner {
     rectDiv.appendChild(rotateIcon);
 
     updateBorderDiv();
-    return rectDiv;
+  }
+
+  private showBorderNode(node: Konva.Node, stageConfig: StageConfig) {
+    //stageConfig.lastPositionNode = { x: node.x(), y: node.y() };
+    this.setNodeBoder(node, stageConfig);
+
+    //return rectDiv;
   }
 
 
@@ -744,35 +808,12 @@ class TShirtDesigner {
       node.offsetX(node.width() / 2);
       node.offsetY(node.height() / 2);
       this.showBorderNode(node, stageConfig);
+
+      this.setMenu();
     });
-
-    // Xử lý selection
-    // stage.on('click tap', (e) => {
-    //     if (e.target === stage) {
-    //         stageConfig.selectedNode = null;
-    //         if (this.onSelectObject) {
-    //             this.onSelectObject(false);
-    //         }
-    //         if (this.currentStage.borderDiv) {
-
-    //           this.currentStage.borderDiv.style.display = 'none';
-    //         }
-    //         this.clearBorderNode(this.currentStage);
-
-    //         return;
-    //     }
-
-    //     const clickedNode = e.target;
-    //     this.showBorderNode(clickedNode, stageConfig);
-    //     if (this.onSelectObject) {
-    //         this.onSelectObject(true);
-    //     }
-    // });    
-
 
     stage.on('click tap', (e) => {
       if (e.target === stage) {
-        stageConfig.selectedNode = null;
         if (this.onSelectObject) {
           this.onSelectObject(false);
         }
@@ -780,11 +821,20 @@ class TShirtDesigner {
           this.currentStage.borderDiv.style.display = 'none';
         }
         this.clearBorderNode(this.currentStage);
+        this.resetWHROfNode();
+        this.resetRSOfNode();
       } else {
         const clickedNode = e.target;
         this.showBorderNode(clickedNode, stageConfig);
         if (this.onSelectObject) {
           this.onSelectObject(true);
+        }
+        this.setMenu();
+        if (e.target instanceof Konva.Text) {
+          this.getRSOfNode();
+        }
+        else if (e.target instanceof Konva.Image) {
+          this.getWHROfNode();
         }
       }
     });
@@ -792,7 +842,7 @@ class TShirtDesigner {
     window.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
       if (!(target instanceof HTMLCanvasElement) || !target.closest('.konvajs-content')) {
-        stageConfig.selectedNode = null;
+
         if (this.onSelectObject) {
           this.onSelectObject(false);
         }
@@ -800,11 +850,14 @@ class TShirtDesigner {
           this.currentStage.borderDiv.style.display = 'none';
         }
         this.clearBorderNode(this.currentStage);
+        this.resetWHROfNode();
+        this.resetRSOfNode();
       }
     });
   }
 
-  private deleteSelectedNode(stageConfig: StageConfig) {
+  public deleteSelectedNode(/*stageConfig: StageConfig*/) {
+    const stageConfig = this.currentStage;
     if (stageConfig.selectedNode) {
       stageConfig.selectedNode.destroy();
       this.clearBorderNode(stageConfig);
@@ -912,6 +965,9 @@ class TShirtDesigner {
 
         this.currentStage.layer!.add(imgNode);
         this.currentStage.layer!.draw();
+        this.showBorderNode(imgNode, this.currentStage);
+        this.menuIndexSetter(5);
+        this.getWHROfNode();
       };
       img.src = e.target?.result as string;
     };
@@ -980,6 +1036,9 @@ class TShirtDesigner {
 
     this.currentStage.layer.add(textNode);
     this.currentStage.layer.draw();
+    this.showBorderNode(textNode, this.currentStage);
+    this.menuIndexSetter(6);
+    this.getRSOfNode();
   }
 
   public changeTextColor(color: string) {
@@ -1066,6 +1125,7 @@ class TShirtDesigner {
           priorityIndex++;
           if (node instanceof Konva.Image) {
             const imageElement = node.image() as HTMLImageElement;
+            imageElement.crossOrigin = 'anonymous';
             const file = this.base64ToFile(imageElement.src, 'image.png');
             try {
 
@@ -1120,7 +1180,6 @@ class TShirtDesigner {
     };
 
     const designs: any[] = [];
-
     for (const item in this.stages) {
       try {
         const designOfStage = {
@@ -1128,14 +1187,20 @@ class TShirtDesigner {
           designs: [] as any[],
         };
         const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
+        imageDom.crossOrigin = 'anonymous';
+
         const stageBase64 = await this.exportStage(this.stages[item], imageDom, this.data[item].code);
+
+
+
+
         const file = this.base64ToFile(stageBase64, 'image.png');
         const response = await uploadImage(file);
         designOfStage.final_image_url = response.file.cloudinary_url;
         designOfStage.designs = await getStageInfo(this.stages[item]);
         designs.push(designOfStage);
       } catch (error) {
-        console.log(error);
+        console.log('co loi ne', error);
       }
     }
 
@@ -1351,6 +1416,7 @@ class TShirtDesigner {
         for (const obj of sortedDesign) {
           if ((obj as any).type == 'image') {
             const img = new Image();
+            img.crossOrigin = "anonymous";
             await new Promise((resolve, reject) => {
               img.onload = resolve;
               img.onerror = reject;
@@ -1492,12 +1558,12 @@ class TShirtDesigner {
     }
   }
 
-  public copySelectedNode() {
-    if (!this.currentStage.selectedNode) return;
+  // public copySelectedNode() {
+  //   if (!this.currentStage.selectedNode) return;
 
-    this.clipboard = this.currentStage.selectedNode.clone();
+  //   this.clipboard = this.currentStage.selectedNode.clone();
 
-  }
+  // }
 
   public pasteNode() {
     if (!this.clipboard || !this.currentStage.layer) return;
@@ -1513,6 +1579,200 @@ class TShirtDesigner {
     this.currentStage.layer.draw();
 
 
+  }
+
+  public setWidthCenterPosition() {
+    if (this.currentStage.selectedNode != null) {
+      const node = this.currentStage.selectedNode;
+      if (this.currentStage.stage != null) {
+        node.x(this.currentStage.stage.width() / 2);
+      }
+    }
+  }
+  public setHeightCenterPosition() {
+    if (this.currentStage.selectedNode != null) {
+      const node = this.currentStage.selectedNode;
+      if (this.currentStage.stage != null) {
+        node.y(this.currentStage.stage.height() / 2);
+      }
+    }
+  }
+
+  public bringToFrontNode() {
+    if (this.currentStage.selectedNode != null && this.currentStage.layer != null) {
+      let nodeChildrend = this.currentStage.layer.getChildren();
+      if (nodeChildrend.length <= 1) {
+        return;
+      }
+      const node = this.currentStage.selectedNode;
+      let index = -1;
+      for (const item in nodeChildrend) {
+        if (nodeChildrend[item] == node) {
+          index = Number(item);
+          break;
+        }
+      }
+      if (index == nodeChildrend.length - 1) {
+        return;
+      }
+      if (index > -1 && index < nodeChildrend.length) {
+        const temp = nodeChildrend[index + 1];
+        nodeChildrend[index + 1] = nodeChildrend[index];
+        nodeChildrend[index] = temp;
+
+        this.currentStage.layer.removeChildren();
+        nodeChildrend.forEach(newNode => this.currentStage.layer?.add(newNode));
+      }
+    }
+  }
+
+  public sendToBackNode() {
+    if (this.currentStage.selectedNode != null && this.currentStage.layer != null) {
+      let nodeChildrend = this.currentStage.layer.getChildren();
+      if (nodeChildrend.length <= 1) {
+        return;
+      }
+      const node = this.currentStage.selectedNode;
+      let index = -1;
+      for (const item in nodeChildrend) {
+        if (nodeChildrend[item] == node) {
+          index = Number(item);
+          break;
+        }
+      }
+      if (index == 0) {
+        return;
+      }
+      if (index > -1 && index < nodeChildrend.length) {
+        const temp = nodeChildrend[index - 1];
+        nodeChildrend[index - 1] = nodeChildrend[index];
+        nodeChildrend[index] = temp;
+
+        this.currentStage.layer.removeChildren();
+        nodeChildrend.forEach(newNode => this.currentStage.layer?.add(newNode));
+      }
+    }
+  }
+
+  public setWHOfNode(width: number | null, height: number | null) {
+    if (this.currentStage.selectedNode != null) {
+      const node = this.currentStage.selectedNode as Konva.Node;
+      const clone = node.clone();
+      if (width != null) {
+        clone.width(width);
+      }
+      if (height != null) {
+        clone.height(height);
+      }
+      const cloneBounds = clone.getClientRect();
+      if (node instanceof Konva.Image) {
+        if (cloneBounds.x >= this.currentStage.stage!.x() && cloneBounds.x + cloneBounds.width <= this.currentStage.stage!.width() && cloneBounds.y >= this.currentStage.stage!.y() && cloneBounds.y + cloneBounds.height <= this.currentStage.stage!.height()) {
+          node.width(clone.width());
+          node.height(clone.height());
+        }
+      }
+      node.offsetX(node.width() / 2);
+      node.offsetY(node.height() / 2);
+      node.setAttr('rotationOfLastWidth', node.width());
+      node.setAttr('rotationOfLastHeight', node.height());
+      this.setNodeBoder(node, this.currentStage);
+      this.currentStage.layer!.draw();
+    }
+  }
+
+  public setRSOfNode(instance: number | null) {
+    if (this.currentStage.selectedNode != null) {
+      const node = this.currentStage.selectedNode as Konva.Node;
+      const clone = node.clone();
+      if (instance != null) {
+        clone.fontSize(instance);
+      }
+      const cloneBounds = clone.getClientRect();
+      if (node instanceof Konva.Text) {
+        if (cloneBounds.x >= this.currentStage.stage!.x() && cloneBounds.x + cloneBounds.width <= this.currentStage.stage!.width() && cloneBounds.y >= this.currentStage.stage!.y() && cloneBounds.y + cloneBounds.height <= this.currentStage.stage!.height()) {
+          node.fontSize(instance);
+        }
+      }
+      node.offsetX(node.width() / 2);
+      node.offsetY(node.height() / 2);
+      node.setAttr('rotationOfLastWidth', node.width());
+      node.setAttr('rotationOfLastHeight', node.height());
+      this.setNodeBoder(node, this.currentStage);
+      this.currentStage.layer!.draw();
+    }
+  }
+
+  public setROfNodeheight(newRotation: number) {
+    if (this.currentStage.selectedNode != null) {
+      const node = this.currentStage.selectedNode;
+      const stage = this.currentStage.stage as Konva.Stage;
+      node.rotation(newRotation);
+
+
+
+      // const scale = parseFloat(node.getAttr('rotationOfLastHeight')) / parseFloat(node.getAttr('rotationOfLastWidth'));
+
+      const bounds = node.getClientRect();
+      const defaultWidth = parseFloat(node.getAttr('rotationOfLastWidth'));
+      const defaultHeight = parseFloat(node.getAttr('rotationOfLastHeight'));
+      const tempNode = node.clone();
+      tempNode.width(defaultWidth);
+      tempNode.height(defaultHeight);
+      const tempBounds = tempNode.getClientRect();
+      if (tempBounds.x >= stage.x() && tempBounds.x + tempBounds.width <= stage.width() && tempBounds.y >= stage.y() && tempBounds.y + tempBounds.height <= stage.height()) {
+        node.width(defaultWidth);
+        node.height(defaultHeight);
+      }
+      else {
+        if (bounds.x < 0) {
+          const scale = node.x() / (node.x() - bounds.x)
+          node.width(node.width() * scale);
+          node.height(node.height() * scale);
+        }
+
+        if (bounds.x + bounds.width > stage.width()) {
+          // Tính khoảng cách dư thừa giữa phần bên phải của node và stage
+          const excessWidth = (bounds.x + bounds.width) - stage.width();
+
+          // Tính tỷ lệ thu nhỏ để node nằm vừa trong stage
+          const scale = (bounds.width - excessWidth) / bounds.width;
+
+          // Áp dụng scale để thay đổi kích thước node
+          node.width(node.width() * scale);
+          node.height(node.height() * scale);
+        }
+
+        if (bounds.y < 0) {
+          // Tính tỷ lệ thu nhỏ cho chiều dọc
+          const scale = node.y() / (node.y() - bounds.y);
+
+          // Áp dụng scale cho chiều rộng và chiều cao của node
+          node.width(node.width() * scale);
+          node.height(node.height() * scale);
+        }
+
+        // Kiểm tra nếu phần dưới của node vượt quá chiều cao của stage
+        if (bounds.y + bounds.height > stage.height()) {
+          // Tính khoảng cách dư thừa giữa phần dưới của node và stage
+          const excessHeight = (bounds.y + bounds.height) - stage.height();
+
+          // Tính tỷ lệ thu nhỏ cho chiều dọc
+          const scale = (bounds.height - excessHeight) / bounds.height;
+
+          // Áp dụng scale cho chiều rộng và chiều cao của node
+          node.width(node.width() * scale);
+          node.height(node.height() * scale);
+        }
+      }
+
+
+      node.offsetX(node.width() / 2);
+      node.offsetY(node.height() / 2);
+      this.setNodeBoder(node, this.currentStage);
+      this.currentStage.layer!.draw();
+
+      //rotateIcon.style.transform = `rotate(${newRotation}deg)`;
+    }
   }
 }
 

@@ -162,7 +162,6 @@ const fetchProductDetail = async (productId: string) => {
   const listColorVariant = new Map<string, object>();
 
   try {
-    console.log('hahgahahahahahaha');
     const client = new GraphQLClient(SALEOR_API_URL);
 
     // Gửi request và nhận dữ liệu

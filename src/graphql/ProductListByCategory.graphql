@@ -1,5 +1,6 @@
 query ProductListByCategory($slug: String!, $channel: String!) {
 	category(slug: $slug) {
+		id
 		name
 		description
 		seoDescription

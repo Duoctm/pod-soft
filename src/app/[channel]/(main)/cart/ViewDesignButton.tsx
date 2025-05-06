@@ -11,8 +11,7 @@ export function ViewDesignButton({ lineId, checkout }: ViewDesignButtonProps) {
     <button
       type="button"
       onClick={async () => {
-        const metadata = await fetchCheckoutLineMetadata(checkout, lineId) as any; // 👈 ép kiểu tại đây
-      
+        const metadata = await fetchCheckoutLineMetadata(checkout, lineId) as any;
         localStorage.setItem('designInfor', JSON.stringify(metadata));
         localStorage.setItem('cartId', lineId);
         window.location.replace(`design/2/${metadata.productId}/${metadata.colorValue}`);

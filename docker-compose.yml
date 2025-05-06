@@ -1,7 +1,9 @@
 services:
   saleor-storefront:
+    image: saleor-storefront
     container_name: saleor-storefront
     build:
+      context: .
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_SALEOR_API_URL: ${NEXT_PUBLIC_SALEOR_API_URL}
@@ -11,3 +13,9 @@ services:
       - .env
     ports:
       - 3000:3000
+    networks:
+      - storefront-network
+
+networks:
+  storefront-network:
+    driver: bridge

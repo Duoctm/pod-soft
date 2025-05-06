@@ -8,8 +8,8 @@ import Image from "next/image";
 import xss from "xss";
 import { toast, ToastContainer } from "react-toastify";
 import Link from "next/link";
-import { addItem } from "./checkout";
 import { getProductDetails } from "./getProductDetails";
+import { addCart } from "./addCart";
 
 import { NavigationButton } from "./_components/NavigationButton";
 import { ThumbnailGallery } from "./_components/ThumbnailGallery";
@@ -17,6 +17,8 @@ import { ProductTitle } from "./_components/ProductTitle";
 import { ProductDescription } from "./_components/ProductDescription";
 import { ProductAttributeSelector } from "./_components/ProductAttributeSelector";
 import { Loader } from "@/ui/atoms/Loader";
+import { useBreadcrumb } from "@/ui/components/BreadcrumbProvider";
+import {Breadcrumb} from "./Breadcrumb"
 import "react-toastify/dist/ReactToastify.css";
 
 // Initialize the parser once
@@ -61,6 +63,7 @@ interface Attribute {
 	attribute: AttributeRef;
 	values: AttributeValue[];
 }
+
 interface ProductVariant {
 	id: string;
 	sku: string | null;
@@ -71,11 +74,17 @@ interface ProductVariant {
 	attributes: Attribute[];
 	quantityLimitPerCustomer: number | null;
 }
+interface Category {
+	id: string;
+	name: string;
+	slug: string;
+}
 interface ProductDetails {
 	id: string;
 	slug: string;
 	name: string;
 	description: string | null;
+	category: Category;
 	defaultVariant: ProductVariant | null;
 	seoTitle: string | null;
 	seoDescription: string | null;
@@ -97,22 +106,19 @@ interface PageProps {
 	};
 }
 
-interface BlockProps{
+interface BlockProps {
 	id: string;
 	type: string;
 	data: {
 		text: string;
 	};
-
 }
 
-
-interface BlocksProps{
+interface BlocksProps {
 	timne: number;
 	version: string;
 	blocks: BlockProps[];
 }
-
 
 const getSearchKey = (attributes: Attribute[]): string => {
 	return [...attributes]
@@ -135,7 +141,12 @@ function getVariantsToAdd(
 }
 
 export default function Page({ params }: PageProps) {
+	const { setBreadcrumb } = useBreadcrumb();
 	const { slug, channel } = params;
+	const [productSlug, setProductSlug] = useState<string | null>(null);
+	const [productName, setProductName] = useState<string | null>(null);
+	const [catalogSlug, setCatalogSlug] = useState<string | null>(null);
+	const [catalogName, setCatalogName] = useState<string | null>(null);
 
 	const [productData, setProductData] = useState<ProductDetailsState | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
@@ -146,8 +157,10 @@ export default function Page({ params }: PageProps) {
 	const [quantity, _setQuantity] = useState(1);
 	const [selectColorAttributeValueId, setSelectColorAttributeValueId] = useState<string | null>(null);
 	const attributeValueIds = useRef<Map<string, string>>(new Map());
+	const attributeValueIdMetadata = useRef<Set<string>>(new Set());
 	const [sizeQuantities, setSizeQuantities] = useState<{ [size: string]: number }>({});
 	const [variantIds, setVariantIds] = useState<{ [size: string]: string }>({});
+	const [isCustomDesign, setIsCustomDesign] = useState<boolean>(true);
 	const sizeValues = Array.from(
 		new Set(
 			productData?.product?.variants?.flatMap((variant) =>
@@ -180,6 +193,24 @@ export default function Page({ params }: PageProps) {
 				if (!data.product) {
 					notFound();
 				}
+				const newData = data.product as ProductDetails;
+				setCatalogSlug(newData.category.slug);
+				setCatalogName(newData.category.name);
+				setProductSlug(newData.slug);
+				setProductName(newData.name);
+				
+				if (data.product.variants != null){
+					for (const item of data.product.variants) {
+						const variant = item as typeof item & { metadata?: { key: string; value: string }[] };
+
+						if (!variant.metadata || variant.metadata.length === 0) continue;
+
+						const customJsonEntry = variant.metadata.find((i) => i.key === "custom_json");
+						if (!customJsonEntry) continue;
+
+						attributeValueIdMetadata.current.add(variant.attributes[0].values[0].id);
+					}
+				}
 
 				const searchKey: { [key: string]: string } = {};
 				const variants = data.product?.variants;
@@ -202,7 +233,15 @@ export default function Page({ params }: PageProps) {
 					defaultVariant = data.product.variants[0] as ProductVariant;
 				}
 				setSelectedVariantId(() => defaultVariant?.id || null);
-				setSelectColorAttributeValueId(defaultVariant?.attributes[0].values[0].id ?? null)
+				setSelectColorAttributeValueId(defaultVariant?.attributes[0].values[0].id ?? null);
+				if (
+					defaultVariant?.attributes[0].values[0].id != null &&
+					attributeValueIdMetadata.current.has(defaultVariant?.attributes[0].values[0].id)
+				) {
+					setIsCustomDesign(true);
+				} else {
+					setIsCustomDesign(false);
+				}
 
 				const optionValue: { [key: string]: string } = {};
 				defaultVariant?.attributes.sort(commpareFunc).map((attr) => {
@@ -220,6 +259,15 @@ export default function Page({ params }: PageProps) {
 		};
 		void fetchData();
 	}, [channel, slug]);
+
+	useEffect(() => {
+		if (productName != null && productSlug != null && catalogSlug != null && catalogName != null){
+			setBreadcrumb(
+				<Breadcrumb channel={channel} catalogName={catalogName} catalogSlug={catalogSlug} productName={productName} productSlug={productSlug} />
+			  );
+		}
+		return () => setBreadcrumb(null);
+	  }, [setBreadcrumb, channel, catalogName, catalogSlug, productName, productSlug]);
 
 	if (error) {
 		console.error("Error fetching product data:", error);
@@ -261,8 +309,7 @@ export default function Page({ params }: PageProps) {
 			console.error("Error parsing product description:", parseError);
 			return [xss(productData?.product.description)];
 		}
-	}, [productData?.product?.description])
-
+	}, [productData?.product?.description]);
 
 	const selectedVariant = useMemo(() => {
 		if (!productData?.product?.variants || !selectedVariantId) {
@@ -314,7 +361,7 @@ export default function Page({ params }: PageProps) {
 				const key = attribute.name.toUpperCase();
 				if (!map.has(key)) map.set(key, new Set());
 				values.forEach((v) => map.get(key)?.add(v.name));
-				if (key == "COLOR"){
+				if (key == "COLOR") {
 					values.forEach((v) => attributeValueIds.current.set(v.name, v.id));
 				}
 			});
@@ -369,7 +416,6 @@ export default function Page({ params }: PageProps) {
 			</div>
 		);
 	}
-
 	return (
 		<div className="flex min-h-screen flex-col items-center py-8 font-sans">
 			<ToastContainer position="top-center" />
@@ -410,8 +456,8 @@ export default function Page({ params }: PageProps) {
 						/>
 					</div>
 					<div className="w-full">
-				<ProductDescription descriptionHtml={descriptionHtml}  title="Descriptions"/>
-			</div>
+						<ProductDescription descriptionHtml={descriptionHtml} title="Descriptions" />
+					</div>
 				</div>
 
 				{/* Product Details Section */}
@@ -429,8 +475,14 @@ export default function Page({ params }: PageProps) {
 									values={option.values}
 									selectedValue={opstions[option.name]}
 									onSelect={(value) => {
-										
-										setSelectColorAttributeValueId(attributeValueIds.current.get(value)|| null);
+										//setSelectColorAttributeValueId(attributeValueIds.current.get(value)|| null);
+										const selectedId = attributeValueIds.current.get(value) || null;
+										setSelectColorAttributeValueId(selectedId);
+										if (selectedId != null && attributeValueIdMetadata.current.has(selectedId)) {
+											setIsCustomDesign(true);
+										} else {
+											setIsCustomDesign(false);
+										}
 										return handleAttributeSelect(option.name, value);
 									}}
 								/>
@@ -476,54 +528,50 @@ export default function Page({ params }: PageProps) {
 					{/* Action Buttons */}
 					<div className="absolute bottom-4 right-4 flex items-center gap-4">
 						<button
+							id="add-to-cart-button"
 							className="transform rounded-lg bg-white px-6 py-3 text-base font-semibold text-black shadow-lg transition-all duration-300 hover:scale-105 hover:bg-slate-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#FD8C6E] focus:ring-offset-2 disabled:opacity-50"
 							disabled={
 								!Object.entries(sizeQuantities).some(([size, quantity]) => quantity > 0 && variantIds[size])
 							}
 							onClick={async () => {
-								const itemsToAdd = getVariantsToAdd(variantIds, sizeQuantities);
-								itemsToAdd.forEach(async ({ variantId, quantity }) => {
-									const errorNotification = (message: string) => {
-										toast.error(message);
-										setTimeout(function () {
-											window.location.href = `/${channel}/login`;
-										}, 2000);
-									};
-									if (quantity > quantityLimitPerCustomer) {
-										toast.error("Quantity exceeds available limit");
-										return;
-									}
-									const result = await addItem(params, variantId, quantity);
-									if (result?.error) {
-										errorNotification(`Please log in to place an order.`);
-										return;
-									}
+								document.getElementById("add-to-cart-button")?.setAttribute("disabled", "true");
+								const items = getVariantsToAdd(variantIds, sizeQuantities);
+								const result = await addCart(params, items);
+								if (result?.error) {
+									result.messages.forEach((item) => {
+										toast.error(item.message);
+									});
+								} else {
 									toast.success("Product added to cart");
-								});
+								}
+								setTimeout(() => {
+									document.getElementById("add-to-cart-button")?.removeAttribute("disabled");
+								}, 300);
 							}}
 						>
 							Add to Cart
 						</button>
-						<Link href={`/${channel}/design/1/${productData?.product?.id}/${selectColorAttributeValueId}`}>
-							<button
-								className="transform rounded-lg bg-slate-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-slate-800/90 focus:outline-none focus:ring-2 focus:ring-[#8C3859] focus:ring-offset-2 disabled:opacity-50"
-								onClick={() => {
-									localStorage.setItem(
-										"cart",
-										JSON.stringify({
-											params: params,
-											selectedVariantId: selectedVariantId,
-											quantity: quantity,
-										}),
-									);
-								}}
-							>
-								Customize Design
-							</button>
-						</Link>
+						{isCustomDesign == true && (
+							<Link href={`/${channel}/design/1/${productData?.product?.id}/${selectColorAttributeValueId}`}>
+								<button
+									className="transform rounded-lg bg-slate-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-slate-800/90 focus:outline-none focus:ring-2 focus:ring-[#8C3859] focus:ring-offset-2 disabled:opacity-50"
+									onClick={() => {
+										localStorage.setItem(
+											"cart",
+											JSON.stringify({
+												params: params,
+												selectedVariantId: selectedVariantId,
+												quantity: quantity,
+											}),
+										);
+									}}
+								>
+									Customize Design
+								</button>
+							</Link>
+						)}
 					</div>
 				</div>
-
 			</div>
 		</div>
 	);

@@ -94,7 +94,7 @@ export async function fetchCollectionProducts(
 	collectionId: string,
 	limit: number = 10,
 	channel: string = "default-channel",
-)  {
+) {
 	try {
 		console.log(
 			`[fetchCollectionProducts] Fetching products for collection: ${collectionId} with limit: ${limit} in channel: ${channel}`,

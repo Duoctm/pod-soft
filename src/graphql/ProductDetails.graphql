@@ -4,6 +4,11 @@ query GetProductDetails($channel: String!, $slug: String!) {
 			slug
 			name
 			description
+			category {
+				id
+				name
+				slug
+			}
 			defaultVariant {
 				id
 				sku
@@ -64,6 +69,10 @@ query GetProductDetails($channel: String!, $slug: String!) {
 					}
 				}
 				quantityLimitPerCustomer
+				metadata{
+					key
+					value
+				}
 			}
 			thumbnail(size: 1024, format: WEBP) {
 				url

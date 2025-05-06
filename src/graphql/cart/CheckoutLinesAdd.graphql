@@ -1,0 +1,30 @@
+input CheckoutLineInput {
+	quantity: Int!
+	variantId: ID!
+}
+
+mutation CheckoutLinesAddMultipleItems($id: ID!, $lines: [CheckoutLineInput!]!) {
+	checkoutLinesAdd(id: $id, lines: $lines) {
+		checkout {
+			id
+			lines {
+				id
+				variant {
+					id
+					name
+				}
+				quantity
+			}
+			totalPrice {
+				gross {
+					currency
+					amount
+				}
+			}
+		}
+		errors {
+			field
+			message
+		}
+	}
+}

@@ -22,7 +22,7 @@ function Page({ params }: PageProps) {
 
   useEffect(() => {
     if (type === 2) {
-      const json =  localStorage.getItem("designInfor") 
+      const json =  localStorage.getItem("designInfor");
       // setJsonDesign(json)
       // // console.log('component mount', json);
       // //const data = JSON.parse(json) as DesignInfo

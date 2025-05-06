@@ -9,7 +9,7 @@ const config = {
 				protocol: "https",
 				hostname: "res.cloudinary.com",
 				port: "",
-				pathname: "dzzqvl1b2/image/**",
+				pathname: "/dzzqvl1b2/image/**",
 			}
 		],
 		unoptimized: process.env.NEXT_IMAGE_UNOPTIMIZED === "true",
@@ -32,7 +32,7 @@ const config = {
 		ignoreDuringBuilds: true,
 	},
 
-	reactStrictMode: true,
+	reactStrictMode: false,
 	experimental: {
 		appDir: true,
 	},

@@ -1,92 +1,59 @@
-import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { executeGraphQL } from '@/lib/graphql';
-import { ProductListByCategoryDocument } from '@/gql/graphql';
-import { notFound } from 'next/navigation';
- 
-export interface PageProps {
-  params: {
-    slug: string;
-    channel: string;
-  };
-}
+"use client";
 
-const CatalogPage = async ({ params }: PageProps) => {
-  const { slug, channel } = params;
-  
-  try {
-    if (!slug) {
-      throw new Error("Collection ID is missing");
-    }
-    
-    const { category } = await executeGraphQL(ProductListByCategoryDocument, {
-      variables: { slug: params.slug, channel: params.channel },
-      revalidate: 60,
-    });
+import React from "react";
+import { FilterSidebar } from "./_components/filter-sidebar";
+import { ProductCard } from "./_components/ProductCard";
+import { useCategoryData } from "./hooks/useCategoryData";
+const CategoryPage = ({ params }: { params: { slug: string; channel: string } }) => {
+	const { attributes, category, setCategory } = useCategoryData(params.slug, params.channel);
 
-    if (!category || !category.products) {
-      notFound();
-    }
-  
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-12 text-center text-gray-800">
-          Collection Products
-        </h1>
-        
-        {category.products.edges.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {category.products.edges.map((product) => (
-              <Link
-                href={`/${channel}/products/${product.node.slug}`}
-                key={product.node.id} 
-                className="group bg-white rounded-xl shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-105"
-              >
-                <div className="relative aspect-square w-full">
-                  {product.node.thumbnail ? (
-                    <Image
-                      src={product.node.thumbnail.url}
-                      alt={product.node.name}
-                      fill
-                      className="object-contain group-hover:scale-100 scale-90 transition-all duration-300"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      priority
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <span className="text-gray-400">No image available</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="p-6">
-                  <h2 className="text-xl font-semibold mb-3 text-gray-800 line-clamp-2">
-                    {product.node.name}
-                  </h2>
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                    {product.node.name}
-                  </p>
+	if (!attributes || !category) {
+		return (
+			<div className="fixed inset-0 flex items-center justify-center bg-white">
+				<div className="flex flex-col items-center">
+					<div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-500"></div>
+					<p className="mt-4 text-lg text-gray-600">Loading...</p>
+				</div>
+			</div>
+		);
+	}
 
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16 bg-gray-50 rounded-xl">
-            <p className="text-xl text-gray-600">No products found in this collection.</p>
-          </div>
-        )}
-      </div>
-    );
-  } catch (error) {
-    console.error("Error in CatalogPage:", error);
-    return (
-      <div className="flex h-[70vh] items-center justify-center bg-gray-50">
-        <p className="text-xl text-gray-600">No data available.</p>
-      </div>
-    );
-  }
+	return (
+		<div className="relative mx-auto max-w-screen-2xl px-4 py-8">
+			<h1 className="mb-12 text-center text-4xl font-bold text-gray-800">
+				{category?.name || "Collection Products"}
+			</h1>
+			<div className="relative flex items-start">
+				<FilterSidebar
+					channel={params.channel}
+					slug={params.slug}
+					category={category}
+					attributes={attributes}
+					setCategory={setCategory}
+				/>
+				{category.products?.edges && category.products.edges.length > 0 ? (
+					<div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+						{category.products.edges.map((product) => (
+							<ProductCard key={product.node.id} product={product} channel={params.channel} />
+						))}
+					</div>
+				) : (
+					<div className="flex min-h-[400px] w-full flex-col items-center justify-center rounded-lg bg-gray-50">
+						<svg
+							className="mb-4 h-16 w-16 text-gray-400"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
+						</svg>
+						<h3 className="mb-2 text-xl font-semibold text-gray-700">No Products Found</h3>
+						<p className="text-gray-500">There are no products available in this category.</p>
+					</div>
+				)}
+			</div>
+		</div>
+	);
 };
 
-export default CatalogPage;
+export default CategoryPage;

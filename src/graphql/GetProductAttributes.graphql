@@ -1,0 +1,18 @@
+query GetProductAttributes {
+	attributes(filter: { filterableInStorefront: true }, first: 10) {
+		edges {
+			node {
+				name
+				slug
+				choices(first: 100) {
+					edges {
+						node {
+							name
+							slug
+						}
+					}
+				}
+			}
+		}
+	}
+}

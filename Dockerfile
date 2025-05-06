@@ -3,7 +3,15 @@ FROM node:20-alpine AS base
 # Install dependencies only when needed
 FROM base AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+# Install dependencies needed for native modules like canvas, and build tools
+RUN apk add --no-cache libc6-compat python3 make g++ pkgconfig \
+    cairo-dev \
+    jpeg-dev \
+    giflib-dev \
+    pango-dev \
+    librsvg-dev \
+    pixman-dev \
+    libpng-dev
 WORKDIR /app
 
 ENV PNPM_HOME="/pnpm"
@@ -11,6 +19,7 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
 COPY package.json pnpm-lock.yaml ./
+# This command should now succeed with the dependencies installed above
 RUN pnpm i --frozen-lockfile --prefer-offline
 
 # Rebuild the source code only when needed
@@ -48,7 +57,7 @@ ENV NODE_ENV production
 ARG NEXT_PUBLIC_SALEOR_API_URL
 ENV NEXT_PUBLIC_SALEOR_API_URL=${NEXT_PUBLIC_SALEOR_API_URL}
 ARG NEXT_PUBLIC_STOREFRONT_URL
-ENV NEXT_PUBLIC_STOREFRONT_URL=${NEXT_PUBLIC_STOREFRONT_URL:-http://192.168.1.12:3000}
+ENV NEXT_PUBLIC_STOREFRONT_URL=${NEXT_PUBLIC_STOREFRONT_URL}
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs

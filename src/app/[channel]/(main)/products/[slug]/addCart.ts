@@ -1,21 +1,24 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { invariant } from "ts-invariant";
-import { executeGraphQL } from "@/lib/graphql";
-import { CheckoutAddLineDocument } from "@/gql/graphql";
+import { checkoutLinesAddMultipleItems } from "./utils/checkoutLinesAddMultipleItems";
 import * as Checkout from "@/lib/checkout";
 import { getUserServer } from "@/checkout/hooks/useUserServer";
+import { type CheckoutLineInput } from "@/gql/graphql";
 
-export type AddItemResponse = {
+export type ErrorResponse = {
 	error: boolean;
-	message: string;
+	type: string;
+	messages: {
+		field: string;
+		message: string;
+	}[];
 };
 
-export async function addItem(
+export async function addCart(
 	params: { slug: string; channel: string },
-	selectedVariantID: string | null,
-	quantity: number,
-): Promise<AddItemResponse | void> {
+	lines: CheckoutLineInput[],
+): Promise<ErrorResponse | void> {
 	"use server";
 	try {
 		await getUserServer();
@@ -31,22 +34,24 @@ export async function addItem(
 		// eslint-disable-next-line @typescript-eslint/await-thenable
 		await Checkout.saveIdToCookie(params.channel, checkout.id);
 
-		if (!selectedVariantID) {
-			return;
-		}
-
-		// TODO: error handling
-		await executeGraphQL(CheckoutAddLineDocument, {
-			variables: {
-				id: checkout.id,
-				productVariantId: decodeURIComponent(selectedVariantID),
-				quantity: quantity,
-			},
-			cache: "no-cache",
+		const updatedCheckout = await checkoutLinesAddMultipleItems({
+			id: checkout.id,
+			lines,
 		});
+
+		if (updatedCheckout?.errors?.length) {
+			return {
+				error: true,
+				type: "Checkout",
+				messages: updatedCheckout.errors.map((error) => ({
+					field: error.field || "",
+					message: error.message ?? "",
+				})),
+			};
+		}
 
 		revalidatePath("/cart");
 	} catch (error) {
-		return { error: true, message: (error as Error).message };
+		return { error: true, type: "User", messages: [{ field: "user", message: (error as Error).message }] };
 	}
 }

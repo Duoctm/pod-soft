@@ -22,11 +22,11 @@ export async function find(checkoutId: string) {
 	try {
 		const { checkout } = checkoutId
 			? await executeGraphQL(CheckoutFindDocument, {
-					variables: {
-						id: checkoutId,
-					},
-					cache: "no-cache",
-			  })
+				variables: {
+					id: checkoutId,
+				},
+				cache: "no-cache",
+			})
 			: { checkout: null };
 
 		return checkout;
