@@ -19,8 +19,8 @@ export const Logo = () => {
 
 	return (
 		<div className="flex items-center font-bold">
-			<LinkWithChannel aria-label="homepage" href="/" className="flex items-center gap-2">
-				<Image src="/images/main-bg.png"  alt="SwiftPod Logo" width={100} height={100} priority />
+			<LinkWithChannel aria-label="homepage" href="/" className="flex items-center gap-2 relative">
+				<Image src="/images/main-logo.png"  alt="SwiftPod Logo" width={170} height={75} priority />
 			</LinkWithChannel>
 		</div>
 	);

@@ -1125,15 +1125,24 @@ class TShirtDesigner {
           priorityIndex++;
           if (node instanceof Konva.Image) {
             const imageElement = node.image() as HTMLImageElement;
-            imageElement.crossOrigin = 'anonymous';
-            const file = this.base64ToFile(imageElement.src, 'image.png');
-            try {
+            //console.log('debug nua ne hehe', imageElement.src); 
+            //imageElement.crossOrigin = 'anonymous';
 
-              const response = await uploadImage(file);
+
+            try {
+              var cloudinary_url = "";
+              if (/^data:image\/[a-zA-Z]+;base64,/.test(imageElement.src)) {
+                const file = this.base64ToFile(imageElement.src, 'image.png');
+                const response = await uploadImage(file);
+                cloudinary_url = response.file.cloudinary_url;
+              }
+              else {
+                cloudinary_url = imageElement.src;
+              }
 
               design.push({
                 type: 'image',
-                src: response.file.cloudinary_url,
+                src: cloudinary_url,
                 x: node.x(),
                 y: node.y(),
                 offset_x: node.offsetX(),
@@ -1146,7 +1155,7 @@ class TShirtDesigner {
                 width: node.width(),
                 height: node.height(),
                 priority_index: priorityIndex,
-                cloud_url: response.file.cloudinary_url, // Optional: add uploaded URL
+                cloud_url: cloudinary_url, // Optional: add uploaded URL
               });
             } catch (error) {
               console.log("Upload failed:", error);
@@ -1189,14 +1198,14 @@ class TShirtDesigner {
         const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
         imageDom.crossOrigin = 'anonymous';
 
-        const stageBase64 = await this.exportStage(this.stages[item], imageDom, this.data[item].code);
+        //const stageBase64 = await this.exportStage(this.stages[item], imageDom, this.data[item].code);
+
+        //console.log('dang debug ne', stageBase64);
 
 
-
-
-        const file = this.base64ToFile(stageBase64, 'image.png');
-        const response = await uploadImage(file);
-        designOfStage.final_image_url = response.file.cloudinary_url;
+        //const file = this.base64ToFile(stageBase64, 'image.png');
+        //const response = await uploadImage(file);
+        //designOfStage.final_image_url = response.file.cloudinary_url;
         designOfStage.designs = await getStageInfo(this.stages[item]);
         designs.push(designOfStage);
       } catch (error) {

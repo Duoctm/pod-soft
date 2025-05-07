@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import DesignPage from "./component/DesignPage";
 import { DesignInfo } from "./utils/type";
+import { useBreadcrumb } from "@/ui/components/BreadcrumbProvider";
 
 interface PageProps {
   params: {
@@ -12,12 +13,15 @@ interface PageProps {
 }
 
 function Page({ params }: PageProps) {
+  const { setBreadcrumb } = useBreadcrumb();
+  setBreadcrumb("");
   const { slug = [] } = params;
   const type = Number(decodeURIComponent(slug[0]));
   const productId = decodeURIComponent(slug[1]);
   const colorId = decodeURIComponent(slug[2]);
 
   const [colorDataMap, setColorDataMap] = useState<DesignInfo | null>(null);   
+
 
 
   useEffect(() => {

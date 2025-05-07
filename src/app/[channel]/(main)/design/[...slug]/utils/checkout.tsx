@@ -65,7 +65,7 @@ export async function addItem(
       return true
     }
     catch(error){
-     
+     console.log(error);
     }
     return false;
   
@@ -81,9 +81,16 @@ export async function addItem(
   ) {
     "use server";
   
+   try{
     await updateCheckoutLineMetadata(checkoutLineId ?? "", [{
       key: "design",
       value: metadata,
     }]);
+    return true;
+   }
+   catch(error){
+    console.log(error);
+   }
+   return false;
   
   }

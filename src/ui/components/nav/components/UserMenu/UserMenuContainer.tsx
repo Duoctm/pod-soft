@@ -15,7 +15,7 @@ export async function UserMenuContainer() {
   return (
     <LinkWithChannel
       href="/login"
-      className="flex items-center justify-center rounded-md p-2 text-white hover:text-[#FD8C6E] transition-colors"
+      className="flex items-center justify-center rounded-md p-2 "
     >
       <UserIcon className="h-6 w-6" aria-hidden="true" />
       <span className="sr-only">Log in</span>

@@ -8,9 +8,10 @@ import { Typography, IconButton, Box, Paper, Modal, Button } from '@mui/material
 import { styled } from '@mui/material/styles';
 import {DesignInfo, PrintFaceData} from '..//utils/type';
 import {/*fetchProductDetail, */getMetaDtataFromColorVariant, getVariantIdFromColorVariant} from '../utils/data'
-import {addItem/*, UpdateDesign*/} from '../utils/checkout'
+import {addItem, UpdateDesign} from '../utils/checkout'
 import {fetchProductDetail} from '../utils/test'
-import {toast} from 'react-toastify'
+import {toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const StyledButton = styled(IconButton)(() => ({
   backgroundColor: 'transparent',
@@ -59,7 +60,7 @@ function DesignPage( param : DesignPageProps) {
   const [resizeFontSize, setFontSize] = useState<number | undefined>(undefined);
   const [isSpinner, setSpinner] = useState<boolean>(false);
   console.log(showObjectMenu);
-
+  
 
   const loadProductData = async (productId : string) => {
     var result : Map<string, object>;
@@ -135,7 +136,7 @@ function DesignPage( param : DesignPageProps) {
         }
             try {
               if (param.designInfor) {
-                  
+                 
                   const designs: object[][] = []; 
                     let index = -1;
                     // for (const design of param.designInfor.get("designs")){
@@ -282,6 +283,7 @@ function DesignPage( param : DesignPageProps) {
       </div>
       
       )}
+      <ToastContainer />
       <Box className="w-full">
         <Box className="relative">
           <Paper
@@ -1476,7 +1478,7 @@ function DesignPage( param : DesignPageProps) {
                     textTransform: 'none',
                 }}
                 onClick={async () => {
-                 
+                  setSpinner(true);
                   const json = localStorage.getItem("cart");
                   
                   if (json != null && json !== undefined) {
@@ -1500,9 +1502,9 @@ function DesignPage( param : DesignPageProps) {
                       if (hasObjectInStage == true){
                         metaData =  await designerRef.current.exportDesignToJson();
                       }
-                      setSpinner(true);
+                      
                       const result = await addItem(cartItem.params, cartItem.selectedVariantId, cartItem.quantity, metaData);
-                      setSpinner(false);
+                      console.log('het qua', result);
                       if (result == true){
                         toast.success('Design added to cart successfully');
                       }
@@ -1513,6 +1515,7 @@ function DesignPage( param : DesignPageProps) {
                       //window.location.replace(/${param.channel}/cart);
                     }
                   }
+                  setSpinner(false);
                 }}
                 >
                 Add to Cart
@@ -1523,7 +1526,7 @@ function DesignPage( param : DesignPageProps) {
 
           <Button
               sx={{
-                  backgroundColor: '#322f75',
+                  backgroundColor:  '#000000',
                   color: '#ffffff',
                   '&:hover': {
                   backgroundColor: '#2b2966',
@@ -1533,16 +1536,24 @@ function DesignPage( param : DesignPageProps) {
                   textTransform: 'none',
               }}
               onClick={async () => {
+                setSpinner(true);
                 const cartId = localStorage.getItem("cartId");
                 if (cartId != null && cartId != undefined){
                   if (designerRef.current != null){
-                    /*const metaData = */await designerRef.current.exportDesignToJson();
+                    const metaData = await designerRef.current.exportDesignToJson();
                    
-                    //await UpdateDesign(cartId, metaData);
+                    const result = await UpdateDesign(cartId, metaData);
+                    if (result == true){
+                      toast.success('Design updated successfully');
+                    }
+                    else{
+                      toast.error('An error occurred during processing. Please try again later');
+                    }
                     //localStorage.removeItem('cartId');
                   }
                   //window.location.replace(`/${param.channel}/cart`);
                 }
+                setSpinner(false);
 
                 
                 // if (designerRef.current != null){

@@ -11,6 +11,10 @@ query CheckoutFind($id: ID!) {
 					currency
 				}
 			}
+			metadata {
+				key
+				value
+			}
 			variant {
 				product {
 					id
@@ -31,6 +35,20 @@ query CheckoutFind($id: ID!) {
 							currency
 						}
 					}
+				}
+				attributes {
+					attribute {
+						name
+						id
+					}
+					values {
+						name
+						id
+					}
+				}
+				metadata {
+					key
+					value
 				}
 				name
 				id

@@ -13,10 +13,10 @@ export function NavLink({ href, children }: { href: string; children: JSX.Elemen
 			<LinkWithChannel
 				href={href}
 				className={clsx(
-					"inline-flex items-center rounded-md px-4 py-2 text-sm font-medium transition-colors",
+					"space-x-[2%] text-sm leading-[100%] text-[#424255]",
 					isActive
-						? "bg-[#FD8C6E] text-white" // Active link: Coral background, white text
-						: "text-back hover:text-[#FD8C6E]", // Inactive: white text, coral on hover
+						? "font-bold text-[#ED806B]" // Active link: Coral background, white text
+						: "font-medium text-[#424255]", // Inactive: white text, coral on hover
 				)}
 			>
 				{children}

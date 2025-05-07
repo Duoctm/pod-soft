@@ -5,6 +5,7 @@ import * as Checkout from "@/lib/checkout";
 import { formatMoney, getHrefForVariant } from "@/lib/utils";
 import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
 import { ViewDesignButton } from "./ViewDesignButton";
+import { DesignButton } from "./DesignButton";
 
 export const metadata = {
 	title: "Shopping Cart - ZoomPrint",
@@ -76,11 +77,19 @@ export default async function Page({ params }: { params: { channel: string } }) 
 										{formatMoney(item.totalPrice.gross.amount, item.totalPrice.gross.currency)}
 									</p>
 								</div>
-								<div className="flex justify-between">
+								<div className="flex justify-between items-center">
 									<div className="text-sm font-bold">Qty: {item.quantity}</div>
-									<ViewDesignButton  lineId={item.id} checkout={checkoutId} />
+
+									<div className="flex space-x-2">
+									{Array.isArray(item.metadata) && item.metadata.length > 0 && <ViewDesignButton lineId={item.id} checkout={checkoutId} />}
+									{Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && <DesignButton colorId={item.variant.attributes[0].values[0].id} productId={item.variant.product.id} />}
+									</div>
+
 									<DeleteLineButton checkoutId={checkoutId} lineId={item.id} />
-								</div> 
+								</div>
+
+
+
 
 							</div>
 						</li>

@@ -1,4 +1,4 @@
-import { ShoppingBagIcon } from "lucide-react";
+import {  ShoppingCart } from "lucide-react";
 import clsx from "clsx";
 import * as Checkout from "@/lib/checkout";
 import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
@@ -11,7 +11,7 @@ export const CartNavItem = async ({ channel }: { channel: string }) => {
 
 	return (
 		<LinkWithChannel href="/cart" className="relative flex items-center" data-testid="CartNavItem">
-			<ShoppingBagIcon className="h-6 w-6 shrink-0" aria-hidden="true" />
+			<ShoppingCart className="h-6 w-6 shrink-0" aria-hidden="true" />
 			{lineCount > 0 ? (
 				<div
 					className={clsx(

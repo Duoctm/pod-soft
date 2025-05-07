@@ -101,6 +101,9 @@ importers:
       sharp:
         specifier: 0.33.2
         version: 0.33.2
+      tailwind-merge:
+        specifier: 3.2.0
+        version: 3.2.0
       ts-invariant:
         specifier: 0.10.3
         version: 0.10.3
@@ -3713,6 +3716,9 @@ packages:
 
   swap-case@2.0.2:
     resolution: {integrity: sha512-kc6S2YS/2yXbtkSMunBtKdah4VFETZ8Oh6ONSmSd9bRxhqTrtARUCBUiWXH3xVPpvR7tz2CSnkuXVE42EcGnMw==}
+
+  tailwind-merge@3.2.0:
+    resolution: {integrity: sha512-FQT/OVqCD+7edmmJpsgCsY820RTD5AkBryuG5IUqR5YQZSdj5xlH5nLgH7YPths7WsLPSpSBNneJdM8aS8aeFA==}
 
   tailwindcss@3.4.0:
     resolution: {integrity: sha512-VigzymniH77knD1dryXbyxR+ePHihHociZbXnLZHUyzf2MMs2ZVqlUrZ3FvpXP8pno9JzmILt1sZPD19M3IxtA==}
@@ -8113,6 +8119,8 @@ snapshots:
   swap-case@2.0.2:
     dependencies:
       tslib: 2.6.3
+
+  tailwind-merge@3.2.0: {}
 
   tailwindcss@3.4.0:
     dependencies:
