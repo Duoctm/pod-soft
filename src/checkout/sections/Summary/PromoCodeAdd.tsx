@@ -4,7 +4,7 @@ import { addPromodeCode } from "@/checkout/hooks/useAddPromoddeCode";
 import "react-toastify/dist/ReactToastify.css";
 import { LoaderCircle } from "lucide-react";
  
-export const PromoCodeAdd = ({ id }: { id: string }) => {
+export const PromoCodeAdd = ({ id, update }: { id: string , update: ()=> void}) => {
 	const [voucherCode, setVoucherCode] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [spamCount, setSpamCount] = useState(0);
@@ -18,7 +18,9 @@ export const PromoCodeAdd = ({ id }: { id: string }) => {
 
 		try {
 			const result = await addPromodeCode(voucherCode, id);
-			if (result?.success == false) {
+			console.log(result)
+
+			if (result?.success === false) {
 				const errors = result?.data;
 				if (errors.length > 0) {
 					errors.map((err: any) => {
@@ -41,7 +43,7 @@ export const PromoCodeAdd = ({ id }: { id: string }) => {
 				toast.success("Promo code applied successfully!");
 				setVoucherCode("");
 				setSpamCount(0); // Reset spam count on success
-				window.location.reload();	
+				update();
 			}
 		} catch (error) {
 			console.error("Failed to apply promo code:", error);

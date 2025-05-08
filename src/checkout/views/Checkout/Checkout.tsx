@@ -159,7 +159,8 @@ export const Checkout = () => {
 					setCheckout(data.checkout as CheckoutType);
 				}
 			} catch (error) {
-				window.location.href = "/";
+				// window.location.href = "/";
+				update();
 			} finally {
 				if (isMounted) {
 					setLoadingCheckout(false);

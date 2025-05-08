@@ -16,8 +16,11 @@ export const addPromodeCode = async (promoCode: string, id: string, ): Promise<P
                 promoCode: promoCode,
             },
         });
-        if (!checkoutAddPromoCode) {
-            return { success: false, data: null };
+
+        console.log(checkoutAddPromoCode)
+
+        if (!checkoutAddPromoCode?.checkout && (checkoutAddPromoCode?.errors as unknown as []).length > 0  ) {
+            return { success: false, data: checkoutAddPromoCode?.errors};
         }
  
 

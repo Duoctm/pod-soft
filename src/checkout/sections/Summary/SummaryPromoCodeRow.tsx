@@ -12,10 +12,12 @@ interface SummaryPromoCodeRowProps extends SummaryMoneyRowProps {
 	promoCodeId?: string;
 	editable: boolean;
 	id: string;
+	update: () => void;	
 }
 
 export const SummaryPromoCodeRow: React.FC<SummaryPromoCodeRowProps> = ({
 	promoCode,
+	update,
 	promoCodeId,
 	editable,
 	id,
@@ -24,13 +26,13 @@ export const SummaryPromoCodeRow: React.FC<SummaryPromoCodeRowProps> = ({
 	const [, checkoutRemovePromoCode] = useCheckoutRemovePromoCodeMutation();
 
 	const handleDelete = async () => {
-		void checkoutRemovePromoCode({
+		await checkoutRemovePromoCode({
 			languageCode: "EN_US",
 			checkoutId: id,
 			promoCode: promoCode,
 		});
 		toast.success("Promo code removed successfully");
-		window.location.reload();		
+		update();	
 	};
 
 	return (

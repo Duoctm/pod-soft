@@ -71,7 +71,7 @@ export const Summary: FC<SummaryProps> = ({
 			</details>
 			{editable && (
 				<>
-					<PromoCodeAdd id={id} />
+					<PromoCodeAdd id={id}  update={update}/>
 					<Divider />
 				</>
 			)}
@@ -85,6 +85,7 @@ export const Summary: FC<SummaryProps> = ({
 						ariaLabel="voucher"
 						label={`Voucher code: ${voucherCode}`}
 						money={discount}
+						update={update}
 						negative
 					/>
 				)}
@@ -98,6 +99,7 @@ export const Summary: FC<SummaryProps> = ({
 						ariaLabel="gift card"
 						label={`Gift Card: •••• •••• ${displayCode}`}
 						money={currentBalance}
+						update={update}
 						negative
 					/>
 				))}
