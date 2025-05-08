@@ -1,5 +1,5 @@
 import { request, gql, GraphQLClient } from "graphql-request";
-import { PrintFaceData } from './type'
+import { type PrintFaceData } from './type'
 
 const endpoint = process.env.NEXT_PUBLIC_SALEOR_API_URL as unknown as string;
 const SALEOR_API_URL = process.env.NEXT_PUBLIC_SALEOR_API_URL as string;

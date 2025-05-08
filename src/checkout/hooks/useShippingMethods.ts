@@ -1,6 +1,6 @@
 'use server'
 import { executeGraphQL } from "@/lib/graphql";
-import { ShippingMethodListQuery, ShippingMethodListQueryVariables, CountryCode, ShippingMethodListDocument } from "@/gql/graphql";
+import { type ShippingMethodListQuery, type ShippingMethodListQueryVariables, type CountryCode, ShippingMethodListDocument } from "@/gql/graphql";
 
 
 type ShippingMethodListOptions = {

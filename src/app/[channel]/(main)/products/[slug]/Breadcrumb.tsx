@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Home, ChevronRight } from "lucide-react";
 
 export function Breadcrumb({ channel, catalogName, catalogSlug, productName, productSlug }: { channel: string | null, catalogName: string | null, catalogSlug: string | null, productName: string | null,  productSlug: string | null}) {
-  var breadcrumbs : any[] = [];
+  const breadcrumbs : any[] = [];
   breadcrumbs.push({
     href: `/${channel}/catalog`,
     label: `Catalog`

@@ -16,9 +16,9 @@ import { ThumbnailGallery } from "./_components/ThumbnailGallery";
 import { ProductTitle } from "./_components/ProductTitle";
 import { ProductDescription } from "./_components/ProductDescription";
 import { ProductAttributeSelector } from "./_components/ProductAttributeSelector";
+import {Breadcrumb} from "./Breadcrumb"
 import { Loader } from "@/ui/atoms/Loader";
 import { useBreadcrumb } from "@/ui/components/BreadcrumbProvider";
-import {Breadcrumb} from "./Breadcrumb"
 import "react-toastify/dist/ReactToastify.css";
 
 // Initialize the parser once
@@ -198,8 +198,8 @@ export default function Page({ params }: PageProps) {
 				setCatalogName(newData.category.name);
 				setProductSlug(newData.slug);
 				setProductName(newData.name);
-				
-				if (data.product.variants != null){
+
+				if (data.product.variants != null) {
 					for (const item of data.product.variants) {
 						const variant = item as typeof item & { metadata?: { key: string; value: string }[] };
 
@@ -261,13 +261,13 @@ export default function Page({ params }: PageProps) {
 	}, [channel, slug]);
 
 	useEffect(() => {
-		if (productName != null && productSlug != null && catalogSlug != null && catalogName != null){
+		if (productName != null && productSlug != null && catalogSlug != null && catalogName != null) {
 			setBreadcrumb(
 				<Breadcrumb channel={channel} catalogName={catalogName} catalogSlug={catalogSlug} productName={productName} productSlug={productSlug} />
-			  );
+			);
 		}
 		return () => setBreadcrumb(null);
-	  }, [setBreadcrumb, channel, catalogName, catalogSlug, productName, productSlug]);
+	}, [setBreadcrumb, channel, catalogName, catalogSlug, productName, productSlug]);
 
 	if (error) {
 		console.error("Error fetching product data:", error);

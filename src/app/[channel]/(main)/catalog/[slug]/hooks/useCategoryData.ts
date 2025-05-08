@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getAttributes } from "../actions/attributes";
 import { getCategory } from "../actions/category";
 import type { FilterSidebarProps } from "../types";
-import { Category } from "@/gql/graphql";
+import { type Category } from "@/gql/graphql";
 export function useCategoryData(slug: string, channel: string) {
 	const [attributes, setAttributes] = useState<FilterSidebarProps["attributes"]>();
 	const [category, setCategory] = useState<Category | null>(null);

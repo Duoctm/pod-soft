@@ -6,7 +6,7 @@ export const NavLinks = async ({ channel }: { channel: string }) => {
 	return (
 		<>
 			<NavLink href="/">Home</NavLink>
-			<NavLink href="/catalog">Catalog</NavLink>
+			{/* <NavLink href="/catalog">Catalog</NavLink> */}
 			<NavLink href="/service">Service</NavLink>
 			<NavLink href="/products">Order</NavLink>
 			<NavLink href="/support">Support</NavLink>

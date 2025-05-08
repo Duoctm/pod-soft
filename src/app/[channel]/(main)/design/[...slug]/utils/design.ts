@@ -1,7 +1,7 @@
 import Konva from 'konva';
 import $ from 'jquery';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import { PrintFaceData, DesignInfo } from '../utils/type';
+import { type PrintFaceData, type DesignInfo } from '../utils/type';
 import { uploadImage } from './data';
 interface StageConfig {
   stage: Konva.Stage | null;
@@ -449,7 +449,7 @@ class TShirtDesigner {
   public copySelectedNode() {
     const node = this.currentStage.selectedNode as Konva.Node;
     const stageConfig = this.currentStage;
-    const clone = node!.clone();
+    const clone = node.clone();
     if ((node.x() + node.offsetX() + 10) < stageConfig.stage!.width()) {
       clone.x(node.x() + 10);
     }
@@ -1130,7 +1130,7 @@ class TShirtDesigner {
 
 
             try {
-              var cloudinary_url = "";
+              let cloudinary_url = "";
               if (/^data:image\/[a-zA-Z]+;base64,/.test(imageElement.src)) {
                 const file = this.base64ToFile(imageElement.src, 'image.png');
                 const response = await uploadImage(file);
@@ -1609,7 +1609,7 @@ class TShirtDesigner {
 
   public bringToFrontNode() {
     if (this.currentStage.selectedNode != null && this.currentStage.layer != null) {
-      let nodeChildrend = this.currentStage.layer.getChildren();
+      const nodeChildrend = this.currentStage.layer.getChildren();
       if (nodeChildrend.length <= 1) {
         return;
       }
@@ -1637,7 +1637,7 @@ class TShirtDesigner {
 
   public sendToBackNode() {
     if (this.currentStage.selectedNode != null && this.currentStage.layer != null) {
-      let nodeChildrend = this.currentStage.layer.getChildren();
+      const nodeChildrend = this.currentStage.layer.getChildren();
       if (nodeChildrend.length <= 1) {
         return;
       }
@@ -1665,7 +1665,7 @@ class TShirtDesigner {
 
   public setWHOfNode(width: number | null, height: number | null) {
     if (this.currentStage.selectedNode != null) {
-      const node = this.currentStage.selectedNode as Konva.Node;
+      const node = this.currentStage.selectedNode ;
       const clone = node.clone();
       if (width != null) {
         clone.width(width);
@@ -1691,7 +1691,7 @@ class TShirtDesigner {
 
   public setRSOfNode(instance: number | null) {
     if (this.currentStage.selectedNode != null) {
-      const node = this.currentStage.selectedNode as Konva.Node;
+      const node = this.currentStage.selectedNode ;
       const clone = node.clone();
       if (instance != null) {
         clone.fontSize(instance);

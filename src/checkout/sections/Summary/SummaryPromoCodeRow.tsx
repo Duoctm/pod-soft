@@ -1,15 +1,11 @@
 import React from "react";
+import { toast, ToastContainer } from "react-toastify";
 import { SummaryMoneyRow, type SummaryMoneyRowProps } from "./SummaryMoneyRow";
 import { IconButton } from "@/checkout/components/IconButton";
 import { RemoveIcon } from "@/checkout/ui-kit/icons";
-// import { useCheckoutRemovePromoCodeMutation } from "@/checkout/graphql";
-// import { useCheckout } from "@/checkout/hooks/useCheckout";
-// import { isOrderConfirmationPage } from "@/checkout/lib/utils/url";
-import { removePromodeCode } from "@/checkout/hooks/useRemovePromodeCode";
-import { toast, ToastContainer } from "react-toastify";
+
 import "react-toastify/dist/ReactToastify.css";
-
-
+import { useCheckoutRemovePromoCodeMutation } from "@/checkout/graphql";
 
 interface SummaryPromoCodeRowProps extends SummaryMoneyRowProps {
 	promoCode?: string;
@@ -25,19 +21,28 @@ export const SummaryPromoCodeRow: React.FC<SummaryPromoCodeRowProps> = ({
 	id,
 	...rest
 }) => {
-	const onDelete = async () => {
-		const res = await removePromodeCode(id, promoCode as string);
-		if(res){
-			toast.success("Remove PromodeCode successfullly")
-		}
+	const [, checkoutRemovePromoCode] = useCheckoutRemovePromoCodeMutation();
+
+	const handleDelete = async () => {
+		void checkoutRemovePromoCode({
+			languageCode: "EN_US",
+			checkoutId: id,
+			promoCode: promoCode,
+		});
+		toast.success("Promo code removed successfully");
+		window.location.reload();		
 	};
 
 	return (
 		<SummaryMoneyRow {...rest}>
-			<ToastContainer/>
+			<ToastContainer />
 			{editable && (
 				<div>
-					<IconButton onClick={onDelete} ariaLabel="remove promo code" icon={<RemoveIcon aria-hidden />} />
+					<IconButton
+						onClick={handleDelete}
+						ariaLabel="remove promo code"
+						icon={<RemoveIcon aria-hidden />}
+					/>
 				</div>
 			)}
 		</SummaryMoneyRow>

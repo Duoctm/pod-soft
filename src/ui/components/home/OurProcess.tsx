@@ -1,6 +1,6 @@
 import React from "react";
-import Wrapper from "../wrapper";
 import Image from "next/image";
+import Wrapper from "../wrapper";
 
 const Process = ({ number, name }: { number: number | string; name: string }) => {
 	return (
@@ -17,17 +17,16 @@ const OurProcess = () => {
 	return (
 		<div className="bg-[#FFEDE9] py-12 md:py-24">
 			<Wrapper className="flex flex-col md:flex-row items-center">
-				<div className="flex flex-1 flex-col px-4 md:px-0">
-					<span className="space-x-[16%] text-base md:text-[18px] font-semibold uppercase text-[#EF816B]">
+				<div className="flex flex-1 flex-col ">
+					<span className="space-x-[16%] text-xs md:text-[18px] font-semibold uppercase text-[#EF816B]">
 						OUR PROCESS
 					</span>
-					<h3 className="w-full max-w-[720px] py-2 md:py-4 text-3xl md:text-[50px] font-bold leading-[120%]">
+					<h3 className="w-full max-w-[720px] py-2 md:py-4 text-[42px] md:text-[50px] font-bold leading-[120%]">
 						Your Guide to <br />
 						Our Process
 					</h3>
 					<p className="max-w-[487px] py-2 md:py-4 text-sm md:text-base font-normal leading-6 text-[#909098]">
-						Netus feugiat vitae enim enim in viverra. Id at sagittis cras pretium dictum nec netus. Ante dolor
-						quis convallis.
+					A step-by-step guide to help you move from idea to finished product with ease and confidence.
 					</p>
 					<div className="flex flex-col gap-y-6 md:gap-y-11 pt-6 md:pt-12">
 						<Process number="1" name="Pick your product" />
@@ -37,11 +36,11 @@ const OurProcess = () => {
 				</div>
 				<div className="flex flex-1 items-center justify-end mt-8 md:mt-0">
 					<Image
-						src="/images/image-box.png"
+						src="/images/image-box.jpg"
 						width={488}
 						height={562}
 						alt="Our Process"
-						className="w-full max-w-[300px] md:max-w-[488px]"
+						className="w-full  md:max-w-[488px] rounded-md"
 					/>
 				</div>
 			</Wrapper>

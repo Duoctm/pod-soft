@@ -1,28 +1,28 @@
 import React from "react";
+import Image from "next/image";
 import Wrapper from "../wrapper";
 import HeroFeature from "../HeroFeature";
-import Image from "next/image";
 
 const LeftSideHero = () => {
 	return (
 		<div className="flex flex-1 flex-col text-[#424255] md:px-4 lg:px-0">
-			<span className="space-x-[16%] text-base md:text-lg font-semibold uppercase text-[#FD8C6F]">
+			<span className="space-x-[16%] text-xs md:text-lg font-semibold uppercase text-[#FD8C6F]">
 				Printing Service Company
 			</span>
 			<h1 className="mt-4 md:mt-6 max-w-[582px] text-4xl md:text-6xl lg:text-7xl font-bold leading-[110%]">Welcome to ZoomPrints</h1>
 			<span className="mt-4 md:mt-6 text-lg md:text-[22px] font-bold leading-[140%]">
-				Bring Your Ideas to Life with High-Quality Prints
+				Bring Your Ideas to Life with High-Quality Prints   
 			</span>
 			<p className="mt-4 md:mt-7 w-full max-w-[546px] text-base md:text-[20px] font-normal leading-[1.6]">
-				Elementum consectetur at aliquet turpis ultricies felis egestas aliquam porta. Amet vitae.
+				Digital printing for the promotional product industry.
 			</p>
 
-			<div className="mt-6 md:mt-9 flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-7">
-				<button className="w-full md:w-auto rounded-md bg-[#8B3958] px-8 md:px-14 py-3 md:py-4 text-base font-semibold text-white shadow-[0_9.67px_29.01px_rgba(253,140,111,0.25)]">
+			<div className="mt-6 flex flex-row items-center gap-4">
+				<button className="rounded-md bg-[#8B3958] px-8 py-3 text-base font-semibold text-white shadow-[0_9.67px_29.01px_rgba(253,140,111,0.25)] hover:bg-[#702d46] transition-colors">
 					Get Started
 				</button>
 
-				<button className="w-full md:w-auto rounded-md border-[1.21px] border-[#8B3958] px-8 md:px-14 py-3 md:py-4 text-base font-semibold text-[#8B3958]">
+				<button className="rounded-md border border-[#8B3958] px-8 py-3 text-base font-semibold text-[#8B3958] hover:bg-[#8B3958] hover:text-white transition-colors">
 					Read More
 				</button>
 			</div>
@@ -59,7 +59,7 @@ const Label = () => {
 
 const RightSideHero = () => {
 	return (
-		<div className="flex flex-col md:flex-row flex-1 gap-4 md:gap-5 mt-8 md:mt-0">
+		<div className="flex flex-row flex-1 gap-4 md:gap-5 mt-8 md:mt-0">
 			<div className="flex flex-1 flex-col">
 				<RatePanel />
 				<div className="relative flex w-full flex-col overflow-hidden rounded-xl bg-[#271E32] text-white">
@@ -78,10 +78,11 @@ const RightSideHero = () => {
 						<Image src={"/images/arrow.png"} height={1} width={100} alt="" className="z-10 mt-4 md:mt-6 w-full" />
 					</div>
 					<Image
-						src={"/images/hero-right-side.png"}
+						src={"/images/hero-right-side.jpg"}
 						height={274}
 						width={274}
 						alt=""
+						loading="lazy"
 						className="z-10 mt-2 w-full bg-cover bg-center bg-no-repeat"
 					/>
 				</div>
@@ -89,9 +90,10 @@ const RightSideHero = () => {
 			<div className="flex-1 flex-col relative">
                 <Label/>
 				<Image
-					src={"/images/hero-right-side-2.png"}
+					src={"/images/hero-right-side-2.jpg"}
 					height={274}
 					width={274}
+					priority
 					alt=""
 					className="z-10 mt-2 w-full bg-cover bg-center bg-no-repeat"
 				/>

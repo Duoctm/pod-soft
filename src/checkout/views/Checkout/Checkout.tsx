@@ -23,12 +23,13 @@ import { AddressCheckoutForm } from "@/checkout/sections/CheckoutForm";
 import { type Country, type UseCountryListOptions, getCountryList } from "@/checkout/hooks/useCountryList";
 import { Contact } from "@/checkout/sections/Contact";
 import { Divider } from "@/checkout/components";
-import { DeliveryMethods } from "@/checkout/sections/CheckoutForm/DeliveryMethodsSection";
+// import { DeliveryMethods } from "@/checkout/sections/CheckoutForm/DeliveryMethodsSection";
 import { updateShippingAddress } from "@/checkout/hooks/useShippingAddressUpdate";
 import { updateBillingAddress } from "@/checkout/hooks/useBillingAddressUpdate";
 import { checkoutCompleteServerFunc } from "@/checkout/hooks/useCheckoutCompleteServer";
 import { AddressSchema } from "@/checkout/lib/utils/validate";
 import { type Address, type FormValues } from "@/checkout/lib/utils/type";
+import { updateDeliveryMethod } from "@/checkout/hooks/checkoutDeliveryMethodUpdate";
 
 // Define the shape for the entire checkout form
 const CheckoutSchema = Yup.object().shape({
@@ -344,11 +345,26 @@ export const Checkout = () => {
 	};
 
 	const handlePlaceOrder = async () => {
+		// TODO: check logic delivery method do affter
+
+		// else if (!checkout.deliveryMethod) {
+		// 	toast.error("Delivery method is not selected");
+		// 	return;
+		// }
+
+		if(!checkout?.shippingMethods || checkout.shippingMethods.length === 0) {
+			toast.error("Please type shipping address");
+			return;
+		}
+
+
+		await updateDeliveryMethod({
+			id: checkout?.id || "",
+			deliveryMethodId: checkout?.shippingMethods[0].id || "",
+		});
+
 		if (!checkout) {
 			toast.error("Checkout is not available");
-			return;
-		} else if (!checkout.deliveryMethod) {
-			toast.error("Delivery method is not selected");
 			return;
 		} else {
 			const completeResult = await checkoutCompleteServerFunc({
@@ -393,7 +409,7 @@ export const Checkout = () => {
 								<div>
 									<AddressCheckoutForm slug={checkout?.channel.slug || ""} />
 									<Divider />
-									<DeliveryMethods user={user} checkout={checkout} handleSubmitAddress={handleSubmit} />
+									{/* <DeliveryMethods user={user} checkout={checkout} handleSubmitAddress={handleSubmit} /> */}
 								</div>
 							</Formik>
 							<div className="my-2 flex">
@@ -407,7 +423,9 @@ export const Checkout = () => {
 							</div>
 						</div>
 						<div className="order-1 bg-gray-50 px-4 py-10 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 lg:py-16">
-							<Suspense fallback={<SummarySkeleton />}>{checkout && <Summary {...checkout} update={update} />}</Suspense>
+							<Suspense fallback={<SummarySkeleton />}>
+								{checkout && <Summary {...checkout} update={update} />}
+							</Suspense>
 						</div>
 					</div>
 				)}

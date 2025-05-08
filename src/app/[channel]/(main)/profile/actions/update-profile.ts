@@ -3,7 +3,7 @@
 import {
 	PasswordChangeDocument,
 	CustomUserDocument,
-	CustomUserQuery,
+	type CustomUserQuery,
 	AccountAddressUpdateDocument,
 	AccountUpdateDocument,
 } from "@/gql/graphql";

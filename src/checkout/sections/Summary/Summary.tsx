@@ -42,7 +42,7 @@ export const Summary: FC<SummaryProps> = ({
 	shippingPrice,
 	discount,
 	update,
-}) => {
+}) => { 
 	return (
 		<div
 			className={clsx(

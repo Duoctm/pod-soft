@@ -1,7 +1,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { filterOptions } from "../actions/filter-option";
-import { CategoryType } from "../types";
+import { type CategoryType } from "../types";
 import { getCategory } from "../actions/category";
 
 interface FilterOptionProps {

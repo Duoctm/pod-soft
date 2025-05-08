@@ -1,5 +1,6 @@
 // components/ServiceFeatureCard.tsx
 import React from 'react';
+import Image from 'next/image';
 import { ArrowRightCircle } from 'lucide-react';
 
 // Định nghĩa interface cho props của component
@@ -11,20 +12,22 @@ interface ServiceFeatureCardProps {
   revert?: boolean; // Thuộc tính để hoán đổi vị trí hình ảnh và nội dung
 }
 
-export default function ServiceFeatureCard({ 
+export const ServiceFeatureCard = ({ 
   image, 
   title, 
   subtitle, 
   features,
   revert = false, // Mặc định là false
-}: ServiceFeatureCardProps) {
+}: ServiceFeatureCardProps) => {
   return (
     <div className={`flex flex-col ${revert ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center justify-between gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-6 rounded-lg`}>
       {/* Phần hình ảnh */}
       <div className="w-full lg:w-1/2 mb-6 lg:mb-0">
-        <img
+        <Image
           src={image}
           alt={title}
+          width={800}
+          height={600}
           className="rounded-xl sm:rounded-2xl shadow-md w-full h-auto object-cover"
           loading="lazy" // Thêm lazy loading cho hiệu suất tốt hơn
         />
@@ -46,4 +49,4 @@ export default function ServiceFeatureCard({
       </div>
     </div>
   );
-}
+};

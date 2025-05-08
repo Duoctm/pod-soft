@@ -1,14 +1,14 @@
 "use server";
 
+import { type AddressField } from "../components/AddressForm/types";
 import {
 	AddressValidationRulesDocument,
-	AddressValidationRulesQuery,
-	AddressValidationRulesQueryVariables,
-	CountryCode,
+	type AddressValidationRulesQuery,
+	type AddressValidationRulesQueryVariables,
+	type CountryCode,
 } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
 
-import { AddressField } from "../components/AddressForm/types";
 
 export const getAddressValidationRules = async (countryCode: CountryCode) => {
 	try {

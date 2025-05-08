@@ -1,8 +1,8 @@
+import Link from "next/link";
 import { CurrentUserOrderListDocument } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
 import { LoginForm } from "@/ui/components/LoginForm";
 import { formatDate } from "@/lib/utils";
-import Link from "next/link";
 import { OrderStatusBadge } from "@/ui/components/OrderStatusBadge";
 
 export default async function OrderPage() {

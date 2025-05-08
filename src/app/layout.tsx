@@ -5,7 +5,7 @@ import { type Metadata } from "next";
 import { DraftModeNotification } from "@/ui/components/DraftModeNotification";
 import { UrqlProvider } from "@/components/UrqlProvider";
 
-const workSands = Work_Sans({ subsets: ["latin", "vietnamese", "latin-ext",], weight: ["400", "500", "600", "700", "800", "900"] });
+const workSands = Work_Sans({ subsets: ["latin",], weight: ["400", "500", "600", "700", "800", "900"] });
 
 export const metadata: Metadata = {
 	title: "ZoomPrint",

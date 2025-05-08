@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { Tag } from "lucide-react";
 
 interface CatalogSectionProps {
@@ -7,7 +8,7 @@ interface CatalogSectionProps {
 	buttonText: string;
 }
 
-const CatalogSection: React.FC<CatalogSectionProps> = ({ title, description, buttonText }) => {
+export const CatalogSection: React.FC<CatalogSectionProps> = ({ title, description, buttonText }) => {
 	return (
 		<div className="w-full overflow-hidden rounded-xl bg-black text-white">
 			<div className="flex w-full flex-col items-center gap-6 p-6 sm:p-10 lg:flex-row lg:p-16">
@@ -23,9 +24,11 @@ const CatalogSection: React.FC<CatalogSectionProps> = ({ title, description, but
 
 				{/* Right side */}
 				<div className="mt-6 hidden w-full flex-1 lg:mt-0 lg:block">
-					<img
+					<Image
 						src="/images/services-bottom.webp"
 						alt="Service visual"
+						width={500}
+						height={300}
 						className="h-auto w-full rounded-lg object-cover"
 					/>
 				</div>
@@ -33,5 +36,3 @@ const CatalogSection: React.FC<CatalogSectionProps> = ({ title, description, but
 		</div>
 	);
 };
-
-export default CatalogSection;

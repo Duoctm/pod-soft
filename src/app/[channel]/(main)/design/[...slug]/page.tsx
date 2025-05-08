@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DesignPage from "./component/DesignPage";
-import { DesignInfo } from "./utils/type";
+import { type DesignInfo } from "./utils/type";
 import { useBreadcrumb } from "@/ui/components/BreadcrumbProvider";
 
 interface PageProps {

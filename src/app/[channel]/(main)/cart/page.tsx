@@ -1,11 +1,11 @@
 import Image from "next/image";
 import { CheckoutLink } from "./CheckoutLink";
 import { DeleteLineButton } from "./DeleteLineButton";
+import { ViewDesignButton } from "./ViewDesignButton";
+import { DesignButton } from "./DesignButton";
 import * as Checkout from "@/lib/checkout";
 import { formatMoney, getHrefForVariant } from "@/lib/utils";
 import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
-import { ViewDesignButton } from "./ViewDesignButton";
-import { DesignButton } from "./DesignButton";
 
 export const metadata = {
 	title: "Shopping Cart - ZoomPrint",
@@ -16,7 +16,7 @@ export default async function Page({ params }: { params: { channel: string } }) 
 	const checkoutId = Checkout.getIdFromCookies(params.channel);
 
 	const checkout = await Checkout.find(checkoutId);
-	
+
 
 	if (!checkout || checkout.lines.length < 1) {
 		return (
@@ -81,8 +81,8 @@ export default async function Page({ params }: { params: { channel: string } }) 
 									<div className="text-sm font-bold">Qty: {item.quantity}</div>
 
 									<div className="flex space-x-2">
-									{Array.isArray(item.metadata) && item.metadata.length > 0 && <ViewDesignButton lineId={item.id} checkout={checkoutId} />}
-									{Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && <DesignButton colorId={item.variant.attributes[0].values[0].id} productId={item.variant.product.id} />}
+										{Array.isArray(item.metadata) && item.metadata.length > 0 && <ViewDesignButton lineId={item.id} checkout={checkoutId} params={params} />}
+										{Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && <DesignButton colorId={item.variant.attributes[0].values[0].id} productId={item.variant.product.id} params={params} quantity={1} selectedVariantId={item.variant.id} />}
 									</div>
 
 									<DeleteLineButton checkoutId={checkoutId} lineId={item.id} />

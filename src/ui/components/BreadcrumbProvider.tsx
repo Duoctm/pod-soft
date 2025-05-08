@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, Dispatch, SetStateAction, ReactNode } from "react";
+import { createContext, useContext, useState, type Dispatch, type SetStateAction, type ReactNode } from "react";
 import { Breadcrumb } from "@/ui/components/Breadcrumb";
 
 // Tạo context để lưu trạng thái breadcrumb

@@ -1,18 +1,18 @@
 "use client";
 
 import React, { useEffect } from "react";
-import {
-	currentUser,
-	updateAddress,
-	updatePassword,
-	UpdatePassWordType,
-	updateUser,
-} from "./actions/update-profile";
-import { CustomUserQuery } from "@/gql/graphql";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Eye, EyeOff } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
+import {
+	currentUser,
+	updateAddress,
+	updatePassword,
+	type UpdatePassWordType,
+	updateUser,
+} from "./actions/update-profile";
+import { type CustomUserQuery } from "@/gql/graphql";
 import "react-toastify/dist/ReactToastify.css";
 type UserType = CustomUserQuery["me"];
 type Address = NonNullable<CustomUserQuery["me"]>["addresses"][number];

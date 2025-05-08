@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import TShirtDesigner from '../utils/design';
-import { initializeModals } from '../utils/modal';
 import { Typography, IconButton, Box, Paper, Modal, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import {DesignInfo, PrintFaceData} from '..//utils/type';
+import {toast, ToastContainer } from 'react-toastify';
+import TShirtDesigner from '../utils/design';
+import { initializeModals } from '../utils/modal';
+import {type DesignInfo, type PrintFaceData} from '..//utils/type';
 import {/*fetchProductDetail, */getMetaDtataFromColorVariant, getVariantIdFromColorVariant} from '../utils/data'
 import {addItem, UpdateDesign} from '../utils/checkout'
 import {fetchProductDetail} from '../utils/test'
-import {toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const StyledButton = styled(IconButton)(() => ({
@@ -32,19 +32,19 @@ const StyledButton = styled(IconButton)(() => ({
 }));
 
 interface DesignPageProps {
-    productId: string;
-    colorId: string;
-    designInfor: DesignInfo | null,
-    typeDesign: number,
-    channel: string
+  productId: string;
+  colorId: string;
+  designInfor: DesignInfo | null,
+  typeDesign: number,
+  channel: string
 }
 
-function DesignPage( param : DesignPageProps) {
+function DesignPage(param: DesignPageProps) {
   const [colorData, setColorData] = useState<Map<string, object>>(new Map);
   const [data, setData] = useState<PrintFaceData[]>([]);
   const [colorLoading, setColorLoading] = useState(true);
   const [loading, setLoading] = useState(true);
-  var sort_data = data.sort((a, b) => a.z_index - b.z_index);
+  let sort_data = data.sort((a, b) => a.z_index - b.z_index);
   const designerRef = useRef<TShirtDesigner | null>(null);
   const [isColorModalOpen, setIsColorModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -58,22 +58,22 @@ function DesignPage( param : DesignPageProps) {
   const [resizeHeight, setResizeHeight] = useState<number | undefined>(undefined);
   const [rotationAngle, setRotationAngle] = useState<number | undefined>(undefined);
   const [resizeFontSize, setFontSize] = useState<number | undefined>(undefined);
+  const [variantIdOfUpdate, setVariantIdOfUpdate] = useState<string | null>(null);
   const [isSpinner, setSpinner] = useState<boolean>(false);
   console.log(showObjectMenu);
-  
 
   const loadProductData = async (productId : string) => {
-    var result : Map<string, object>;
+    let result : Map<string, object>;
     if (param.designInfor?.colorData != null){
         result = new Map(Object.entries(param.designInfor.colorData)); //param.designInfor.colorData;
     }
-    else{
-        result = await fetchProductDetail(productId);
+    else {
+      result = await fetchProductDetail(productId);
     }
     setColorData(result);
   }
 
-  const updateVariant = (colorId : string, productId: string, colorData: Map<string, object>) => {
+  const updateVariant = (colorId: string, productId: string, colorData: Map<string, object>) => {
     const result = getMetaDtataFromColorVariant(colorId, colorData)
     setData(result);
     setProductId(productId)
@@ -97,10 +97,10 @@ function DesignPage( param : DesignPageProps) {
     };
 
     fetchColorData();
-  },  [param.designInfor]);
+  }, [param.designInfor]);
 
   useEffect(() => {
-    if (!colorLoading){
+    if (!colorLoading) {
       const fetchData = async () => {
         try {
           // const result = await fetchProductVariantData();
@@ -114,49 +114,50 @@ function DesignPage( param : DesignPageProps) {
           setLoading(false);
         }
       };
-  
+
       fetchData();
     }
-  }, [ colorLoading ,colorData]);
+  }, [colorLoading, colorData]);
 
   useEffect(() => {
     if (!loading) {
       // Initialize TShirtDesigner
       designerRef.current = new TShirtDesigner(data.sort((a, b) => a.z_index - b.z_index), productId, variantId, colorId, colorData,
-       setMenuIndex, setResizeWidth, setResizeHeight, setRotationAngle, setFontSize);
-      
+        setMenuIndex, setResizeWidth, setResizeHeight, setRotationAngle, setFontSize);
+
       // Thêm callback khi chọn/bỏ chọn đối tượng
       if (designerRef.current) {
         designerRef.current.onSelectObject = (hasSelection) => {
           setShowObjectMenu(hasSelection);
         };
 
-        const importUpload = async (designs: object[][])  => {
-            await designerRef.current?.importDesignFromJson(designs);
+        const importUpload = async (designs: object[][]) => {
+          await designerRef.current?.importDesignFromJson(designs);
         }
-            try {
-              if (param.designInfor) {
-                 
-                  const designs: object[][] = []; 
-                    let index = -1;
-                    // for (const design of param.designInfor.get("designs")){
-                    //     index++;
-                    //     designs[index] = design.designs;
-                    // }
+        try {
+          if (param.designInfor) {
+
+            const designs: object[][] = [];
+            let index = -1;
+            // for (const design of param.designInfor.get("designs")){
+            //     index++;
+            //     designs[index] = design.designs;
+            // }
 
 
-                    for (const design of param.designInfor.designs){
-                      index++;
-                      designs[index] = design.designs;
-                    }
-                    
-                    importUpload(designs);
-                }
+            for (const design of param.designInfor.designs) {
+              index++;
+              designs[index] = design.designs;
             }
-            catch(error){
-                console.log(error);
-            }
-       // }
+
+            importUpload(designs);
+            setVariantIdOfUpdate(variantId);
+          }
+        }
+        catch (error) {
+          console.log(error);
+        }
+        // }
       }
 
       // Initialize modals
@@ -183,24 +184,24 @@ function DesignPage( param : DesignPageProps) {
       const handleThumbnailClick = (e: Event) => {
         const target = e.currentTarget as HTMLDivElement;
         const view = target.getAttribute('data-view');
-        
+
         // Cập nhật active state
         document.querySelectorAll('.thumbnail').forEach(thumb => {
           thumb.classList.remove('active');
         });
         target.classList.add('active');
         for(const item in sort_data){
-          let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-          let previewDom = document.getElementById('preview-'+sort_data[item].code);
+          const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
+          const previewDom = document.getElementById('preview-'+sort_data[item].code);
           imageDom.style.display = 'none';
           previewDom!.style.display = 'none';
         }
 
         for(const item in sort_data){
-          let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-          let previewDom = document.getElementById('preview-'+sort_data[item].code);
+          const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
+          const previewDom = document.getElementById('preview-'+sort_data[item].code);
 
-          if (view === sort_data[item].code){
+          if (view === sort_data[item].code) {
             imageDom.style.display = 'block';
             previewDom!.style.display = 'block';
             if (designerRef.current) {
@@ -227,9 +228,9 @@ function DesignPage( param : DesignPageProps) {
         });
         document.removeEventListener('keydown', handleKeyDown);
       };
-     
+
     }
-  }, [loading, data,  param.designInfor]);
+  }, [loading, data, param.designInfor]);
 
 
   const colors = [
@@ -275,13 +276,44 @@ function DesignPage( param : DesignPageProps) {
     }
   };
 
+  const handleThumbnailClick = (e: Event) => {
+    console.log('dang chay ne')
+    const target = e.currentTarget as HTMLDivElement;
+    const view = target.getAttribute('data-view');
+
+    // Cập nhật active state
+    document.querySelectorAll('.thumbnail').forEach(thumb => {
+      thumb.classList.remove('active');
+    });
+    target.classList.add('active');
+    for (const item in sort_data) {
+      let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
+      let previewDom = document.getElementById('preview-' + sort_data[item].code);
+      imageDom.style.display = 'none';
+      previewDom!.style.display = 'none';
+    }
+
+    for (const item in sort_data) {
+      let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
+      let previewDom = document.getElementById('preview-' + sort_data[item].code);
+
+      if (view === sort_data[item].code) {
+        imageDom.style.display = 'block';
+        previewDom!.style.display = 'block';
+        if (designerRef.current) {
+          designerRef.current.switchToStage(sort_data[item].code);
+        }
+      }
+    }
+  }
+
   return (
     <>
-     {isSpinner && (
+      {isSpinner && (
         <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-      </div>
-      
+          <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+        </div>
+
       )}
       <ToastContainer />
       <Box className="w-full">
@@ -338,7 +370,7 @@ function DesignPage( param : DesignPageProps) {
               <i className="fas fa-upload text-base"></i>
               <span className="text-[10px]">Import</span>
             </button> */}
-            <button 
+            {/* <button 
               type="button" 
               id="export"
               onClick={() => setIsExportModalOpen(true)}
@@ -346,7 +378,7 @@ function DesignPage( param : DesignPageProps) {
             >
               <i className="fas fa-download text-2xl"></i>
               <span className="text-xs">Export</span>
-            </button>
+            </button> */}
           </Paper>
 
           {/* Function Area */}
@@ -381,16 +413,16 @@ function DesignPage( param : DesignPageProps) {
                 name="file-select"
                 className="hidden"
                 accept="image/jpeg,image/png,image/gif"
-                
+
               />
               {menuIndex === 0 && (
                 <Box>
                   <Typography variant="h4" sx={{ color: '#000000', mb: 3, textAlign: 'center' }}>
                     Choose your next step
                   </Typography>
-                  <Box sx={{ 
+                  <Box sx={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gridTemplateColumns: 'repeat(1, 1fr)',
                     gap: 3,
                     px: 2
                   }}>
@@ -457,7 +489,7 @@ function DesignPage( param : DesignPageProps) {
                       <Typography sx={{ fontSize: '0.9rem', color: '#000000' }}>Text</Typography>
                     </Paper>
 
-                    <Paper
+                    {/* <Paper
                       elevation={2}
                       onClick={() => setIsExportModalOpen(true)}
                       sx={{
@@ -476,7 +508,7 @@ function DesignPage( param : DesignPageProps) {
                     >
                       <i className="fas fa-download text-3xl" style={{ color: '#282c34' }}></i>
                       <Typography sx={{ fontSize: '0.9rem', color: '#000000' }}>Export</Typography>
-                    </Paper>
+                    </Paper> */}
                   </Box>
                 </Box>
               )}
@@ -486,8 +518,8 @@ function DesignPage( param : DesignPageProps) {
                   <Typography variant="h6" sx={{ color: '#282c34', mb: 2 }}>
                     Choose a color
                   </Typography>
-                  <Box sx={{ 
-                    display: 'grid', 
+                  <Box sx={{
+                    display: 'grid',
                     gridTemplateColumns: 'repeat(8, 1fr)',
                     gap: 1,
                     bgcolor: '#f5f5f5',
@@ -504,19 +536,25 @@ function DesignPage( param : DesignPageProps) {
                             const result = getMetaDtataFromColorVariant(key, colorData);
                             sort_data = result.sort((a, b) => a.z_index - b.z_index);
 
-                            for(const item in result){
-                              const imageDom = document.getElementById(result[item].code+ "Image") as HTMLImageElement;
+                            for (const item in result) {
+                              const imageDom = document.getElementById(result[item].code + "Image") as HTMLImageElement;
                               const thumbnailDom = document.getElementById(`thumb-${result[item].code}`);
                               imageDom.src = result[item].image;
                               if (thumbnailDom) {
                                 thumbnailDom.setAttribute('src', result[item].image);
                               }
                             }
+                            const thumbnails = document.querySelectorAll('.thumbnail');
+                            thumbnails.forEach(thumb => {
+                              thumb.addEventListener('click', handleThumbnailClick);
+                            });
 
                             designerRef.current.data = result;
                             designerRef.current.colorValue = key;
-                            designerRef.current.variantId = getVariantIdFromColorVariant(key, colorData);
+                            const selectVariant = getVariantIdFromColorVariant(key, colorData);
+                            designerRef.current.variantId = selectVariant;// getVariantIdFromColorVariant(key, colorData);
                             designerRef.current.updateStagePositions();
+                            setVariantId(selectVariant);
                           }
                         }}
                         sx={{
@@ -543,74 +581,74 @@ function DesignPage( param : DesignPageProps) {
                   <Typography variant="h6" sx={{ color: '#282c34', mb: 2 }}>
                     Add images
                   </Typography>
-                  
-                  {/* Upload Area */}
-                  {(menuIndex === 2 ) && (
-                    <Box
-                    sx={{
-                      border: '2px dashed #282c34',
-                      borderRadius: 2,
-                      p: 4,
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      bgcolor: '#f5f5f5',
-                      transition: 'all 0.2s',
-                      mb: 3,
-                      '&:hover': {
-                        bgcolor: '#e8e8e8',
-                        borderColor: '#1976d2'
-                      }
-                    }}
-                    onClick={() => {
-                      const fileInput = document.getElementById('file-select');
-                      if (fileInput) {
-                        fileInput.click();
-                      }
-                    }}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      e.currentTarget.style.borderColor = '#1976d2';
-                    }}
-                    onDragLeave={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      e.currentTarget.style.borderColor = '#282c34';
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      e.currentTarget.style.borderColor = '#282c34';
 
-                      const files = e.dataTransfer.files;
-                      if (files && files.length > 0) {
-                        const file = files[0];
-                        if (file.type.startsWith('image/')) {
-                          const fileInput = document.getElementById('file-select') as HTMLInputElement;
-                          if (fileInput) {
-                            const dataTransfer = new DataTransfer();
-                            dataTransfer.items.add(file);
-                            fileInput.files = dataTransfer.files;
-                            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                  {/* Upload Area */}
+                  {(menuIndex === 2) && (
+                    <Box
+                      sx={{
+                        border: '2px dashed #282c34',
+                        borderRadius: 2,
+                        p: 4,
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        bgcolor: '#f5f5f5',
+                        transition: 'all 0.2s',
+                        mb: 3,
+                        '&:hover': {
+                          bgcolor: '#e8e8e8',
+                          borderColor: '#1976d2'
+                        }
+                      }}
+                      onClick={() => {
+                        const fileInput = document.getElementById('file-select');
+                        if (fileInput) {
+                          fileInput.click();
+                        }
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.currentTarget.style.borderColor = '#1976d2';
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.currentTarget.style.borderColor = '#282c34';
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.currentTarget.style.borderColor = '#282c34';
+
+                        const files = e.dataTransfer.files;
+                        if (files && files.length > 0) {
+                          const file = files[0];
+                          if (file.type.startsWith('image/')) {
+                            const fileInput = document.getElementById('file-select') as HTMLInputElement;
+                            if (fileInput) {
+                              const dataTransfer = new DataTransfer();
+                              dataTransfer.items.add(file);
+                              fileInput.files = dataTransfer.files;
+                              fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
                           }
                         }
-                      }
-                    }}
-                  >
-                    <i className="fas fa-cloud-upload-alt fa-3x mb-3" style={{ color: '#282c34' }}></i>
-                    <Typography variant="h6" sx={{ color: '#282c34', mb: 1 }}>
-                      Click to upload or drag and drop
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#666666' }}>
-                      JPEG, PNG, GIF files are allowed
-                    </Typography>
-                  </Box>
+                      }}
+                    >
+                      <i className="fas fa-cloud-upload-alt fa-3x mb-3" style={{ color: '#282c34' }}></i>
+                      <Typography variant="h6" sx={{ color: '#282c34', mb: 1 }}>
+                        Click to upload or drag and drop
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#666666' }}>
+                        JPEG, PNG, GIF files are allowed
+                      </Typography>
+                    </Box>
                   )}
-                  
+
 
                   {/* Image Manipulation Tools */}
                   {menuIndex === 5 && (
-                    <Box sx={{ 
+                    <Box sx={{
                       bgcolor: '#f5f5f5',
                       borderRadius: 2,
                       p: 2
@@ -618,9 +656,9 @@ function DesignPage( param : DesignPageProps) {
                       <Typography variant="subtitle2" sx={{ color: '#282c34', mb: 2 }}>
                         Image Tools
                       </Typography>
-                      
+
                       {/* Basic Tools */}
-                      <Box sx={{ 
+                      <Box sx={{
                         display: 'flex',
                         gap: 1.5,
                         mb: 3
@@ -654,7 +692,7 @@ function DesignPage( param : DesignPageProps) {
                             Copy
                           </Typography>
                         </Box>
-  
+
                         {/* Delete */}
                         <Box
                           sx={{
@@ -685,15 +723,15 @@ function DesignPage( param : DesignPageProps) {
                           </Typography>
                         </Box>
                       </Box>
-  
+
                       {/* Advanced Controls */}
-                      <Box sx={{ 
+                      <Box sx={{
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 2
                       }}>
                         {/* Width Control */}
-                        <Box sx={{ 
+                        <Box sx={{
                           bgcolor: 'white',
                           borderRadius: 1,
                           p: 2
@@ -701,11 +739,11 @@ function DesignPage( param : DesignPageProps) {
                           <Typography variant="subtitle2" sx={{ color: '#282c34', mb: 2 }}>
                             Resize
                           </Typography>
-                          
+
                           {/* Width Control */}
                           <Box sx={{ mb: 2 }}>
-                            <Box sx={{ 
-                              display: 'flex', 
+                            <Box sx={{
+                              display: 'flex',
                               alignItems: 'center',
                               gap: 1,
                               mb: 1
@@ -735,11 +773,11 @@ function DesignPage( param : DesignPageProps) {
                               style={{ accentColor: '#1976d2' }}
                             />
                           </Box>
-  
+
                           {/* Height Control */}
                           <Box>
-                            <Box sx={{ 
-                              display: 'flex', 
+                            <Box sx={{
+                              display: 'flex',
                               alignItems: 'center',
                               gap: 1,
                               mb: 1
@@ -770,9 +808,9 @@ function DesignPage( param : DesignPageProps) {
                             />
                           </Box>
                         </Box>
-  
+
                         {/* Rotation Control */}
-                        <Box sx={{ 
+                        <Box sx={{
                           bgcolor: 'white',
                           borderRadius: 1,
                           p: 2,
@@ -781,9 +819,9 @@ function DesignPage( param : DesignPageProps) {
                           <Typography variant="subtitle2" sx={{ color: '#282c34', mb: 2 }}>
                             Rotation
                           </Typography>
-                          
-                          <Box sx={{ 
-                            display: 'flex', 
+
+                          <Box sx={{
+                            display: 'flex',
                             alignItems: 'center',
                             gap: 1,
                             mb: 1
@@ -814,9 +852,9 @@ function DesignPage( param : DesignPageProps) {
                             style={{ accentColor: '#1976d2' }}
                           />
                         </Box>
-  
+
                         {/* Center and Layer Controls */}
-                        <Box sx={{ 
+                        <Box sx={{
                           bgcolor: 'white',
                           borderRadius: 1,
                           p: 2
@@ -824,9 +862,9 @@ function DesignPage( param : DesignPageProps) {
                           <Typography variant="subtitle2" sx={{ color: '#282c34', mb: 2 }}>
                             Position & Layering
                           </Typography>
-                          
+
                           {/* Center Controls */}
-                          <Box sx={{ 
+                          <Box sx={{
                             display: 'flex',
                             gap: 2,
                             mb: 2
@@ -852,7 +890,7 @@ function DesignPage( param : DesignPageProps) {
                               <i className="fas fa-arrows-alt-h mr-2"></i>
                               Center Width
                             </Button>
-                            
+
                             <Button
                               variant="outlined"
                               size="small"
@@ -875,9 +913,9 @@ function DesignPage( param : DesignPageProps) {
                               Center Height
                             </Button>
                           </Box>
-  
+
                           {/* Layering Controls */}
-                          <Box sx={{ 
+                          <Box sx={{
                             display: 'flex',
                             gap: 2
                           }}>
@@ -902,7 +940,7 @@ function DesignPage( param : DesignPageProps) {
                               <i className="fas fa-layer-group mr-2"></i>
                               Bring to Front
                             </Button>
-                            
+
                             <Button
                               variant="outlined"
                               size="small"
@@ -932,142 +970,142 @@ function DesignPage( param : DesignPageProps) {
                 </Box>
               )}
 
-              {(menuIndex === 3 || menuIndex === 6 ) && (
+              {(menuIndex === 3 || menuIndex === 6) && (
                 <Box>
                   <Typography variant="h6" sx={{ color: '#282c34', mb: 2 }}>
                     Add text
                   </Typography>
-                 {menuIndex == 3 && (
-                   <div className="space-y-6">
-                   <div>
-                     <textarea 
-                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                       id="textInput"
-                       rows={3}
-                       placeholder="Enter your text here..."
-                     ></textarea>
-                   </div>
+                  {menuIndex == 3 && (
+                    <div className="space-y-6">
+                      <div>
+                        <textarea
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          id="textInput"
+                          rows={3}
+                          placeholder="Enter your text here..."
+                        ></textarea>
+                      </div>
 
-                   <div id="fontColorPickerWrap">
-                     <h5 className="text-lg font-medium mb-3">Text Color</h5>
-                     <div id="fontColorPicker">
-                       <div className="grid grid-cols-10 gap-1">
-                         {colors.map((color) => (
-                           <div
-                             key={color}
-                             className="w-7 h-7 rounded-full cursor-pointer transform hover:scale-110 transition-transform"
-                             style={{ backgroundColor: color }}
-                             data-color={color}
-                             onClick={() => {
-                               if (designerRef.current) {
-                                 designerRef.current.changeTextColor(color);
-                                 const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
-                                 if (textInput) {
-                                   textInput.style.color = color;
-                                 }
-                               }
-                             }}
-                           />
-                         ))}
-                       </div>
-                     </div>
-                   </div>
+                      <div id="fontColorPickerWrap">
+                        <h5 className="text-lg font-medium mb-3">Text Color</h5>
+                        <div id="fontColorPicker">
+                          <div className="grid grid-cols-10 gap-1">
+                            {colors.map((color) => (
+                              <div
+                                key={color}
+                                className="w-7 h-7 rounded-full cursor-pointer transform hover:scale-110 transition-transform"
+                                style={{ backgroundColor: color }}
+                                data-color={color}
+                                onClick={() => {
+                                  if (designerRef.current) {
+                                    designerRef.current.changeTextColor(color);
+                                    const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
+                                    if (textInput) {
+                                      textInput.style.color = color;
+                                    }
+                                  }
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
 
-                   <div id="fontStyle">
-                     <h5 className="text-lg font-medium mb-3">Font Style</h5>
-                     <div className="flex justify-center gap-4">
-                       <label className="flex items-center gap-2">
-                         <input
-                           type="checkbox"
-                           id="boldCheck"
-                           className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                           onChange={(e) => {
-                             if (designerRef.current) {
-                               const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
-                               if (textInput) {
-                                 textInput.style.fontWeight = e.target.checked ? 'bold' : 'normal';
-                                 designerRef.current.changeFontStyle(e.target.checked ? 'bold' : 'normal');
-                               }
-                             }
-                           }}
-                         />
-                         <span>Bold</span>
-                       </label>
-                       <label className="flex items-center gap-2">
-                         <input
-                           type="checkbox"
-                           id="italicCheck"
-                           className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                           onChange={(e) => {
-                             if (designerRef.current) {
-                               const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
-                               if (textInput) {
-                                 textInput.style.fontStyle = e.target.checked ? 'italic' : 'normal';
-                                 designerRef.current.changeFontStyle(e.target.checked ? 'italic' : 'normal');
-                               }
-                             }
-                           }}
-                         />
-                         <span>Italic</span>
-                       </label>
-                     </div>
-                   </div>
+                      <div id="fontStyle">
+                        <h5 className="text-lg font-medium mb-3">Font Style</h5>
+                        <div className="flex justify-center gap-4">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id="boldCheck"
+                              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                              onChange={(e) => {
+                                if (designerRef.current) {
+                                  const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
+                                  if (textInput) {
+                                    textInput.style.fontWeight = e.target.checked ? 'bold' : 'normal';
+                                    designerRef.current.changeFontStyle(e.target.checked ? 'bold' : 'normal');
+                                  }
+                                }
+                              }}
+                            />
+                            <span>Bold</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id="italicCheck"
+                              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                              onChange={(e) => {
+                                if (designerRef.current) {
+                                  const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
+                                  if (textInput) {
+                                    textInput.style.fontStyle = e.target.checked ? 'italic' : 'normal';
+                                    designerRef.current.changeFontStyle(e.target.checked ? 'italic' : 'normal');
+                                  }
+                                }
+                              }}
+                            />
+                            <span>Italic</span>
+                          </label>
+                        </div>
+                      </div>
 
-                   <div id="fontFamily">
-                     <h5 className="text-lg font-medium mb-3">Font Family</h5>
-                     <select
-                       className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                       id="chooseFontFamily"
-                       onChange={(e) => {
-                         if (designerRef.current) {
-                           designerRef.current.changeFontFamily(e.target.value);
-                           const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
-                           if (textInput) {
-                             textInput.style.fontFamily = e.target.value;
-                           }
-                         }
-                       }}
-                     >
-                       <option value="Montserrat">Montserrat</option>
-                       <option value="Sans Serif">Sans Serif</option>
-                       <option value="Arial">Arial</option>
-                       <option value="Comic Sans MS">Comic Sans MS</option>
-                       <option value="Times New Roman">Times New Roman</option>
-                       <option value="Courier New">Courier New</option>
-                       <option value="Verdana">Verdana</option>
-                       <option value="Trebuchet MS">Trebuchet MS</option>
-                       <option value="Arial Black">Arial Black</option>
-                       <option value="Impact">Impact</option>
-                       <option value="Bookman">Bookman</option>
-                       <option value="Garamond">Garamond</option>
-                       <option value="Palatino">Palatino</option>
-                       <option value="Georgia">Georgia</option>
-                     </select>
-                   </div>
+                      <div id="fontFamily">
+                        <h5 className="text-lg font-medium mb-3">Font Family</h5>
+                        <select
+                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          id="chooseFontFamily"
+                          onChange={(e) => {
+                            if (designerRef.current) {
+                              designerRef.current.changeFontFamily(e.target.value);
+                              const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
+                              if (textInput) {
+                                textInput.style.fontFamily = e.target.value;
+                              }
+                            }
+                          }}
+                        >
+                          <option value="Montserrat">Montserrat</option>
+                          <option value="Sans Serif">Sans Serif</option>
+                          <option value="Arial">Arial</option>
+                          <option value="Comic Sans MS">Comic Sans MS</option>
+                          <option value="Times New Roman">Times New Roman</option>
+                          <option value="Courier New">Courier New</option>
+                          <option value="Verdana">Verdana</option>
+                          <option value="Trebuchet MS">Trebuchet MS</option>
+                          <option value="Arial Black">Arial Black</option>
+                          <option value="Impact">Impact</option>
+                          <option value="Bookman">Bookman</option>
+                          <option value="Garamond">Garamond</option>
+                          <option value="Palatino">Palatino</option>
+                          <option value="Georgia">Georgia</option>
+                        </select>
+                      </div>
 
-                   <div className="text-center">
-                     <button 
-                       type="button" 
-                       className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                       id="submitText"
-                       onClick={() => {
-                         const text = (document.getElementById('textInput') as HTMLTextAreaElement).value.trim();
-                         if (text && designerRef.current) {
-                           designerRef.current.addText(text);
-                           const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
-                           if (textInput) {
-                             textInput.value = '';
-                           }
-                         }
-                       }}
-                     >
-                       Add Text
-                     </button>
-                   </div>
-                 </div>
-                 )}
-                 {menuIndex === 6 && (
-                    <Box sx={{ 
+                      <div className="text-center">
+                        <button
+                          type="button"
+                          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          id="submitText"
+                          onClick={() => {
+                            const text = (document.getElementById('textInput') as HTMLTextAreaElement).value.trim();
+                            if (text && designerRef.current) {
+                              designerRef.current.addText(text);
+                              const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
+                              if (textInput) {
+                                textInput.value = '';
+                              }
+                            }
+                          }}
+                        >
+                          Add Text
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {menuIndex === 6 && (
+                    <Box sx={{
                       bgcolor: '#f5f5f5',
                       borderRadius: 2,
                       p: 2
@@ -1075,9 +1113,9 @@ function DesignPage( param : DesignPageProps) {
                       <Typography variant="subtitle2" sx={{ color: '#282c34', mb: 2 }}>
                         Image Tools
                       </Typography>
-                      
+
                       {/* Basic Tools */}
-                      <Box sx={{ 
+                      <Box sx={{
                         display: 'flex',
                         gap: 1.5,
                         mb: 3
@@ -1111,7 +1149,7 @@ function DesignPage( param : DesignPageProps) {
                             Copy
                           </Typography>
                         </Box>
-  
+
                         {/* Delete */}
                         <Box
                           sx={{
@@ -1142,15 +1180,15 @@ function DesignPage( param : DesignPageProps) {
                           </Typography>
                         </Box>
                       </Box>
-  
+
                       {/* Advanced Controls */}
-                      <Box sx={{ 
+                      <Box sx={{
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 2
                       }}>
                         {/* Width Control */}
-                        <Box sx={{ 
+                        <Box sx={{
                           bgcolor: 'white',
                           borderRadius: 1,
                           p: 2
@@ -1158,11 +1196,11 @@ function DesignPage( param : DesignPageProps) {
                           <Typography variant="subtitle2" sx={{ color: '#282c34', mb: 2 }}>
                             Resize
                           </Typography>
-                          
+
                           {/* Width Control */}
                           <Box sx={{ mb: 2 }}>
-                            <Box sx={{ 
-                              display: 'flex', 
+                            <Box sx={{
+                              display: 'flex',
                               alignItems: 'center',
                               gap: 1,
                               mb: 1
@@ -1193,9 +1231,9 @@ function DesignPage( param : DesignPageProps) {
                             />
                           </Box>
                         </Box>
-  
+
                         {/* Rotation Control */}
-                        <Box sx={{ 
+                        <Box sx={{
                           bgcolor: 'white',
                           borderRadius: 1,
                           p: 2,
@@ -1204,9 +1242,9 @@ function DesignPage( param : DesignPageProps) {
                           <Typography variant="subtitle2" sx={{ color: '#282c34', mb: 2 }}>
                             Rotation
                           </Typography>
-                          
-                          <Box sx={{ 
-                            display: 'flex', 
+
+                          <Box sx={{
+                            display: 'flex',
                             alignItems: 'center',
                             gap: 1,
                             mb: 1
@@ -1237,9 +1275,9 @@ function DesignPage( param : DesignPageProps) {
                             style={{ accentColor: '#1976d2' }}
                           />
                         </Box>
-  
+
                         {/* Center and Layer Controls */}
-                        <Box sx={{ 
+                        <Box sx={{
                           bgcolor: 'white',
                           borderRadius: 1,
                           p: 2
@@ -1247,9 +1285,9 @@ function DesignPage( param : DesignPageProps) {
                           <Typography variant="subtitle2" sx={{ color: '#282c34', mb: 2 }}>
                             Position & Layering
                           </Typography>
-                          
+
                           {/* Center Controls */}
-                          <Box sx={{ 
+                          <Box sx={{
                             display: 'flex',
                             gap: 2,
                             mb: 2
@@ -1275,7 +1313,7 @@ function DesignPage( param : DesignPageProps) {
                               <i className="fas fa-arrows-alt-h mr-2"></i>
                               Center Width
                             </Button>
-                            
+
                             <Button
                               variant="outlined"
                               size="small"
@@ -1298,9 +1336,9 @@ function DesignPage( param : DesignPageProps) {
                               Center Height
                             </Button>
                           </Box>
-  
+
                           {/* Layering Controls */}
-                          <Box sx={{ 
+                          <Box sx={{
                             display: 'flex',
                             gap: 2
                           }}>
@@ -1325,7 +1363,7 @@ function DesignPage( param : DesignPageProps) {
                               <i className="fas fa-layer-group mr-2"></i>
                               Bring to Front
                             </Button>
-                            
+
                             <Button
                               variant="outlined"
                               size="small"
@@ -1370,7 +1408,7 @@ function DesignPage( param : DesignPageProps) {
             }}
           >
             <Box sx={{ position: 'relative', maxWidth: '600px', mx: 'auto' }}>
-             
+
 
               {/* Main Content Area */}
               <Box
@@ -1423,75 +1461,75 @@ function DesignPage( param : DesignPageProps) {
             }}
           >
             {sort_data.map((item: PrintFaceData, index: number) => (
-  <Box 
-    key={item.code}
-    sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, marginTop: '10px' }}
-  >
-    <Box>
-      <Box
-        className={index === 0 ? "thumbnail active" : "thumbnail"}
-        data-view={item.code}
-        sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: 0, 
-          cursor: 'pointer',
-          marginBottom: '20px'
-        }}
-      >
-        <Box
-          id={`thumb-${item.code}`}
-          component="img"
-          src={item.image}
-          alt={`${item.code}View`}
-          sx={{
-            width: '80%',
-            height: '80%',
-            objectFit: 'cover',
-            borderRadius: '4px',
-            background: 'white',
-            margin: 'auto'
-          }}
-        />
-        <Typography 
-          variant="caption" 
-          sx={{ fontSize: '15px', textAlign: 'center', color: '#ffffff' }}
-        >
-          <strong>{item.name}</strong>
-        </Typography>
-      </Box>
-    </Box>
-  </Box>
-))}
+              <Box
+                key={item.code}
+                sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, marginTop: '10px' }}
+              >
+                <Box>
+                  <Box
+                    className={index === 0 ? "thumbnail active" : "thumbnail"}
+                    data-view={item.code}
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 0,
+                      cursor: 'pointer',
+                      marginBottom: '20px'
+                    }}
+                  >
+                    <Box
+                      id={`thumb-${item.code}`}
+                      component="img"
+                      src={item.image}
+                      alt={`${item.code}View`}
+                      sx={{
+                        width: '80%',
+                        height: '80%',
+                        objectFit: 'cover',
+                        borderRadius: '4px',
+                        background: 'white',
+                        margin: 'auto'
+                      }}
+                    />
+                    <Typography
+                      variant="caption"
+                      sx={{ fontSize: '15px', textAlign: 'center', color: '#ffffff' }}
+                    >
+                      <strong>{item.name}</strong>
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            ))}
 
-          {param.typeDesign === 1 && (
+            {(param.typeDesign == 1 || (param.typeDesign == 2 && variantId != variantIdOfUpdate)) && (
 
-            <Button
+              <Button
                 sx={{
-                    backgroundColor: '#000000',
-                    color: '#ffffff',
-                    '&:hover': {
+                  backgroundColor: '#000000',
+                  color: '#ffffff',
+                  '&:hover': {
                     backgroundColor: '#2b2966',
-                    },
-                    width: '100%',
-                    mt: '20px',
-                    textTransform: 'none',
+                  },
+                  width: '100%',
+                  mt: '20px',
+                  textTransform: 'none',
                 }}
                 onClick={async () => {
                   setSpinner(true);
                   const json = localStorage.getItem("cart");
-                  
+
                   if (json != null && json !== undefined) {
                     const cartItem = JSON.parse(json) as {  // Ép kiểu trực tiếp ở đây
                       params: any;  // Loại của params có thể thay đổi tuỳ theo nhu cầu
                       selectedVariantId: string;
                       quantity: number;
                     };
-                    
+
                     if (designerRef.current != null) {
                      
-                      var metaData = null;
-                      var hasObjectInStage = false;
+                      let metaData = null;
+                      let hasObjectInStage = false;
                       if (designerRef.current.stages != null){}
                       for (const i of designerRef.current.stages){
                         if (i.layer?.getChildren().length != null && i.layer?.getChildren().length > 0){
@@ -1499,16 +1537,20 @@ function DesignPage( param : DesignPageProps) {
                           break;
                         }
                       }
-                      if (hasObjectInStage == true){
-                        metaData =  await designerRef.current.exportDesignToJson();
+                      if (hasObjectInStage == true) {
+                        metaData = await designerRef.current.exportDesignToJson();
                       }
-                      
-                      const result = await addItem(cartItem.params, cartItem.selectedVariantId, cartItem.quantity, metaData);
-                      console.log('het qua', result);
-                      if (result == true){
+                      var result = false;
+                      if (param.typeDesign == 1) {
+                        result = (await addItem(cartItem.params, /*cartItem.selectedVariantId*/variantId, cartItem.quantity, metaData)) as boolean;
+                      }
+                      else {
+                        result = (await addItem(cartItem.params, /*cartItem.selectedVariantId*/variantId, 1, metaData)) as boolean;
+                      }
+                      if (result === true) {
                         toast.success('Design added to cart successfully');
                       }
-                      else{
+                      else {
                         toast.error('An error occurred during processing. Please try again later');
                       }
                       //localStorage.removeItem('cart');
@@ -1517,54 +1559,54 @@ function DesignPage( param : DesignPageProps) {
                   }
                   setSpinner(false);
                 }}
-                >
+              >
                 Add to Cart
-                </Button>
-          )}
+              </Button>
+            )}
 
-          {param.typeDesign === 2 && (
+            {param.typeDesign === 2 && variantId === variantIdOfUpdate && (
 
-          <Button
-              sx={{
-                  backgroundColor:  '#000000',
+              <Button
+                sx={{
+                  backgroundColor: '#000000',
                   color: '#ffffff',
                   '&:hover': {
-                  backgroundColor: '#2b2966',
+                    backgroundColor: '#2b2966',
                   },
                   width: '100%',
                   mt: '20px',
                   textTransform: 'none',
-              }}
-              onClick={async () => {
-                setSpinner(true);
-                const cartId = localStorage.getItem("cartId");
-                if (cartId != null && cartId != undefined){
-                  if (designerRef.current != null){
-                    const metaData = await designerRef.current.exportDesignToJson();
-                   
-                    const result = await UpdateDesign(cartId, metaData);
-                    if (result == true){
-                      toast.success('Design updated successfully');
-                    }
-                    else{
-                      toast.error('An error occurred during processing. Please try again later');
-                    }
-                    //localStorage.removeItem('cartId');
-                  }
-                  //window.location.replace(`/${param.channel}/cart`);
-                }
-                setSpinner(false);
+                }}
+                onClick={async () => {
+                  setSpinner(true);
+                  const cartId = localStorage.getItem("cartId");
+                  if (cartId != null && cartId != undefined) {
+                    if (designerRef.current != null) {
+                      const metaData = await designerRef.current.exportDesignToJson();
 
-                
-                // if (designerRef.current != null){
-                //   const metaData = await designerRef.current.exportDesignToJson();
-                //   //await addItem(cartItem.params, cartItem.selectedVariantId, cartItem.quantity, metaData )
-                // }
-              }}
+                      const result = await UpdateDesign(cartId, metaData);
+                      if (result == true) {
+                        toast.success('Design updated successfully');
+                      }
+                      else {
+                        toast.error('An error occurred during processing. Please try again later');
+                      }
+                      //localStorage.removeItem('cartId');
+                    }
+                    //window.location.replace(`/${param.channel}/cart`);
+                  }
+                  setSpinner(false);
+
+
+                  // if (designerRef.current != null){
+                  //   const metaData = await designerRef.current.exportDesignToJson();
+                  //   //await addItem(cartItem.params, cartItem.selectedVariantId, cartItem.quantity, metaData )
+                  // }
+                }}
               >
-              Update
+                Update
               </Button>
-          )}
+            )}
           </Paper>
         </Box>
       </Box>
@@ -1587,9 +1629,9 @@ function DesignPage( param : DesignPageProps) {
           maxWidth: 500,
           mx: 2,
         }}>
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'space-between',
             p: 2,
             borderBottom: '1px solid',
@@ -1606,10 +1648,10 @@ function DesignPage( param : DesignPageProps) {
             </IconButton>
           </Box>
           <Box sx={{ p: 3 }}>
-            <Box sx={{ 
-              display: 'grid', 
+            <Box sx={{
+              display: 'grid',
               gridTemplateColumns: 'repeat(6, 1fr)',
-              gap: 2 
+              gap: 2
             }}>
               {Array.from(colorData.entries()).map(([key, value]) => (
                 <Box
@@ -1633,15 +1675,15 @@ function DesignPage( param : DesignPageProps) {
                         });
                         target.classList.add('active');
                         for(const item in sort_data){
-                          let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-                          let previewDom = document.getElementById('preview-'+sort_data[item].code);
+                          const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
+                          const previewDom = document.getElementById('preview-'+sort_data[item].code);
                           imageDom.style.display = 'none';
                           previewDom!.style.display = 'none';
                         }
                 
                         for(const item in sort_data){
-                          let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-                          let previewDom = document.getElementById('preview-'+sort_data[item].code);
+                          const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
+                          const previewDom = document.getElementById('preview-'+sort_data[item].code);
                 
                           if (view === sort_data[item].code){
                             imageDom.style.display = 'block';
@@ -1659,6 +1701,7 @@ function DesignPage( param : DesignPageProps) {
                         if (thumbnailDom) {
                           thumbnailDom.setAttribute('src', result[item].image);
                         }
+
                       }
 
                       const thumbnails = document.querySelectorAll('.thumbnail');
@@ -1667,7 +1710,7 @@ function DesignPage( param : DesignPageProps) {
                       });
                       designerRef.current.data = result;
                       designerRef.current.colorValue = key;
-                      designerRef.current.variantId = getVariantIdFromColorVariant(key,colorData );
+                      designerRef.current.variantId = getVariantIdFromColorVariant(key, colorData);
                       designerRef.current.updateStagePositions();
                     }
                   }}
@@ -1707,9 +1750,9 @@ function DesignPage( param : DesignPageProps) {
           maxWidth: 400,
           mx: 2,
         }}>
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'space-between',
             p: 2,
             borderBottom: '1px solid',
@@ -1892,7 +1935,7 @@ function DesignPage( param : DesignPageProps) {
             <div className="p-6" id="editorTextDrawer">
               <div className="space-y-6">
                 <div>
-                  <textarea 
+                  <textarea
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     id="textInput"
                     rows={3}
@@ -1998,8 +2041,8 @@ function DesignPage( param : DesignPageProps) {
                 </div>
 
                 <div className="text-center">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     id="submitText"
                     onClick={() => {

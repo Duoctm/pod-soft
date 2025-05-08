@@ -1,23 +1,21 @@
+// app/actions/removePromodeCode.ts
 "use server";
 
 import { RemovePromoCodeFromCheckoutDocument } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
 
-export const removePromodeCode = async (id: string, promodeCode: string) => {
+export const removePromodeCode = async (id: string, promoCode: string) => {
 	try {
 		const { checkoutRemovePromoCode } = await executeGraphQL(RemovePromoCodeFromCheckoutDocument, {
-			variables: {
-				checkoutId: id,
-				promoCode: promodeCode,
-			},
+			variables: { checkoutId: id, promoCode },
 		});
-        console.log(checkoutRemovePromoCode)
+
 		if (checkoutRemovePromoCode?.errors) {
-			return checkoutRemovePromoCode?.errors;
+			return { success: false, message: "Server returned errors." };
 		}
-		return checkoutRemovePromoCode;
+
+		return { success: true };
 	} catch (error) {
-		console.log(error);
-		return error;
+		return { success: false, message: "Server exception occurred." };
 	}
 };

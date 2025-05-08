@@ -1,11 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CurrentUserOrderListDocument, PaymentChargeStatusEnum } from "@/gql/graphql";
+import React from "react";
+import { CurrentUserOrderListDocument, type PaymentChargeStatusEnum } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
 import { LoginForm } from "@/ui/components/LoginForm";
 import { formatDate, formatMoney } from "@/lib/utils";
 import { PaymentStatus } from "@/ui/components/PaymentStatus";
-import React from "react";
 
 const OrderDetailPage = async ({ params }: { params: { id: string; channel: string } }) => {
 	const { me: user } = await executeGraphQL(CurrentUserOrderListDocument, {
