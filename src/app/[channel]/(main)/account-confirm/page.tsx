@@ -21,11 +21,16 @@ function ConfirmContent() {
 		(async () => {
 			try {
 				const res = await confirmAccountOnServer(decodeURIComponent(email), token);
-				if (res.errors.length === 0) {
+				if (res?.user) {
 					setConfirmStatus("success");
 				} else {
 					setConfirmStatus("error");
-					setErrorMessage(res.errors.map((e: any) => e.message).join(", "));
+					if (res?.user) {
+						setErrorMessage(res?.errors.map((e) => e.message).join(", "));
+						return
+					}
+					setErrorMessage("Something wrong")
+					return;
 				}
 			} catch (err) {
 				setConfirmStatus("error");

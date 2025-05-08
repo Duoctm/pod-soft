@@ -1,49 +1,62 @@
 // server.ts
 "use server";
 
-import { GraphQLClient, gql } from "graphql-request";
+import { ConfirmAccountDocument } from "@/gql/graphql";
+import { executeGraphQL } from "@/lib/graphql";
 
-const SALEOR_API_URL = process.env.NEXT_PUBLIC_SALEOR_API_URL as string;
+// import { GraphQLClient, gql } from "graphql-request";
 
-// Define types for the response
-interface User {
-	id: string;
-	email: string;
-	isActive: boolean;
-}
+// const SALEOR_API_URL = process.env.NEXT_PUBLIC_SALEOR_API_URL as string;
 
-interface AccountError {
-	field: string;
-	message: string;
-	code: string;
-}
+// // Define types for the response
+// interface User {
+// 	id: string;
+// 	email: string;
+// 	isActive: boolean;
+// }
 
-interface ConfirmAccountResponse {
-	confirmAccount: {
-		user: User | null;
-		errors: AccountError[];
-	};
-}
+// interface AccountError {
+// 	field: string;
+// 	message: string;
+// 	code: string;
+// }
 
-const ACCOUNT_CONFIRM_MUTATION = gql`
-	mutation ConfirmAccount($email: String!, $token: String!) {
-		confirmAccount(email: $email, token: $token) {
-			user {
-				id
-				email
-				isActive
-			}
-			errors {
-				field
-				message
-				code
-			}
-		}
-	}
-`;
+// interface ConfirmAccountResponse {
+// 	confirmAccount: {
+// 		user: User | null;
+// 		errors: AccountError[];
+// 	};
+// }
+
+// const ACCOUNT_CONFIRM_MUTATION = gql`
+// 	mutation ConfirmAccount($email: String!, $token: String!) {
+// 		confirmAccount(email: $email, token: $token) {
+// 			user {
+// 				id
+// 				email
+// 				isActive
+// 			}
+// 			errors {
+// 				field
+// 				message
+// 				code
+// 			}
+// 		}
+// 	}
+// `;
 
 export async function confirmAccountOnServer(email: string, token: string) {
-	const client = new GraphQLClient(SALEOR_API_URL);
-	const result = await client.request<ConfirmAccountResponse>(ACCOUNT_CONFIRM_MUTATION, { email, token });
-	return result.confirmAccount;
+	try {
+		const {confirmAccount} = await executeGraphQL(ConfirmAccountDocument, {
+			variables: {
+				email: email,
+				token: token
+			}
+		})
+	 return confirmAccount
+
+
+	} catch (error) {
+		throw error
+	}
 }
