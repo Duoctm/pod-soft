@@ -6,6 +6,7 @@ mutation CheckoutAddLine($id: ID!, $productVariantId: ID!, $quantity: Int!) {
 				id
 				quantity
 				variant {
+					id
 					name
 					product {
 						name

@@ -1,5 +1,9 @@
 mutation checkoutShippingAddressUpdate($checkoutId: ID!, $shippingAddress: AddressInput!) {
-	checkoutShippingAddressUpdate(id: $checkoutId, shippingAddress: $shippingAddress) {
+	checkoutShippingAddressUpdate(
+		id: $checkoutId
+		shippingAddress: $shippingAddress
+		validationRules: { checkRequiredFields: false }
+	) {
 		checkout {
 			id
 			shippingAddress {

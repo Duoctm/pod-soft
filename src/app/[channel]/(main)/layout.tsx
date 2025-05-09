@@ -4,8 +4,8 @@ import { Header } from "@/ui/components/Header";
 import { BreadcrumbProvider } from "@/ui/components/BreadcrumbProvider";
 
 export const metadata = {
-	title: "ZoomPrint",
-	description: "ZoomPrint is your gateway to rapid fast fulfillment minus the steep investment.",
+	title: "ZoomPrints",
+	description: "ZoomPrints is your gateway to rapid fast fulfillment minus the steep investment.",
 };
 
 export default function RootLayout(props: { children: ReactNode; params: { channel: string } }) {

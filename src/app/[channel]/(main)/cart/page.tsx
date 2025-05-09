@@ -8,8 +8,8 @@ import { formatMoney, getHrefForVariant } from "@/lib/utils";
 import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
 
 export const metadata = {
-	title: "Shopping Cart - ZoomPrint",
-	description: "ZoomPrint is your gateway to rapid fast fulfillment minus the steep investment.",
+	title: "Shopping Cart - ZoomPrints",
+	description: "ZoomPrints is your gateway to rapid fast fulfillment minus the steep investment.",
 };
 
 export default async function Page({ params }: { params: { channel: string } }) {
@@ -82,7 +82,7 @@ export default async function Page({ params }: { params: { channel: string } }) 
 
 									<div className="flex space-x-2">
 										{Array.isArray(item.metadata) && item.metadata.length > 0 && <ViewDesignButton lineId={item.id} checkout={checkoutId} params={params} />}
-										{Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && <DesignButton colorId={item.variant.attributes[0].values[0].id} productId={item.variant.product.id} params={params} quantity={1} selectedVariantId={item.variant.id} />}
+										{(Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && Array.isArray(item.metadata) && item.metadata.length == 0) && <DesignButton colorId={item.variant.attributes[0].values[0].id} productId={item.variant.product.id} params={params} quantity={1} selectedVariantId={item.variant.id} />}
 									</div>
 
 									<DeleteLineButton checkoutId={checkoutId} lineId={item.id} />

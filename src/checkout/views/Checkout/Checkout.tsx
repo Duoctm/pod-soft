@@ -28,7 +28,7 @@ import { updateBillingAddress } from "@/checkout/hooks/useBillingAddressUpdate";
 import { checkoutCompleteServerFunc } from "@/checkout/hooks/useCheckoutCompleteServer";
 import { AddressSchema } from "@/checkout/lib/utils/validate";
 import { type Address, type FormValues } from "@/checkout/lib/utils/type";
-import { updateDeliveryMethod } from "@/checkout/hooks/checkoutDeliveryMethodUpdate";
+// import { updateDeliveryMethod } from "@/checkout/hooks/checkoutDeliveryMethodUpdate";
 
 // Define the shape for the entire checkout form
 const CheckoutSchema = Yup.object().shape({
@@ -314,27 +314,29 @@ export const Checkout = () => {
 				}
 			});
 		}
-		await handlePlaceOrder();
-		if (!hasErrors) {
-			update();
+
+		if (hasErrors) {
 			if (inAddressForm) {
-				toast.success("Addresses updated successfully!");
+				update();
+				toast.success("Error when updating address, please check the address and try again");
+				return;
 			}
 		}
-
+		await handlePlaceOrder();
 		setSubmitting(false);
 	};
 
 	const handlePlaceOrder = async () => {
-		if(!checkout?.shippingMethods || checkout.shippingMethods.length === 0) {
-			toast.error("Please type shipping address");
-			return;
-		}
+		// console.log(checkout)
+		// if (!checkout?.shippingMethods || checkout.shippingMethods.length === 0) {
+		// 	toast.error("Please type shipping address");
+		// 	return;
+		// }
 
-		await updateDeliveryMethod({
-			id: checkout?.id || "",
-			deliveryMethodId: checkout?.shippingMethods[0].id || "",
-		});
+		// await updateDeliveryMethod({
+		// 	id: checkout?.id || "",
+		// 	deliveryMethodId: checkout?.shippingMethods[0].id || "",
+		// });
 
 		if (!checkout) {
 			toast.error("Checkout is not available");

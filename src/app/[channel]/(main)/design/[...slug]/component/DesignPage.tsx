@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { Typography, IconButton, Box, Paper, Modal, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import {toast, ToastContainer } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import TShirtDesigner from '../utils/design';
 import { initializeModals } from '../utils/modal';
-import {type DesignInfo, type PrintFaceData} from '..//utils/type';
-import {/*fetchProductDetail, */getMetaDtataFromColorVariant, getVariantIdFromColorVariant} from '../utils/data'
-import {addItem, UpdateDesign} from '../utils/checkout'
-import {fetchProductDetail} from '../utils/test'
+import { type DesignInfo, type PrintFaceData } from '..//utils/type';
+import {/*fetchProductDetail, */getMetaDtataFromColorVariant, getVariantIdFromColorVariant } from '../utils/data'
+import { addItem, UpdateDesign } from '../utils/checkout'
+import { fetchProductDetail } from '../utils/test'
 import 'react-toastify/dist/ReactToastify.css';
 
 const StyledButton = styled(IconButton)(() => ({
@@ -62,10 +62,10 @@ function DesignPage(param: DesignPageProps) {
   const [isSpinner, setSpinner] = useState<boolean>(false);
   console.log(showObjectMenu);
 
-  const loadProductData = async (productId : string) => {
-    let result : Map<string, object>;
-    if (param.designInfor?.colorData != null){
-        result = new Map(Object.entries(param.designInfor.colorData)); //param.designInfor.colorData;
+  const loadProductData = async (productId: string) => {
+    let result: Map<string, object>;
+    if (param.designInfor?.colorData != null) {
+      result = new Map(Object.entries(param.designInfor.colorData)); //param.designInfor.colorData;
     }
     else {
       result = await fetchProductDetail(productId);
@@ -190,16 +190,16 @@ function DesignPage(param: DesignPageProps) {
           thumb.classList.remove('active');
         });
         target.classList.add('active');
-        for(const item in sort_data){
+        for (const item in sort_data) {
           const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-          const previewDom = document.getElementById('preview-'+sort_data[item].code);
+          const previewDom = document.getElementById('preview-' + sort_data[item].code);
           imageDom.style.display = 'none';
           previewDom!.style.display = 'none';
         }
 
-        for(const item in sort_data){
+        for (const item in sort_data) {
           const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-          const previewDom = document.getElementById('preview-'+sort_data[item].code);
+          const previewDom = document.getElementById('preview-' + sort_data[item].code);
 
           if (view === sort_data[item].code) {
             imageDom.style.display = 'block';
@@ -287,15 +287,15 @@ function DesignPage(param: DesignPageProps) {
     });
     target.classList.add('active');
     for (const item in sort_data) {
-      const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-      const previewDom = document.getElementById('preview-' + sort_data[item].code);
+      let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
+      let previewDom = document.getElementById('preview-' + sort_data[item].code);
       imageDom.style.display = 'none';
       previewDom!.style.display = 'none';
     }
 
     for (const item in sort_data) {
-      const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-      const previewDom = document.getElementById('preview-' + sort_data[item].code);
+      let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
+      let previewDom = document.getElementById('preview-' + sort_data[item].code);
 
       if (view === sort_data[item].code) {
         imageDom.style.display = 'block';
@@ -1527,12 +1527,12 @@ function DesignPage(param: DesignPageProps) {
                     };
 
                     if (designerRef.current != null) {
-                     
+
                       let metaData = null;
                       let hasObjectInStage = false;
-                      if (designerRef.current.stages != null){}
-                      for (const i of designerRef.current.stages){
-                        if (i.layer?.getChildren().length != null && i.layer?.getChildren().length > 0){
+                      if (designerRef.current.stages != null) { }
+                      for (const i of designerRef.current.stages) {
+                        if (i.layer?.getChildren().length != null && i.layer?.getChildren().length > 0) {
                           hasObjectInStage = true;
                           break;
                         }
@@ -1540,11 +1540,12 @@ function DesignPage(param: DesignPageProps) {
                       if (hasObjectInStage == true) {
                         metaData = await designerRef.current.exportDesignToJson();
                       }
-                      let result = false;
+                      var result = false;
                       if (param.typeDesign == 1) {
                         result = (await addItem(cartItem.params, /*cartItem.selectedVariantId*/variantId, cartItem.quantity, metaData)) as boolean;
                       }
                       else {
+                        console.log('checkkkkkkkkkk neffffff', variantId, variantIdOfUpdate);
                         result = (await addItem(cartItem.params, /*cartItem.selectedVariantId*/variantId, 1, metaData)) as boolean;
                       }
                       if (result === true) {
@@ -1668,24 +1669,24 @@ function DesignPage(param: DesignPageProps) {
                       const handleThumbnailClick = (e: Event) => {
                         const target = e.currentTarget as HTMLDivElement;
                         const view = target.getAttribute('data-view');
-                        
+
                         // Cập nhật active state
                         document.querySelectorAll('.thumbnail').forEach(thumb => {
                           thumb.classList.remove('active');
                         });
                         target.classList.add('active');
-                        for(const item in sort_data){
+                        for (const item in sort_data) {
                           const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-                          const previewDom = document.getElementById('preview-'+sort_data[item].code);
+                          const previewDom = document.getElementById('preview-' + sort_data[item].code);
                           imageDom.style.display = 'none';
                           previewDom!.style.display = 'none';
                         }
-                
-                        for(const item in sort_data){
+
+                        for (const item in sort_data) {
                           const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-                          const previewDom = document.getElementById('preview-'+sort_data[item].code);
-                
-                          if (view === sort_data[item].code){
+                          const previewDom = document.getElementById('preview-' + sort_data[item].code);
+
+                          if (view === sort_data[item].code) {
                             imageDom.style.display = 'block';
                             previewDom!.style.display = 'block';
                             if (designerRef.current) {
@@ -1694,8 +1695,8 @@ function DesignPage(param: DesignPageProps) {
                           }
                         }
                       }
-                      for(const item in result){
-                        const imageDom = document.getElementById(result[item].code+ "Image") as HTMLImageElement;
+                      for (const item in result) {
+                        const imageDom = document.getElementById(result[item].code + "Image") as HTMLImageElement;
                         const thumbnailDom = document.getElementById(`thumb-${result[item].code}`);
                         imageDom.src = result[item].image
                         if (thumbnailDom) {

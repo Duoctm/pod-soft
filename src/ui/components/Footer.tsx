@@ -1,6 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
 import Wrapper from "./wrapper";
+import Link from "next/link";
 
 // Common styles for text elements
 const textStyles = {
@@ -13,7 +13,7 @@ const footerNavigation = [
 {
   title: "Company",
   links: [
-    { label: "Home", path: "" },
+    { label: "Home", path: "/" },
     { label: "Services", path: "/service" },
     { label: "Order", path: "/products" },
     { label: "Support", path: "/support" },
@@ -43,7 +43,7 @@ const renderNavigationColumn = ({links }: typeof footerNavigation[0], channel: s
     {/* <div className={textStyles.heading}>{title}</div> */}
     <div className="flex flex-col md:flex-row gap-[8px] md:gap-[10px]">
       {links.map((link, index) => (
-        <Link key={index} className={textStyles.base} href={`${channel}${link.path}`}>
+        <Link key={index} className={textStyles.base} href={`/${channel}${link.path}`}>
           {link.label}
         </Link>
       ))}

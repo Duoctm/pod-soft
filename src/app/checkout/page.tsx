@@ -4,7 +4,7 @@ import { RootWrapper } from "./pageWrapper";
 import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
 
 export const metadata = {
-	title: "Checkout · ZoomPrint",
+	title: "Checkout · ZoomPrints",
 };
 
 export default function CheckoutPage({
@@ -24,11 +24,11 @@ export default function CheckoutPage({
 				<div className="flex items-center font-bold">
 					<div className="flex items-center font-bold">
 						<LinkWithChannel aria-label="homepage" href="/" className="flex items-center gap-2">
-							<Image src="/images/logo-image.png" alt="SwiftPod Logo" width={70} height={70} priority />
+							<Image src="/images/main-logo.png" alt="SwiftPod Logo" width={150} height={70} priority />
 						</LinkWithChannel>
 					</div>
 				</div>
-				<h1 className="mt-8 text-3xl font-bold text-neutral-900">Checkout</h1>
+				<h1 className="text-3xl font-bold text-neutral-900">Checkout</h1>
 
 				<section className="mb-12 mt-6 flex-1">
 					<RootWrapper saleorApiUrl={process.env.NEXT_PUBLIC_SALEOR_API_URL} />

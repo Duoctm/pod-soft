@@ -6,8 +6,8 @@ import { ProductList } from "@/ui/components/ProductList";
 import { ProductsPerPage } from "@/app/config";
 
 export const metadata = {
-	title: "Search products · ZoomPrint",
-	description: "ZoomPrint is your gateway to rapid fast fulfillment minus the steep investment.",
+	title: "Search products · ZoomPrints",
+	description: "ZoomPrints is your gateway to rapid fast fulfillment minus the steep investment.",
 };
 
 export default async function Page({

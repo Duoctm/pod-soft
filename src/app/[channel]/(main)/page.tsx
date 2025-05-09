@@ -7,8 +7,8 @@ import SpecialOffer from "@/ui/components/home/SpecialOffer";
 import Subscribe from "@/ui/components/home/Subscribe";
 
 export const metadata = {
-	title: "ZoomPrint",
-	description: "ZoomPrint is your gateway to rapid fast fulfillment minus the steep investment.",
+	title: "ZoomPrints",
+	description: "ZoomPrints is your gateway to rapid fast fulfillment minus the steep investment.",
 };
 
 export default async function Page({ params }: { params: { channel: string } }) {
