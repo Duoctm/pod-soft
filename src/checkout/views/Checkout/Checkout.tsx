@@ -28,6 +28,7 @@ import { updateBillingAddress } from "@/checkout/hooks/useBillingAddressUpdate";
 import { checkoutCompleteServerFunc } from "@/checkout/hooks/useCheckoutCompleteServer";
 import { AddressSchema } from "@/checkout/lib/utils/validate";
 import { type Address, type FormValues } from "@/checkout/lib/utils/type";
+import { updateDeliveryMethod } from "@/checkout/hooks/checkoutDeliveryMethodUpdate";
 // import { updateDeliveryMethod } from "@/checkout/hooks/checkoutDeliveryMethodUpdate";
 
 // Define the shape for the entire checkout form
@@ -327,16 +328,16 @@ export const Checkout = () => {
 	};
 
 	const handlePlaceOrder = async () => {
-		// console.log(checkout)
-		// if (!checkout?.shippingMethods || checkout.shippingMethods.length === 0) {
-		// 	toast.error("Please type shipping address");
-		// 	return;
-		// }
+		console.log(checkout)
+		if (!checkout?.shippingMethods || checkout.shippingMethods.length === 0) {
+			toast.error("Please type shipping address");
+			return;
+		}
 
-		// await updateDeliveryMethod({
-		// 	id: checkout?.id || "",
-		// 	deliveryMethodId: checkout?.shippingMethods[0].id || "",
-		// });
+		await updateDeliveryMethod({
+			id: checkout?.id || "",
+			deliveryMethodId: checkout?.shippingMethods[0].id || "",
+		});
 
 		if (!checkout) {
 			toast.error("Checkout is not available");
@@ -386,7 +387,7 @@ export const Checkout = () => {
 									<Divider />
 								</div>
 							</Formik>
-							{/* <div className="my-2 flex">
+							<div className="my-2 flex">
 								<button
 									type="submit"
 									className="flex w-full justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
@@ -394,7 +395,7 @@ export const Checkout = () => {
 								>
 									Place Order
 								</button>
-							</div> */}
+							</div>
 						</div>
 						<div className="order-1 bg-gray-50 px-4 py-10 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 lg:py-16">
 							<Suspense fallback={<SummarySkeleton />}>
