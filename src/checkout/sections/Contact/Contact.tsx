@@ -10,7 +10,7 @@ export const Contact = ({ user }: ContactProps) => {
 			<div id="user-info">
 				{user?.lastName && user?.firstName && (
 					<div className="mb-3">
-						<p className="text-md font-medium font-semibold text-gray-800">User name:</p>
+						<p className="text-md font-semibold text-gray-800">User name:</p>
 						<p className="text-lg text-gray-900">
 							{user?.lastName} {user?.firstName}
 						</p>
@@ -18,7 +18,7 @@ export const Contact = ({ user }: ContactProps) => {
 				)}
 
 				<div>
-					<p className="text-md font-medium font-semibold text-gray-800">Email:</p>
+					<p className="text-md font-semibold text-gray-800">Email:</p>
 					<p className="text-lg text-gray-900">{user?.email}</p>
 				</div>
 			</div>

@@ -53,16 +53,18 @@ const Servicecard = ({ service }: { service: ServiceType }) => {
 const AboutUs = () => {
     return (
         <Wrapper className="flex w-full flex-col py-12 md:py-24">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-y-6 md:gap-y-0">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-y-6 lg:gap-y-0">
                 <div className="flex flex-col gap-y-3 md:gap-y-5">
                     <span className="font-semibold text-xs md:text-[18px] space-x-[16%] text-[#EF816B] uppercase">About Us</span>
                     <h3 className="max-w-full md:max-w-[720px] w-full font-bold text-[42px] md:text-[50px] leading-[120%]">
                         Your Trusted Partner for Superior Printing Services
                     </h3>
                 </div>
-                <button className=" w-[133px] text-xs md:w-auto rounded-md bg-[#8B3958] px-8 md:px-14 py-3 md:py-4 md:text-sm lg:text-base font-semibold text-white shadow-[0_9.67px_29.01px_rgba(253,140,111,0.25)]">
+                <Link 
+                href={"/default-channel/service"}
+                className="w-full max-w-[133px] md:max-w-[200px] text-center text-xs lg:w-auto rounded-md bg-[#8B3958] px-8 md:px-14 py-3 lg:py-4 md:text-sm lg:text-base font-semibold text-white shadow-[0_9.67px_29.01px_rgba(253,140,111,0.25)]">
                     Learn More
-                </button>
+                </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-10 md:mt-[76px] gap-8 md:gap-x-16">
                 {

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Wrapper from "./wrapper";
+import Link from "next/link";
 
 // Common styles for text elements
 const textStyles = {
@@ -9,47 +10,55 @@ const textStyles = {
 
 // Footer navigation data
 const footerNavigation = [
-  {
-    title: "Company",
-    links: ["About Us", "Services", "Our Projects", "Pricing"],
-  },
-  {
-    title: "Resources",
-    links: ["Gift Cards", "Design Tutorial", "How to - Blog", "Spotify Podcast"],
-  },
-  {
-    title: "Help",
-    links: [
-      "Customer Support",
-      "Delivery Details",
-      "Terms & Conditions",
-      "Privacy Policy",
-    ],
-  },
+{
+  title: "Company",
+  links: [
+    { label: "Home", path: "" },
+    { label: "Services", path: "/service" },
+    { label: "Order", path: "/products" },
+    { label: "Support", path: "/support" },
+  ],
+}
+  // {
+  //   title: "Resources",
+  //   links: ["Gift Cards", "Design Tutorial", "How to - Blog", "Spotify Podcast"],
+  // },
+  // {
+  //   title: "Help",
+  //   links: [
+  //     "Customer Support",
+  //     "Delivery Details",
+  //     "Terms & Conditions",
+  //     "Privacy Policy",
+  //   ],
+  // },
 ];
 
 interface FooterProps {
   channel: string;
 }
 
+const renderNavigationColumn = ({links }: typeof footerNavigation[0], channel: string) => (
+  <div className="flex flex-col md:flex-row gap-[16px] md:gap-[24px]">
+    {/* <div className={textStyles.heading}>{title}</div> */}
+    <div className="flex flex-col md:flex-row gap-[8px] md:gap-[10px]">
+      {links.map((link, index) => (
+        <Link key={index} className={textStyles.base} href={`${channel}${link.path}`}>
+          {link.label}
+        </Link>
+      ))}
+    </div>
+  </div>
+);
+
+
 export async function Footer({ channel }: FooterProps) {
   console.log(channel)
-  const renderNavigationColumn = ({ title, links }: typeof footerNavigation[0]) => (
-    <div className="flex flex-col gap-[16px] md:gap-[24px]">
-      <div className={textStyles.heading}>{title}</div>
-      <div className="flex flex-col gap-[8px] md:gap-[10px]">
-        {links.map((link, index) => (
-          <div key={index} className={textStyles.base}>
-            {link}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+ 
 
   return (
     <div className="bg-[#1C1C1C] py-8 md:py-16 flex flex-col">
-      <Wrapper className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 md:gap-0">
+      <Wrapper className="flex flex-col md:flex-row items-start md:items-end justify-between gap-8 md:gap-0">
         <div className="flex flex-col gap-y-5 w-full md:w-auto">
           <Image
             src="/images/main-logo.png"
@@ -59,13 +68,12 @@ export async function Footer({ channel }: FooterProps) {
             height={100}
           />
           <p className="max-w-full md:max-w-[387px] text-white text-[14px] md:text-[16px] leading-[24px] md:leading-[26px] tracking-[0%] font-[400]">
-            Netus feugiat vitae enim enim in viverra. Id at sagittis cras pretium
-            dictum nec netus. Ante dolor quis convallis.
+          Digital printing for the promotional product industry.
           </p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-16 w-full md:w-auto">
+        <div className="flex flex-row items-center gap-8 md:gap-16 w-full md:w-auto">
           {footerNavigation.map((section, index) => (
-            <div key={index}>{renderNavigationColumn(section)}</div>
+            <div key={index}  className="flex">{renderNavigationColumn(section, channel)}</div>
           ))}
         </div>
       </Wrapper>

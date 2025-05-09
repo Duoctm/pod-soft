@@ -1,14 +1,31 @@
-mutation RegisterAccount($email: String!, $password: String!, 
-  $redirectUrl: String, $channel: String) {
-  accountRegister(input: {email: $email, password: $password, 
-    redirectUrl: $redirectUrl, channel: $channel}) {
-        user{email id 
+mutation RegisterAccount(
+  $email: String!,
+  $password: String!,
+  $redirectUrl: String,
+  $channel: String,
+  $firstName: String,
+  $lastName: String
+) {
+  accountRegister(
+    input: {
+      email: $email,
+      password: $password,
+      redirectUrl: $redirectUrl,
+      channel: $channel,
+      firstName: $firstName,
+      lastName: $lastName
+    }
+  ) {
+    user {
+      email
+      id
+      firstName
+      lastName
     }
     errors {
       field
       message
     }
     requiresConfirmation
-    
   }
 }

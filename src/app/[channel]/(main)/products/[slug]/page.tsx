@@ -16,9 +16,9 @@ import { ThumbnailGallery } from "./_components/ThumbnailGallery";
 import { ProductTitle } from "./_components/ProductTitle";
 import { ProductDescription } from "./_components/ProductDescription";
 import { ProductAttributeSelector } from "./_components/ProductAttributeSelector";
-import {Breadcrumb} from "./Breadcrumb"
+// import {Breadcrumb} from "./Breadcrumb"
 import { Loader } from "@/ui/atoms/Loader";
-import { useBreadcrumb } from "@/ui/components/BreadcrumbProvider";
+// import { useBreadcrumb } from "@/ui/components/BreadcrumbProvider";
 import "react-toastify/dist/ReactToastify.css";
 
 // Initialize the parser once
@@ -141,12 +141,12 @@ function getVariantsToAdd(
 }
 
 export default function Page({ params }: PageProps) {
-	const { setBreadcrumb } = useBreadcrumb();
+	// const { setBreadcrumb } = useBreadcrumb();
 	const { slug, channel } = params;
-	const [productSlug, setProductSlug] = useState<string | null>(null);
-	const [productName, setProductName] = useState<string | null>(null);
-	const [catalogSlug, setCatalogSlug] = useState<string | null>(null);
-	const [catalogName, setCatalogName] = useState<string | null>(null);
+	// const [productSlug, setProductSlug] = useState<string | null>(null);
+	// const [productName, setProductName] = useState<string | null>(null);
+	// const [catalogSlug, setCatalogSlug] = useState<string | null>(null);
+	// const [catalogName, setCatalogName] = useState<string | null>(null);
 
 	const [productData, setProductData] = useState<ProductDetailsState | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
@@ -193,11 +193,11 @@ export default function Page({ params }: PageProps) {
 				if (!data.product) {
 					notFound();
 				}
-				const newData = data.product as ProductDetails;
-				setCatalogSlug(newData.category.slug);
-				setCatalogName(newData.category.name);
-				setProductSlug(newData.slug);
-				setProductName(newData.name);
+				// const newData = data.product as ProductDetails;
+				// setCatalogSlug(newData.category.slug);
+				// setCatalogName(newData.category.name);
+				// setProductSlug(newData.slug);
+				// setProductName(newData.name);
 
 				if (data.product.variants != null) {
 					for (const item of data.product.variants) {
@@ -260,14 +260,14 @@ export default function Page({ params }: PageProps) {
 		void fetchData();
 	}, [channel, slug]);
 
-	useEffect(() => {
-		if (productName != null && productSlug != null && catalogSlug != null && catalogName != null) {
-			setBreadcrumb(
-				<Breadcrumb channel={channel} catalogName={catalogName} catalogSlug={catalogSlug} productName={productName} productSlug={productSlug} />
-			);
-		}
-		return () => setBreadcrumb(null);
-	}, [setBreadcrumb, channel, catalogName, catalogSlug, productName, productSlug]);
+	// useEffect(() => {
+	// 	if (productName != null && productSlug != null && catalogSlug != null && catalogName != null) {
+	// 		setBreadcrumb(
+	// 			<Breadcrumb channel={channel} catalogName={catalogName} catalogSlug={catalogSlug} productName={productName} productSlug={productSlug} />
+	// 		);
+	// 	}
+	// 	return () => setBreadcrumb(null);
+	// }, [setBreadcrumb, channel, catalogName, catalogSlug, productName, productSlug]);
 
 	if (error) {
 		console.error("Error fetching product data:", error);

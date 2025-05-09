@@ -4,8 +4,8 @@ import Wrapper from "./wrapper";
 
 export function Header({ channel }: { channel: string }) {
 	return (
-		<header className="sticky top-0 z-20 shadow-md backdrop-blur-md">
-			<Wrapper className="flex items-center  lg:h-[142px]">
+		<header className="sticky top-0 z-20 shadow-md md:shadow-none border-b bg-white py-5 lg:py-0 rounded-b-xl md:rounded-none">
+			<Wrapper className="flex items-center lg:h-[142px]">
 				<Logo />
 				<Nav channel={channel} />
 			</Wrapper>

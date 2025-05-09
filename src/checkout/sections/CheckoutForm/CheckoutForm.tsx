@@ -98,7 +98,6 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 
 					const filteredCountryAreas = filterUniqueCountryAreas(data?.countryAreaChoices as CountryArea[]);
 					setCountryAreas(filteredCountryAreas);
-				 
 				} catch (error) {
 					console.error("Failed to fetch address validation rules:", error);
 				}
@@ -217,14 +216,21 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 						/>
 					</section>
 				)}
-				<div className="my-2 flex justify-end">
+				{/* <div className="my-2 flex justify-end">
 					<button
 						type="submit"
 						className="flex w-fit justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
 					>
 						Save Address
 					</button>
-				</div>
+				</div> */}
+				<button
+					type="submit"
+					className="flex w-full justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+					// onClick={handlePlaceOrder}
+				>
+					Place Order
+				</button>
 			</Form>
 		</div>
 	);

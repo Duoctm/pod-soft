@@ -5,10 +5,10 @@ import { Home, ChevronRight } from "lucide-react";
 
 export function Breadcrumb({ channel, catalogName, catalogSlug, productName, productSlug }: { channel: string | null, catalogName: string | null, catalogSlug: string | null, productName: string | null,  productSlug: string | null}) {
   const breadcrumbs : any[] = [];
-  breadcrumbs.push({
-    href: `/${channel}/catalog`,
-    label: `Catalog`
-  });
+  // breadcrumbs.push({
+  //   href: `/${channel}/catalog`,
+  //   label: `Catalog`
+  // });
   breadcrumbs.push({
     href: `/${channel}/catalog/${catalogSlug}`,
     label: catalogName

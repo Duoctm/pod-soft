@@ -16,11 +16,14 @@ function ConfirmContent() {
 	const token = searchParams.get("token");
 
 	useEffect(() => {
+		console.log(email, token)
 		if (!email || !token) return;
+		 
 
 		(async () => {
 			try {
 				const res = await confirmAccountOnServer(decodeURIComponent(email), token);
+				console.log(res)
 				if (res?.user) {
 					setConfirmStatus("success");
 				} else {

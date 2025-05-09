@@ -1,5 +1,14 @@
 mutation CheckoutCreate($channel: String!) {
-	checkoutCreate(input: { channel: $channel, lines: [] }) {
+	checkoutCreate(
+		input: {
+			channel: $channel
+			lines: []
+			validationRules: {
+				shippingAddress: { checkRequiredFields: false }
+				billingAddress: { checkRequiredFields: false, checkFieldsFormat: false }
+			}
+		}
+	) {
 		checkout {
 			id
 			email

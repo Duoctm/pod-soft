@@ -23,7 +23,6 @@ import { AddressCheckoutForm } from "@/checkout/sections/CheckoutForm";
 import { type Country, type UseCountryListOptions, getCountryList } from "@/checkout/hooks/useCountryList";
 import { Contact } from "@/checkout/sections/Contact";
 import { Divider } from "@/checkout/components";
-// import { DeliveryMethods } from "@/checkout/sections/CheckoutForm/DeliveryMethodsSection";
 import { updateShippingAddress } from "@/checkout/hooks/useShippingAddressUpdate";
 import { updateBillingAddress } from "@/checkout/hooks/useBillingAddressUpdate";
 import { checkoutCompleteServerFunc } from "@/checkout/hooks/useCheckoutCompleteServer";
@@ -35,7 +34,6 @@ import { updateDeliveryMethod } from "@/checkout/hooks/checkoutDeliveryMethodUpd
 const CheckoutSchema = Yup.object().shape({
 	shippingAddress: AddressSchema.required(),
 	useShippingAsBilling: Yup.boolean().required(),
-	// Billing address is only required if useShippingAsBilling is false
 	billingAddress: Yup.object().when("useShippingAsBilling", {
 		is: false,
 		then: () => AddressSchema.required("Billing address is required when not using shipping address"),
@@ -43,7 +41,6 @@ const CheckoutSchema = Yup.object().shape({
 	}),
 });
 
-// --- Helper function to map Formik address data to API address data ---
 const mapFormDataToApiAddress = (address: Address): AddressInput => {
 	return {
 		firstName: address.firstName,
@@ -59,7 +56,6 @@ const mapFormDataToApiAddress = (address: Address): AddressInput => {
 	};
 };
 
-// --- Helper function to map API field names to Formik field names ---
 const mapApiFieldToFormikField = (apiField: string, addressType: "shipping" | "billing"): string => {
 	const prefix = addressType === "shipping" ? "shippingAddress" : "billingAddress";
 	switch (apiField) {
@@ -89,7 +85,6 @@ const mapApiFieldToFormikField = (apiField: string, addressType: "shipping" | "b
 	}
 };
 
-// --- Compare two addresses for equality ---
 const compareAddress = (shippingAddress: ApiAddress, billingAddress: ApiAddress): boolean => {
 	return (
 		shippingAddress.firstName === billingAddress.firstName &&
@@ -123,7 +118,6 @@ export const Checkout = () => {
 
 	const [countries, setCountries] = useState<{ code: string; country: string }[]>([]);
 
-	// --- Fetch User Data ---
 	useEffect(() => {
 		let isMounted = true;
 		setLoadingUser(true);
@@ -147,7 +141,6 @@ export const Checkout = () => {
 		};
 	}, []);
 
-	// --- Fetch Checkout Data ---
 	useEffect(() => {
 		let isMounted = true;
 		setLoadingCheckout(true);
@@ -159,7 +152,6 @@ export const Checkout = () => {
 					setCheckout(data.checkout as CheckoutType);
 				}
 			} catch (error) {
-				// window.location.href = "/";
 				update();
 			} finally {
 				if (isMounted) {
@@ -173,7 +165,6 @@ export const Checkout = () => {
 		};
 	}, [checkoutId, date]);
 
-	// --- Fetching countries based on the channel slug ---
 	useEffect(() => {
 		let isMounted = true;
 		if (checkout?.channel?.slug) {
@@ -195,15 +186,12 @@ export const Checkout = () => {
 		};
 	}, [checkout?.channel?.slug]);
 
-	// --- Formik Setup ---
-	// --- Initializing Formik with default values ---
-	// NOTE: Default US
 	const getDefaultAddressFormData = (countriesData: Country[] | null): Address => {
 		const defaultCountryCode = countriesData && countriesData.length > 0 ? "US" : "US";
 		return {
 			country: defaultCountryCode,
-			firstName: "",
-			lastName: "",
+			firstName: user?.firstName || "",
+			lastName: user?.lastName || "",
 			company: "",
 			streetAddress1: "",
 			streetAddress2: "",
@@ -240,7 +228,6 @@ export const Checkout = () => {
 		const defaultBillingAddress = user?.defaultBillingAddress;
 		let useShippingAsBilling = true;
 
-		// Check default Shipping Address and Billing Address
 		if (!defaultShippingAddress && !defaultBillingAddress) {
 			useShippingAsBilling = true;
 		} else if (
@@ -278,14 +265,11 @@ export const Checkout = () => {
 
 		let hasErrors = false;
 
-		// --- Update Shipping Address ---
 		const shippingAddressUpdateResult: CheckoutShippingAddressUpdateMutation = await updateShippingAddress({
 			checkoutId: checkoutId,
 			shippingAddress: mapFormDataToApiAddress(values.shippingAddress),
 		});
 
-		// Check for shipping address errors
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const shippingErrors: readonly CheckoutError[] | null | undefined =
 			shippingAddressUpdateResult?.checkoutShippingAddressUpdate?.errors;
 		if (shippingErrors && shippingErrors.length > 0) {
@@ -300,9 +284,8 @@ export const Checkout = () => {
 			});
 		}
 
-		// --- Update Billing Address ---
 		const billingAddressInput = values.useShippingAsBilling
-			? mapFormDataToApiAddress(values.shippingAddress) // Use shipping data if checkbox is checked
+			? mapFormDataToApiAddress(values.shippingAddress)
 			: mapFormDataToApiAddress(values.billingAddress);
 
 		const billingAddressUpdateResult: CheckoutBillingAddressUpdateMutation = await updateBillingAddress({
@@ -310,15 +293,12 @@ export const Checkout = () => {
 			billingAddress: billingAddressInput,
 		});
 
-		// Check for billing address errors
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const billingErrors: readonly CheckoutError[] | null | undefined =
 			billingAddressUpdateResult?.checkoutBillingAddressUpdate?.errors;
 		if (billingErrors && billingErrors.length > 0) {
 			hasErrors = true;
 			billingErrors.forEach((error: CheckoutError) => {
 				if (error.field && error.message) {
-					// Determine which form section to show the error in
 					const addressType = values.useShippingAsBilling ? "shipping" : "billing";
 					const formikField = mapApiFieldToFormikField(error.field, addressType);
 					setFieldError(formikField, error.message);
@@ -334,7 +314,7 @@ export const Checkout = () => {
 				}
 			});
 		}
-
+		await handlePlaceOrder();
 		if (!hasErrors) {
 			update();
 			if (inAddressForm) {
@@ -346,18 +326,10 @@ export const Checkout = () => {
 	};
 
 	const handlePlaceOrder = async () => {
-		// TODO: check logic delivery method do affter
-
-		// else if (!checkout.deliveryMethod) {
-		// 	toast.error("Delivery method is not selected");
-		// 	return;
-		// }
-
 		if(!checkout?.shippingMethods || checkout.shippingMethods.length === 0) {
 			toast.error("Please type shipping address");
 			return;
 		}
-
 
 		await updateDeliveryMethod({
 			id: checkout?.id || "",
@@ -380,11 +352,11 @@ export const Checkout = () => {
 			} else {
 				const notification = (message: string) => {
 					toast.success(message, {
-						position: "top-center",
+						position: "top-right",
 					});
 					setTimeout(function () {
 						window.location.href = `/${checkout.channel.slug}/orders`;
-					}, 2000);
+					}, 2500);
 				};
 				notification("The order has been placed successfully!");
 			}
@@ -410,10 +382,9 @@ export const Checkout = () => {
 								<div>
 									<AddressCheckoutForm slug={checkout?.channel.slug || ""} />
 									<Divider />
-									{/* <DeliveryMethods user={user} checkout={checkout} handleSubmitAddress={handleSubmit} /> */}
 								</div>
 							</Formik>
-							<div className="my-2 flex">
+							{/* <div className="my-2 flex">
 								<button
 									type="submit"
 									className="flex w-full justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
@@ -421,7 +392,7 @@ export const Checkout = () => {
 								>
 									Place Order
 								</button>
-							</div>
+							</div> */}
 						</div>
 						<div className="order-1 bg-gray-50 px-4 py-10 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 lg:py-16">
 							<Suspense fallback={<SummarySkeleton />}>

@@ -34,13 +34,10 @@ function LoginFormContent() {
 					toast.success("Login successful!");
 					router.push("/");
 				} else if (result.errors && result.errors.length > 0) {
-					result.errors.forEach((error: { message: string }) => {
-						toast.error(error.message);
-					});
+					toast.error("Email or password is incorrect");
 				}
 			} catch (error) {
 				console.error("Login error:", error);
-				toast.error("Something went wrong. Please try again.");
 			} finally {
 				setSubmitting(false);
 			}

@@ -19,7 +19,6 @@ const validationSchema = Yup.object({
 		.matches(/[a-z]/, "Password must contain at least one lowercase letter")
 		.matches(/[A-Z]/, "Password must contain at least one uppercase letter")
 		.matches(/\d/, "Password must contain at least one number")
-		.matches(/[@$!%*?&#]/, "Password must contain at least one special character")
 		.required("Password is required"),
 	confirmPassword: Yup.string()
 		.oneOf([Yup.ref("password")], "Passwords must match")
@@ -51,7 +50,9 @@ export default function RegisterForm() {
 				const result = await registerAccount(submitValues);
 
 				if (result.success) {
-					toast.success("Registration successful! Please check your email to confirm your account");
+					toast.success(
+						"Registration successful! Please check your email inbox or spam folder to confirm your account",
+					);
 					resetForm();
 					setTimeout(() => {
 						router.push("/default-channel/login");

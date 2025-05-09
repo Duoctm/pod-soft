@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 interface PopularyType {
 	off: number;
@@ -45,9 +46,12 @@ const Popular = () => {
 						</div>
 					</div>
 
-					<button className="flex h-[49px] w-[183px] items-center justify-center gap-[10px] rounded-[8px] bg-[#8B3958] px-[38px] py-[20px] shadow-[0px_8px_24px_0px_#FD8C6F40]">
+					<Link
+						href={"/default-channel/products"}
+						className="flex h-[49px] w-[183px] items-center justify-center gap-[10px] rounded-[8px] bg-[#8B3958] px-[38px] py-[20px] shadow-[0px_8px_24px_0px_#FD8C6F40]"
+					>
 						<div className="text-center text-[14px] font-semibold leading-[100%] text-[#F3F3FF]">See All</div>
-					</button>
+					</Link>
 				</div>
 
 				{/* Popular Items */}
@@ -92,6 +96,6 @@ const Popular = () => {
 			</div>
 		</div>
 	);
-}
+};
 
 export default Popular;

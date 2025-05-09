@@ -21,12 +21,6 @@ type RegisterResult = {
 
 export async function registerAccount(data: RegisterData): Promise<RegisterResult> {
 	try {
- 
-
-
-	 
-	 
-
 		const { accountRegister } = await executeGraphQL(RegisterAccountDocument, {
 			variables: {
 				email: data.email,
@@ -37,7 +31,7 @@ export async function registerAccount(data: RegisterData): Promise<RegisterResul
 				channel: "default-channel",
 			},
 		});
-
+		console.log(accountRegister)
 		// Check for errors from the GraphQL response
 		if (accountRegister?.errors && accountRegister.errors.length > 0) {
 			return {

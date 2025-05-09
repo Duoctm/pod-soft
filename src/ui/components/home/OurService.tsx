@@ -76,10 +76,10 @@ const OurService = () => {
 				<h3 className="w-full max-w-[720px] md:py-4 text-[40px] md:text-[50px] font-bold leading-[110%] md:leading-[120%]">
 					Printing Solutions for All Your Needs
 				</h3>
-				<p className="max-w-[487px] py-2 md:py-4 text-sm md:text-base font-normal leading-6 text-[#909098]">
+				{/* <p className="max-w-[487px] py-2 md:py-4 text-sm md:text-base font-normal leading-6 text-[#909098]">
 					Netus feugiat vitae enim enim in viverra. Id at sagittis cras pretium dictum nec netus. Ante dolor
 					quis convallis.
-				</p>
+				</p> */}
 			</div>
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-x-28 md:gap-y-[65px]">
 				{SERVICES.map((s, i) => (
