@@ -1,0 +1,9 @@
+mutation RequestEmailConfirmation($email: String!, $redirectUrl: String!, $channel: String) {
+	requestEmailConfirmation(email: $email, redirectUrl: $redirectUrl, channel: $channel) {
+		errors {
+			field
+			message
+			code
+		}
+	}
+}

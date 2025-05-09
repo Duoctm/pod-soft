@@ -124,9 +124,11 @@ export const Checkout = () => {
 		setLoadingUser(true);
 		const fetchUser = async () => {
 			try {
-				const data = await getUserServer();
+				const data = (await getUserServer()).user;
 				if (isMounted) {
-					setUser(data);
+					if (data != null) {
+						setUser(data);
+					}
 				}
 			} catch (error) {
 				window.location.href = "/";

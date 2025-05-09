@@ -1,12 +1,18 @@
-import React from 'react'
-import  RegisterForm from '@/ui/components/RegisterForm'
+import React from "react";
+import { RegisterForm } from "@/ui/components/RegisterForm";
 
-const RegisterPage = () => {
-  return (
-    <main>
-        <RegisterForm/>
-    </main>
-  )
+interface RegisterPageParams {
+	params: {
+		channel: string;
+	};
 }
 
-export default RegisterPage
+const RegisterPage = ({ params }: RegisterPageParams) => {
+	return (
+		<main>
+			<RegisterForm params={params} />
+		</main>
+	);
+};
+
+export default RegisterPage;

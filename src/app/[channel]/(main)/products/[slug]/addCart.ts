@@ -7,7 +7,7 @@ import { getUserServer } from "@/checkout/hooks/useUserServer";
 import { type CheckoutLineInput } from "@/gql/graphql";
 
 export type ErrorResponse = {
-	error: boolean;
+	error: number;
 	type: string;
 	messages: {
 		field: string;
@@ -15,13 +15,18 @@ export type ErrorResponse = {
 	}[];
 };
 
+
 export async function addCart(
 	params: { slug: string; channel: string },
 	lines: CheckoutLineInput[],
 ): Promise<ErrorResponse | void> {
 	"use server";
 	try {
-		await getUserServer();
+		const check = await getUserServer();
+		if (check.status == false) {
+			return { error: 1, type: "User", messages: [{ field: "user", message: "" }] };
+		}
+
 
 		const checkout = await Checkout.findOrCreate({
 			// eslint-disable-next-line @typescript-eslint/await-thenable
@@ -41,7 +46,7 @@ export async function addCart(
 
 		if (updatedCheckout?.errors?.length) {
 			return {
-				error: true,
+				error: 2,
 				type: "Checkout",
 				messages: updatedCheckout.errors.map((error) => ({
 					field: error.field || "",
@@ -52,6 +57,7 @@ export async function addCart(
 
 		revalidatePath("/cart");
 	} catch (error) {
-		return { error: true, type: "User", messages: [{ field: "user", message: (error as Error).message }] };
+		//console.log('111111111111111111111', error);
+		return { error: 3, type: "User", messages: [{ field: "user", message: (error as Error).message }] };
 	}
 }

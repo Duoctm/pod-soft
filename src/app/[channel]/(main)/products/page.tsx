@@ -6,8 +6,8 @@ import { ProductList } from "@/ui/components/ProductList";
 import { ProductsPerPage } from "@/app/config";
 
 export const metadata = {
-	title: "Products · ZoomPrint",
-	description: "ZoomPrint is your gateway to rapid fast fulfillment minus the steep investment.",
+	title: "Products · ZoomPrints",
+	description: "ZoomPrints is your gateway to rapid fast fulfillment minus the steep investment.",
 };
 
 export default async function Page({
@@ -33,6 +33,10 @@ export default async function Page({
 	if (!products) {
 		notFound();
 	}
+	// for (const i of products) {
+	// 	console.log(i);y
+	// }
+	console.log(products.edges[0].node.pricing);
 
 	const newSearchParams = new URLSearchParams({
 		...(products.pageInfo.endCursor && { cursor: products.pageInfo.endCursor }),

@@ -44,7 +44,9 @@ export const getUserServer = async () => {
 		},
 	);
 	if (!user) {
-		throw new Error("User not found");
+		//throw new Error("User not found");
+		return { user: user, status: false };
 	}
-	return user;
+	//return user;
+	return { user: user, status: true };;
 };

@@ -131,6 +131,14 @@ function getVariantsToAdd(
 	variantIds: { [size: string]: string },
 	sizeQuantities: { [size: string]: number },
 ): { variantId: string; quantity: number }[] {
+	//console.log('xem ne hehehehehehehe', variantIds, sizeQuantities);
+	const a = Object.entries(sizeQuantities)
+		.filter(([_, quantity]) => quantity > 0)
+		.map(([size, quantity]) => ({
+			variantId: variantIds[size],
+			quantity,
+		}));
+	console.log('xem ne hehehehehehehe', a);
 	return Object.entries(sizeQuantities)
 		.filter(([_, quantity]) => quantity > 0)
 		.map(([size, quantity]) => ({
@@ -184,6 +192,9 @@ export default function Page({ params }: PageProps) {
 		}));
 	};
 
+
+
+
 	useEffect(() => {
 		const fetchData = async () => {
 			setLoading(true);
@@ -217,7 +228,15 @@ export default function Page({ params }: PageProps) {
 
 				variants?.forEach((variant) => {
 					const variantId = variant.id;
-					const value = getSearchKey(variant.attributes as Attribute[]);
+
+					const attribute_standarn = [];
+					for (const attr of variant.attributes) {
+						if (attr.attribute.name == 'COLOR' || attr.attribute.name == 'SIZE') {
+							attribute_standarn.push(attr);
+						}
+					}
+					// const value = getSearchKey(variant.attributes as Attribute[]);
+					const value = getSearchKey(attribute_standarn as Attribute[]);
 					searchKey[value] = variantId;
 				});
 
@@ -232,6 +251,18 @@ export default function Page({ params }: PageProps) {
 				} else if (data.product?.variants && data.product.variants.length > 0) {
 					defaultVariant = data.product.variants[0] as ProductVariant;
 				}
+
+				if (defaultVariant?.attributes != null) {
+					for (const atr of defaultVariant?.attributes) {
+						if (atr.attribute.name == 'SIZE') {
+							updateSizeQuantity(atr.values[0].name, 1);
+							break;
+						}
+					}
+				}
+
+				//updateSizeQuantity(defaultVariant?.attributes[1].values[0].name, 1);
+				//updateSizeQuantity(defaultVariant.)
 				setSelectedVariantId(() => defaultVariant?.id || null);
 				setSelectColorAttributeValueId(defaultVariant?.attributes[0].values[0].id ?? null);
 				if (
@@ -379,18 +410,26 @@ export default function Page({ params }: PageProps) {
 	useEffect(() => {
 		const searchKeyList: string[] = [];
 		optionList.forEach((option) => {
-			searchKeyList.push(opstions[option.name]);
+			//console.log('uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu', option);
+			if (option.name == 'COLOR' || option.name == 'SIZE') {
+				searchKeyList.push(opstions[option.name]);
+			}
 		});
+		// console.log('uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu', searchKeyList);
 		const searchKey = searchKeyList.join("_");
-
+		// console.log('uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu', searchKey);
+		console.log('nônnonononno', productData?.seachKey);
 		setVariantIds((prev) => {
 			const updated = {
 				...prev,
 				[searchKey.split("_")[1]]: productData?.seachKey[searchKey] ?? "",
 			};
 
+
+
 			// Xóa key 'undefined' nếu tồn tại
 			const { undefined: _omit, ...rest } = updated;
+
 			return rest;
 		});
 
@@ -398,6 +437,21 @@ export default function Page({ params }: PageProps) {
 			return productData?.seachKey[searchKey] || prev;
 		});
 	}, [opstions, optionList, productData?.seachKey]);
+
+	// useEffect(() => {
+	// 	const shouldDisable = !Object.entries(sizeQuantities).some(
+	// 		([size, quantity]) => quantity > 0 && variantIds[size]
+	// 	);
+	// 	const button = document.getElementById("add-to-cart-button");
+	// 	if (button) {
+	// 		if (!shouldDisable) {
+	// 			button.setAttribute("disabled", "true");
+	// 		} else {
+	// 			button.removeAttribute("disabled");
+	// 		}
+	// 	}
+	// }, [sizeQuantities, variantIds]);
+
 
 	const handlePrev = () => {
 		if (currentImages.length === 0) return;
@@ -416,6 +470,8 @@ export default function Page({ params }: PageProps) {
 			</div>
 		);
 	}
+
+
 	return (
 		<div className="flex min-h-screen flex-col items-center py-8 font-sans">
 			<ToastContainer position="top-center" />
@@ -468,7 +524,7 @@ export default function Page({ params }: PageProps) {
 
 						{/* Interactive Product Options */}
 						<div className="space-y-4">
-							{optionList.map((option) => (
+							{/* {optionList.map((option) => (
 								<ProductAttributeSelector
 									key={option.name}
 									name={option.name}
@@ -483,10 +539,63 @@ export default function Page({ params }: PageProps) {
 										} else {
 											setIsCustomDesign(false);
 										}
+
+										for (const option of optionList) {
+											if (option.name == "SIZE") {
+												//updateSizeQuantity(option.name, 0);
+												//console.log('aaaaaaaaaaaaaaaaaaaaaaa', option.values);
+												for (const i of option.values) {
+													updateSizeQuantity(i, 0);
+													//console.log(i);
+												}
+											}
+
+										}
+										updateSizeQuantity(value, 1);
 										return handleAttributeSelect(option.name, value);
 									}}
 								/>
-							))}
+							))} */}
+							{optionList.map((option) => {
+								const isColorOrSize = option.name === 'COLOR' || option.name === 'SIZE';
+
+								if (!isColorOrSize) {
+									return null; // Không render ProductAttributeSelector nếu không phải 'COLOR' hoặc 'SIZE'
+								}
+
+								return (
+									<ProductAttributeSelector
+										key={option.name}
+										name={option.name}
+										values={option.values}
+										selectedValue={opstions[option.name]}
+										onSelect={(value) => {
+											// COLOR logic
+											if (option.name === 'COLOR') {
+												const selectedId = attributeValueIds.current.get(value) || null;
+												setSelectColorAttributeValueId(selectedId);
+
+												if (selectedId != null && attributeValueIdMetadata.current.has(selectedId)) {
+													setIsCustomDesign(true);
+												} else {
+													setIsCustomDesign(false);
+												}
+											}
+
+											// SIZE logic
+											if (option.name === 'SIZE') {
+												// for (const i of option.values) {
+												// 	updateSizeQuantity(i, 0);
+												// }
+												updateSizeQuantity(value, 1);
+											}
+
+											return handleAttributeSelect(option.name, value);
+										}}
+									/>
+								);
+							})}
+
 						</div>
 
 						{/* Size Selector with Quantity */}
@@ -507,17 +616,33 @@ export default function Page({ params }: PageProps) {
 										role="option"
 									>
 										<div className="flex w-full justify-center">
-											<input
-												type="number"
-												disabled={!isSelected}
-												value={sizeQuantities[size] ?? 0}
-												onChange={(e) => updateSizeQuantity(size, parseInt(e.target.value) || 0)}
-												max={quantityLimitPerCustomer}
-												min="0"
-												className="w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
-												aria-label={`Quantity for size ${size}`}
-												tabIndex={isSelected ? 0 : -1}
-											/>
+											{isSelected && (
+												<input
+													type="number"
+													disabled={!isSelected}
+													value={sizeQuantities[size] ?? 0}
+													onChange={(e) => updateSizeQuantity(size, parseInt(e.target.value) || 0)}
+													max={quantityLimitPerCustomer}
+													min="0"
+													className="w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+													aria-label={`Quantity for size ${size}`}
+													tabIndex={isSelected ? 0 : -1}
+												/>
+											)}
+
+											{!isSelected && (
+												<input
+													type="number"
+													disabled={!isSelected}
+													value={sizeQuantities[size] ?? 0}
+													onChange={(e) => updateSizeQuantity(size, parseInt(e.target.value) || 0)}
+													max={quantityLimitPerCustomer}
+													min="0"
+													className="w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+													aria-label={`Quantity for size ${size}`}
+													tabIndex={isSelected ? 0 : -1}
+												/>
+											)}
 										</div>
 									</div>
 								);
@@ -530,21 +655,47 @@ export default function Page({ params }: PageProps) {
 						<button
 							id="add-to-cart-button"
 							className="transform rounded-lg bg-white px-6 py-3 text-base font-semibold text-black shadow-lg transition-all duration-300 hover:scale-105 hover:bg-slate-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#FD8C6E] focus:ring-offset-2 disabled:opacity-50"
-							disabled={
-								!Object.entries(sizeQuantities).some(([size, quantity]) => quantity > 0 && variantIds[size])
-							}
+							// disabled={
+							// 	!Object.entries(sizeQuantities).some(([size, quantity]) => quantity > 0 && variantIds[size])
+							// }
 							onClick={async () => {
+								//document.getElementById("add-to-cart-button")?.setAttribute("disabled", "true");
+								var totalQuanlity = 0;
+
+								for (const size in sizeQuantities) {
+									const quantity = sizeQuantities[size];
+									totalQuanlity += quantity
+								}
+								if (totalQuanlity == 0) {
+									toast.error("Total quantity of items must be greater than 0.")
+
+									return;
+								}
+								//console.log('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk', variantIds, sizeQuantities);
 								document.getElementById("add-to-cart-button")?.setAttribute("disabled", "true");
 								const items = getVariantsToAdd(variantIds, sizeQuantities);
+								// console.log('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk', items);
 								const result = await addCart(params, items);
-								if (result?.error) {
+								if (result?.error == 2) {
 									result.messages.forEach((item) => {
 										toast.error(item.message);
 									});
-								} else {
+								}
+								else if (result?.error == 1) {
+									// result.messages.forEach((item) => {
+									// 	//toast.error(item.message);
+									// 	window.location.replace(`/${params.channel}/login`);
+									// });
+									window.location.replace(`/${params.channel}/login`);
+								}
+								else if (result?.error == 3) {
+									toast.error('Something went wrong. Please try again later');
+								}
+								else {
 									toast.success("Product added to cart");
 								}
 								setTimeout(() => {
+
 									document.getElementById("add-to-cart-button")?.removeAttribute("disabled");
 								}, 300);
 							}}

@@ -13,7 +13,7 @@ const OrderDetailPage = async ({ params }: { params: { id: string; channel: stri
 	});
 
 	if (!user) {
-		return <LoginForm />;
+		return <LoginForm params={{ channel: params.channel }} />;
 	}
 
 	const orders = user.orders?.edges || [];
@@ -104,7 +104,9 @@ const OrderDetailPage = async ({ params }: { params: { id: string; channel: stri
 							</div>
 							<div className="flex items-center justify-between py-1">
 								<span className="text-neutral-600">Status</span>
-								<PaymentStatus status={orderDetail?.node.paymentStatus as unknown as PaymentChargeStatusEnum} />
+								<PaymentStatus
+									status={orderDetail?.node.paymentStatus as unknown as PaymentChargeStatusEnum}
+								/>
 							</div>
 							<div className="mt-3 border-t pt-3">
 								<div className="flex items-center justify-between font-semibold">

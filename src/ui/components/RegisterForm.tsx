@@ -1,14 +1,14 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast, ToastContainer } from "react-toastify";
 import clsx from "clsx";
-import { registerAccount } from "@/actions/register";
+import { useRouter } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { registerAccount } from "@/actions/register";
 
 const validationSchema = Yup.object({
 	firstName: Yup.string().required("First name is required"),
@@ -25,7 +25,7 @@ const validationSchema = Yup.object({
 		.required("Confirm password is required"),
 });
 
-export default function RegisterForm() {
+export function RegisterForm({ params }: { params: { channel: string } }) {
 	const [isClient, setIsClient] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -46,6 +46,7 @@ export default function RegisterForm() {
 		validationSchema,
 		onSubmit: async (values, { setSubmitting, resetForm }) => {
 			try {
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const { confirmPassword, ...submitValues } = values;
 				const result = await registerAccount(submitValues);
 
@@ -55,8 +56,8 @@ export default function RegisterForm() {
 					);
 					resetForm();
 					setTimeout(() => {
-						router.push("/default-channel/login");
-					}, 1000);
+						router.push(`/${params.channel}/login?email=${values.email}`);
+					}, 1500);
 				} else if (result.errors && result.errors.length > 0) {
 					result.errors.forEach((error: { message: string }) => {
 						toast.error(error.message);
@@ -198,7 +199,7 @@ export default function RegisterForm() {
 				<p className="text-sm text-neutral-500">
 					Already have an account?{" "}
 					<a
-						href="/default-channel/login"
+						href={`/${params.channel}/login`}
 						className="font-medium text-neutral-800 underline hover:text-neutral-600"
 					>
 						Log in

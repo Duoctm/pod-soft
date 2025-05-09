@@ -29,7 +29,7 @@ const convertUserAddressToAddressInput = (address: Address): AddressInput => {
 export async function checkout(checkoutId: string): Promise<ErrorResponse | void> {
 	"use server";
 	try {
-		const user = await getUserServer();
+		const user = (await getUserServer()).user;
 
 		const { checkout } = await getCheckoutServer({ id: checkoutId, languageCode: LanguageCodeEnum.EnUs });
 
@@ -37,14 +37,14 @@ export async function checkout(checkoutId: string): Promise<ErrorResponse | void
 			throw new Error("Checkout not found");
 		}
 
-		if (!checkout.shippingAddress && user.defaultShippingAddress) {
+		if (!checkout.shippingAddress && user?.defaultShippingAddress) {
 			const shippingAddressInput = convertUserAddressToAddressInput(user.defaultShippingAddress);
 			await updateShippingAddress({
 				checkoutId: checkout.id,
 				shippingAddress: shippingAddressInput,
 			});
 		}
-		if (!checkout.billingAddress && user.defaultBillingAddress) {
+		if (!checkout.billingAddress && user?.defaultBillingAddress) {
 			const billingAddressInput = convertUserAddressToAddressInput(user.defaultBillingAddress);
 			await updateBillingAddress({
 				checkoutId: checkout.id,

@@ -5,7 +5,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast, ToastContainer } from "react-toastify";
 import clsx from "clsx";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { signInAction } from "@/actions/login";
@@ -16,13 +16,15 @@ const validationSchema = Yup.object({
 	password: Yup.string().required("Password is required"),
 });
 
-function LoginFormContent() {
+function LoginFormContent({ params }: { params?: { channel: string } }) {
 	const router = useRouter();
 	const [showPassword, setShowPassword] = useState(false);
+	const searchParams = useSearchParams();
+	const email = searchParams.get("email") || "";
 
 	const formik = useFormik({
 		initialValues: {
-			email: "",
+			email: email,
 			password: "",
 		},
 		validationSchema,
@@ -65,7 +67,7 @@ function LoginFormContent() {
 					)}
 				</div>
 
-				<div className="mb-4 relative">
+				<div className="relative mb-4">
 					<input
 						type={showPassword ? "text" : "password"}
 						placeholder="Password"
@@ -88,14 +90,26 @@ function LoginFormContent() {
 						<div className="mt-1 text-sm text-red-500">{formik.errors.password}</div>
 					)}
 				</div>
-
-				<Link
-					href={"/default-channel/reset-password"}
-					className="mt-4 text-sm font-medium text-neutral-800 underline hover:text-neutral-600"
-				>
-					Forgot your password?
-				</Link>
-
+				<div>
+					<div className="mb-4">
+						<div>
+							<Link
+								href={`/${params?.channel}/reset-password`}
+								className="block text-sm font-medium text-neutral-800 underline hover:text-neutral-600"
+							>
+								Forgot your password?
+							</Link>
+						</div>
+						<div className="mt-2">
+							<Link
+								href={`/${params?.channel}/request-email-confirmation`}
+								className="block text-sm font-medium text-neutral-800 underline hover:text-neutral-600"
+							>
+								Didn&apos;t receive your confirmation email?
+							</Link>
+						</div>
+					</div>
+				</div>
 				<button
 					type="submit"
 					disabled={formik.isSubmitting}
@@ -115,7 +129,7 @@ function LoginFormContent() {
 					<p className="text-sm text-neutral-500">
 						Don&apos;t have an account?{" "}
 						<Link
-							href="/default-channel/register"
+							href={`/${params?.channel}/register`}
 							className="font-medium text-neutral-800 underline hover:text-neutral-600"
 						>
 							Register
@@ -127,7 +141,7 @@ function LoginFormContent() {
 	);
 }
 
-export function LoginForm() {
+export function LoginForm({ params }: { params?: { channel: string } }) {
 	return (
 		<Suspense
 			fallback={
@@ -136,7 +150,7 @@ export function LoginForm() {
 				</div>
 			}
 		>
-			<LoginFormContent />
+			<LoginFormContent params={params} />
 		</Suspense>
 	);
 }
