@@ -1,32 +1,10 @@
-import dynamic from "next/dynamic";
-
+import AboutUs from "@/ui/components/home/AboutUs";
 import HeroPage from "@/ui/components/home/HeroPage";
-
-const AboutUs = dynamic(() => import("@/ui/components/home/AboutUs"), {
-	loading: () => <div>Loading...</div>,
-});
-
-const OurProcess = dynamic(() => import("@/ui/components/home/OurProcess"), {
-	loading: () => <div>Loading...</div>,
-});
-
-const OurService = dynamic(() => import("@/ui/components/home/OurService"), {
-	loading: () => <div>Loading...</div>,
-});
-
-const SpecialOffer = dynamic(() => import("@/ui/components/home/SpecialOffer"), {
-	loading: () => <div>Loading...</div>,
-});
-
-// const Statistics = dynamic(() => import("@/ui/components/home/Statistics"), {
-//   loading: () => <div>Loading...</div>
-// });
-const Popular = dynamic<any>(() => import("@/ui/components/home/Popular"), {
-	loading: () => <div>Loading...</div>,
-});
-const Subscribe = dynamic(() => import("@/ui/components/home/Subscribe"), {
-	loading: () => <div>Loading...</div>,
-});
+import OurProcess from "@/ui/components/home/OurProcess";
+import OurService from "@/ui/components/home/OurService";
+import Popular from "@/ui/components/home/Popular";
+import SpecialOffer from "@/ui/components/home/SpecialOffer";
+import Subscribe from "@/ui/components/home/Subscribe";
 
 export const metadata = {
 	title: "ZoomPrint",

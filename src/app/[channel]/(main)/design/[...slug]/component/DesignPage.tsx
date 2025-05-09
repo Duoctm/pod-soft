@@ -287,15 +287,15 @@ function DesignPage(param: DesignPageProps) {
     });
     target.classList.add('active');
     for (const item in sort_data) {
-      let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-      let previewDom = document.getElementById('preview-' + sort_data[item].code);
+      const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
+      const previewDom = document.getElementById('preview-' + sort_data[item].code);
       imageDom.style.display = 'none';
       previewDom!.style.display = 'none';
     }
 
     for (const item in sort_data) {
-      let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-      let previewDom = document.getElementById('preview-' + sort_data[item].code);
+      const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
+      const previewDom = document.getElementById('preview-' + sort_data[item].code);
 
       if (view === sort_data[item].code) {
         imageDom.style.display = 'block';
@@ -1540,7 +1540,7 @@ function DesignPage(param: DesignPageProps) {
                       if (hasObjectInStage == true) {
                         metaData = await designerRef.current.exportDesignToJson();
                       }
-                      var result = false;
+                      let result = false;
                       if (param.typeDesign == 1) {
                         result = (await addItem(cartItem.params, /*cartItem.selectedVariantId*/variantId, cartItem.quantity, metaData)) as boolean;
                       }

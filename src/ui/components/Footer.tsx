@@ -1,6 +1,6 @@
 import Image from "next/image";
-import Wrapper from "./wrapper";
 import Link from "next/link";
+import Wrapper from "./wrapper";
 
 // Common styles for text elements
 const textStyles = {

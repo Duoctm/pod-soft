@@ -1,8 +1,8 @@
 import { type ReactNode } from "react";
+import Image from "next/image";
 import { useSummaryLineLineAttributesText, getSummaryLineProps } from "./utils";
 import { type CheckoutLineFragment, type OrderLineFragment } from "@/checkout/graphql";
 import { PhotoIcon } from "@/checkout/ui-kit/icons";
-import Image from "next/image";
 
 export type SummaryLine = CheckoutLineFragment | OrderLineFragment;
 
