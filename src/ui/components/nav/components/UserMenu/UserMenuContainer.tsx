@@ -22,8 +22,8 @@ export function UserMenuContainer() {
 		fetchUser();
 	}, []);
 
+	if (!user) return <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-gray-900" />;
 	if (user) return <UserMenu user={user} />;
-
 	return (
 		<LinkWithChannel href="/login" className="flex items-center justify-center rounded-md p-2">
 			<UserIcon className="h-6 w-6" aria-hidden="true" />
