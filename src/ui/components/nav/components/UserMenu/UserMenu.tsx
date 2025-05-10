@@ -8,12 +8,20 @@ import { UserAvatar } from "./components/UserAvatar";
 import { type UserDetailsFragment } from "@/gql/graphql";
 import { logout } from "@/app/actions";
 import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
+import { useRouter } from "next/navigation";
 
 type Props = {
 	user: UserDetailsFragment;
 };
 
 export function UserMenu({ user }: Props) {
+	const router = useRouter();
+
+	const logoutClient = async () => {
+		await logout();
+		router.push("/");
+	}
+
 	return (
 		<Menu as="div" className="relative">
 			<Menu.Button className="relative flex rounded-full bg-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-800">
@@ -65,7 +73,7 @@ export function UserMenu({ user }: Props) {
 					<div className="flex flex-col px-1 py-1">
 						<Menu.Item>
 							{({ active }) => (
-								<form action={logout}>
+								<form action={logoutClient}>
 									<button
 										type="submit"
 										className={clsx(
