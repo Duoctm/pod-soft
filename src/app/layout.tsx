@@ -1,4 +1,4 @@
-import { Work_Sans } from "next/font/google";
+import {  Work_Sans } from "next/font/google";
 import "./globals.css";
 import { type ReactNode } from "react";
 import { type Metadata } from "next";
@@ -22,8 +22,8 @@ export default function RootLayout(props: { children: ReactNode }) {
 		<html lang="en" className="min-h-dvh">
 			<body className={`${workSands.className} min-h-dvh`}>
 				<UrqlProvider>
-					{children}
-					<DraftModeNotification />
+				{children}
+				<DraftModeNotification />
 				</UrqlProvider>
 			</body>
 		</html>

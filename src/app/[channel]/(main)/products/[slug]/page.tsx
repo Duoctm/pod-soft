@@ -636,7 +636,7 @@ export default function Page({ params }: PageProps) {
 													type="number"
 													disabled={!isSelected}
 													value={sizeQuantities[size] ?? 0}
-													onChange={(e) => updateSizeQuantity(size, parseInt(e.target.value) || 0)}
+													onChange={() => updateSizeQuantity(size, 0)}
 													max={quantityLimitPerCustomer}
 													min="0"
 													className="w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 input-number"
