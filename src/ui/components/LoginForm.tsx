@@ -10,6 +10,7 @@ import Link from "next/link";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { signInAction } from "@/actions/login";
 import "react-toastify/dist/ReactToastify.css";
+import { getCheckoutDetail } from '@/app/[channel]/(main)/login/checkoutdata';
 
 const validationSchema = Yup.object({
 	email: Yup.string().email("Invalid email").required("Email is required"),
@@ -34,6 +35,10 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 
 				if (result.success) {
 					toast.success("Login successful!");
+					if (params?.channel != undefined) {
+						await getCheckoutDetail(params?.channel);
+					}
+
 					router.push("/");
 				} else if (result.errors && result.errors.length > 0) {
 					toast.error("Email or password is incorrect");

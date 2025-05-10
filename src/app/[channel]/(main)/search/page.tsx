@@ -4,6 +4,7 @@ import { executeGraphQL } from "@/lib/graphql";
 import { Pagination } from "@/ui/components/Pagination";
 import { ProductList } from "@/ui/components/ProductList";
 import { ProductsPerPage } from "@/app/config";
+import { Search } from "lucide-react";
 
 export const metadata = {
 	title: "Search products · ZoomPrints",
@@ -54,7 +55,7 @@ export default async function Page({
 	});
 
 	return (
-		<section className="mx-auto max-w-7xl p-8 pb-16">
+		<section className="mx-auto min-h-screen max-w-7xl p-8 pb-16">
 			{products.totalCount && products.totalCount > 0 ? (
 				<div>
 					<h1 className="pb-8 text-xl font-semibold">Search results for &quot;{searchValue}&quot;:</h1>
@@ -68,7 +69,13 @@ export default async function Page({
 					/>
 				</div>
 			) : (
-				<h1 className="mx-auto pb-8 text-center text-xl font-semibold">Nothing found :(</h1>
+				<div className="flex min-h-[50vh] flex-col items-center justify-center">
+					<div className="mb-4 text-6xl text-gray-400">
+						<Search className="h-20 w-20" />
+					</div>
+					<h1 className="text-2xl font-medium text-gray-700">No results found</h1>
+					<p className="mt-2 text-gray-500">We couldn't find any matches for "{searchValue}"</p>
+				</div>
 			)}
 		</section>
 	);

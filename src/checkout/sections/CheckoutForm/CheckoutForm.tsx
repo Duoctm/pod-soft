@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect } from "react";
 import { Form, Field, ErrorMessage, useFormikContext } from "formik";
+import { Loader2 } from "lucide-react";
 import { getCountryList } from "@/checkout/hooks/useCountryList";
 import { type CountryCode } from "@/gql/graphql";
 import { type FormValues, type CountryArea } from "@/checkout/lib/utils/type";
@@ -67,19 +68,18 @@ type AddressCheckoutFormProps = {
 
 // --- Main Address Form Component ---
 export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }) => {
-	const { values } = useFormikContext<FormValues>();
+	const { values, isSubmitting } = useFormikContext<FormValues>();
+	// Country list
 	const [countries, setCountries] = React.useState<{ code: string; country: string }[]>([]);
-	// const { countryAreaChoices  } = useAddressFormUtils(values.shippingAddress.country as CountryCode);
+	// Shipping address: country areas
 	const [countryAreas, setCountryAreas] = React.useState<CountryArea[]>([]);
-
-	// const countryAreas = useMemo(() => {
-
-	// 	return filterUniqueCountryAreas(countryAreaChoices as CountryArea[]);
-	// }, [countryAreaChoices]);
+	// Billing address: country areas
+	const [countryAreasBillingAddress, setCountryAreasBillingAddress] = React.useState<CountryArea[]>([]);
 
 	useEffect(() => {
 		let isMounted = true;
 		if (slug) {
+			// Fetch countries
 			const fetchCountries = async () => {
 				try {
 					const data = await getCountryList({ slug });
@@ -92,6 +92,7 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 				}
 			};
 
+			// Fetch country areas
 			const fetchAddressValidationRules = async () => {
 				try {
 					const { data } = await getAddressValidationRules(values.shippingAddress.country as CountryCode);
@@ -103,13 +104,28 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 				}
 			};
 
+			// Fetch country areas for billing address
+			const fetchBillingAddressValidationRules = async () => {
+				try {
+					const { data } = await getAddressValidationRules(values.billingAddress.country as CountryCode);
+
+					const filteredCountryAreas = filterUniqueCountryAreas(data?.countryAreaChoices as CountryArea[]);
+					setCountryAreasBillingAddress(filteredCountryAreas);
+				} catch (error) {
+					console.error("Failed to fetch address validation rules:", error);
+				}
+			};
+
 			void fetchCountries();
 			void fetchAddressValidationRules();
+			if (!values.useShippingAsBilling) {
+				void fetchBillingAddressValidationRules();
+			}
 		}
 		return () => {
 			isMounted = false;
 		};
-	}, [slug, values.shippingAddress.country]);
+	}, [slug, values.shippingAddress.country, values.billingAddress.country, values.useShippingAsBilling]);
 
 	return (
 		<div className="mx-auto mt-4 max-w-2xl rounded-lg bg-white">
@@ -190,7 +206,7 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 							<option value="" disabled>
 								Select a state
 							</option>
-							{countryAreas.map((countryArea) => (
+							{countryAreasBillingAddress.map((countryArea) => (
 								<option key={countryArea.raw} value={countryArea.raw || ""}>
 									{countryArea.verbose}
 								</option>
@@ -216,21 +232,20 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 						/>
 					</section>
 				)}
-				<div className="my-2 flex justify-end">
-					<button
-						type="submit"
-						className="flex w-fit justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-					>
-						Save Address
-					</button>
-				</div>
-				{/* <button
+				<button
 					type="submit"
 					className="flex w-full justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-					// onClick={handlePlaceOrder}
+					disabled={isSubmitting}
 				>
-					Place Order
-				</button> */}
+					{isSubmitting ? (
+						<>
+							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+							Loading...
+						</>
+					) : (
+						"Place Order"
+					)}
+				</button>
 			</Form>
 		</div>
 	);

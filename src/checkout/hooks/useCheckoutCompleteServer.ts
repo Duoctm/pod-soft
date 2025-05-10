@@ -12,7 +12,7 @@ export const checkoutCompleteServerFunc = async (variables: CheckoutCompleteMuta
 		CheckoutCompleteDocument,
 		{
 			variables: variables,
-			
+
 		},
 	);
 	return data;

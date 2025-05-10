@@ -6,9 +6,10 @@ import { deleteLineFromCheckout } from "./actions";
 type Props = {
 	lineId: string;
 	checkoutId: string;
+	onRemove?: () => void;
 };
 
-export const DeleteLineButton = ({ lineId, checkoutId }: Props) => {
+export const DeleteLineButton = ({ lineId, checkoutId, onRemove }: Props) => {
 	const [isPending, startTransition] = useTransition();
 
 	return (
@@ -17,7 +18,10 @@ export const DeleteLineButton = ({ lineId, checkoutId }: Props) => {
 			className="text-sm text-neutral-500 hover:text-neutral-900"
 			onClick={() => {
 				if (isPending) return;
-				startTransition(() => deleteLineFromCheckout({ lineId, checkoutId }));
+				startTransition(() => {
+					deleteLineFromCheckout({ lineId, checkoutId })
+					onRemove?.();
+				});
 			}}
 			aria-disabled={isPending}
 		>

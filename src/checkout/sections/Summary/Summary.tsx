@@ -10,9 +10,9 @@ import { ChevronDownIcon } from "@/checkout/ui-kit/icons";
 import { getFormattedMoney } from "@/checkout/lib/utils/money";
 import { Divider, Money, Title } from "@/checkout/components";
 import {
+	type Money as MoneyType ,
 	type CheckoutLineFragment,
 	type GiftCardFragment,
-	type Money as MoneyType,
 	type OrderLineFragment,
 } from "@/checkout/graphql";
 import { SummaryItemMoneySection } from "@/checkout/sections/Summary/SummaryItemMoneySection";
@@ -42,7 +42,15 @@ export const Summary: FC<SummaryProps> = ({
 	shippingPrice,
 	discount,
 	update,
-}) => { 
+}) => {
+	const hanlePriceBeforeAddVoucher = (priceGross: MoneyType, voucherDiscount: number) => {
+		if (!voucherCode) return priceGross;
+		return {
+			...priceGross,
+			amount: priceGross.amount + voucherDiscount,
+		}
+	}
+
 	return (
 		<div
 			className={clsx(
@@ -71,12 +79,12 @@ export const Summary: FC<SummaryProps> = ({
 			</details>
 			{editable && (
 				<>
-					<PromoCodeAdd id={id}  update={update}/>
-					<Divider />
+					<PromoCodeAdd id={id} update={update} />
+					<Divider  className="mt-4"/>
 				</>
 			)}
 			<div className="mt-4 flex max-w-full flex-col">
-				<SummaryMoneyRow label="Subtotal" money={subtotalPrice?.gross} ariaLabel="subtotal price" />
+				<SummaryMoneyRow label="Subtotal" money={hanlePriceBeforeAddVoucher(subtotalPrice?.gross as MoneyType, discount?.amount as number)} ariaLabel="subtotal price" />
 				{voucherCode && (
 					<SummaryPromoCodeRow
 						id={id}
@@ -89,8 +97,8 @@ export const Summary: FC<SummaryProps> = ({
 						negative
 					/>
 				)}
-				
-				{giftCards.map(({ currentBalance, displayCode, id : grif_id}) => (
+
+				{giftCards.map(({ currentBalance, displayCode, id: grif_id }) => (
 					<SummaryPromoCodeRow
 						key={grif_id}
 						id={id}

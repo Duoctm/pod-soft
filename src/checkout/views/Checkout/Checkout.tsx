@@ -29,7 +29,6 @@ import { checkoutCompleteServerFunc } from "@/checkout/hooks/useCheckoutComplete
 import { AddressSchema } from "@/checkout/lib/utils/validate";
 import { type Address, type FormValues } from "@/checkout/lib/utils/type";
 import { updateDeliveryMethod } from "@/checkout/hooks/checkoutDeliveryMethodUpdate";
-// import { updateDeliveryMethod } from "@/checkout/hooks/checkoutDeliveryMethodUpdate";
 
 // Define the shape for the entire checkout form
 const CheckoutSchema = Yup.object().shape({
@@ -151,6 +150,7 @@ export const Checkout = () => {
 		const fetchCheckout = async () => {
 			try {
 				const data = await getCheckoutServer({ id: checkoutId, languageCode: LanguageCodeEnum.EnUs });
+
 				if (isMounted) {
 					setCheckout(data.checkout as CheckoutType);
 				}
@@ -272,7 +272,6 @@ export const Checkout = () => {
 			checkoutId: checkoutId,
 			shippingAddress: mapFormDataToApiAddress(values.shippingAddress),
 		});
-
 		const shippingErrors: readonly CheckoutError[] | null | undefined =
 			shippingAddressUpdateResult?.checkoutShippingAddressUpdate?.errors;
 		if (shippingErrors && shippingErrors.length > 0) {
@@ -320,34 +319,38 @@ export const Checkout = () => {
 
 		if (hasErrors) {
 			if (inAddressForm) {
-				update();
-				toast.success("Error when updating address, please check the address and try again");
+				// update();
+				// toast.error("Error when updating address, please check the address and try again");
 				return;
 			}
+		} else {
+			await handlePlaceOrder();
 		}
-		await handlePlaceOrder();
 		setSubmitting(false);
 	};
 
 	const handlePlaceOrder = async () => {
-		console.log(checkout)
-		if (!checkout?.shippingMethods || checkout.shippingMethods.length === 0) {
+		const dataCheckout = await getCheckoutServer({ id: checkoutId, languageCode: LanguageCodeEnum.EnUs });
+
+		if (!dataCheckout.checkout?.shippingMethods || dataCheckout.checkout.shippingMethods.length === 0) {
+
 			toast.error("Please type shipping address");
 			return;
 		}
 
 		await updateDeliveryMethod({
-			id: checkout?.id || "",
-			deliveryMethodId: checkout?.shippingMethods[0].id || "",
+			id: dataCheckout.checkout?.id || "",
+			deliveryMethodId: dataCheckout.checkout?.shippingMethods[0].id || "",
 		});
 
-		if (!checkout) {
+		if (!dataCheckout.checkout) {
 			toast.error("Checkout is not available");
 			return;
 		} else {
 			const completeResult = await checkoutCompleteServerFunc({
-				checkoutId: checkout?.id || "",
+				checkoutId: dataCheckout.checkout?.id || "",
 			});
+
 			const completeCheckoutErrors: readonly CheckoutError[] | null | undefined =
 				completeResult.checkoutComplete?.errors;
 			if (completeCheckoutErrors && completeCheckoutErrors.length > 0) {
@@ -360,7 +363,7 @@ export const Checkout = () => {
 						position: "top-right",
 					});
 					setTimeout(function () {
-						window.location.href = `/${checkout.channel.slug}/orders`;
+						window.location.href = `/${dataCheckout.checkout?.channel.slug}/orders`;
 					}, 2500);
 				};
 				notification("The order has been placed successfully!");
@@ -389,7 +392,7 @@ export const Checkout = () => {
 									<Divider />
 								</div>
 							</Formik>
-							<div className="my-2 flex">
+							{/* <div className="my-2 flex">
 								<button
 									type="submit"
 									className="flex w-full justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
@@ -397,7 +400,7 @@ export const Checkout = () => {
 								>
 									Place Order
 								</button>
-							</div>
+							</div> */}
 						</div>
 						<div className="order-1 bg-gray-50 px-4 py-10 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 lg:py-16">
 							<Suspense fallback={<SummarySkeleton />}>

@@ -1,11 +1,10 @@
-import React from "react";
+import React, { useTransition } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import { SummaryMoneyRow, type SummaryMoneyRowProps } from "./SummaryMoneyRow";
 import { IconButton } from "@/checkout/components/IconButton";
 import { RemoveIcon } from "@/checkout/ui-kit/icons";
-
 import "react-toastify/dist/ReactToastify.css";
-import { useCheckoutRemovePromoCodeMutation } from "@/checkout/graphql";
+import { removePromodeCode } from "@/checkout/hooks/useRemovePromodeCode";
 
 interface SummaryPromoCodeRowProps extends SummaryMoneyRowProps {
 	promoCode?: string;
@@ -23,13 +22,13 @@ export const SummaryPromoCodeRow: React.FC<SummaryPromoCodeRowProps> = ({
 	id,
 	...rest
 }) => {
-	const [, checkoutRemovePromoCode] = useCheckoutRemovePromoCodeMutation();
 
-	const handleDelete = async () => {
-		await checkoutRemovePromoCode({
-			languageCode: "EN_US",
-			checkoutId: id,
-			promoCode: promoCode,
+	const [isPending, startTransition] = useTransition();
+
+	const handleDelete =  () => {
+		if (isPending) return;
+		startTransition(() => {
+			removePromodeCode(id, promoCode as string);
 		});
 		toast.success("Promo code removed successfully");
 		update();	

@@ -131,14 +131,6 @@ function getVariantsToAdd(
 	variantIds: { [size: string]: string },
 	sizeQuantities: { [size: string]: number },
 ): { variantId: string; quantity: number }[] {
-	//console.log('xem ne hehehehehehehe', variantIds, sizeQuantities);
-	const a = Object.entries(sizeQuantities)
-		.filter(([_, quantity]) => quantity > 0)
-		.map(([size, quantity]) => ({
-			variantId: variantIds[size],
-			quantity,
-		}));
-	console.log('xem ne hehehehehehehe', a);
 	return Object.entries(sizeQuantities)
 		.filter(([_, quantity]) => quantity > 0)
 		.map(([size, quantity]) => ({
@@ -621,10 +613,19 @@ export default function Page({ params }: PageProps) {
 													type="number"
 													disabled={!isSelected}
 													value={sizeQuantities[size] ?? 0}
-													onChange={(e) => updateSizeQuantity(size, parseInt(e.target.value) || 0)}
+													onChange={(e) => {
+														const inputValue = parseInt(e.target.value);
+														if (inputValue >= 0) {
+															updateSizeQuantity(size, parseInt(e.target.value) || 0);
+														}
+														else {
+															toast.error('Quantity cannot be less than 0');
+														}
+
+													}}
 													max={quantityLimitPerCustomer}
 													min="0"
-													className="w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+													className="w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 input-number"
 													aria-label={`Quantity for size ${size}`}
 													tabIndex={isSelected ? 0 : -1}
 												/>
@@ -638,7 +639,7 @@ export default function Page({ params }: PageProps) {
 													onChange={(e) => updateSizeQuantity(size, parseInt(e.target.value) || 0)}
 													max={quantityLimitPerCustomer}
 													min="0"
-													className="w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+													className="w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 input-number"
 													aria-label={`Quantity for size ${size}`}
 													tabIndex={isSelected ? 0 : -1}
 												/>
@@ -693,10 +694,21 @@ export default function Page({ params }: PageProps) {
 								}
 								else {
 									toast.success("Product added to cart");
+									const inputs = document.querySelectorAll<HTMLInputElement>('.input-number');
+
+									for (const [size, variantId] of Object.entries(variantIds)) {
+										console.log(`Size: ${size}, Variant ID: ${variantId}`);
+										updateSizeQuantity(size, 0);
+									}
+
+									inputs.forEach(input => {
+										input.value = "0";
+									});
 								}
 								setTimeout(() => {
-
 									document.getElementById("add-to-cart-button")?.removeAttribute("disabled");
+
+
 								}, 300);
 							}}
 						>

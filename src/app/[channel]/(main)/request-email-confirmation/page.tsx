@@ -5,6 +5,7 @@ import { Mail, Loader2 } from "lucide-react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { requestEmailConfirmation } from "./server-action/requestEmailConfirmation";
 
 // Validation schema using Yup for form validation

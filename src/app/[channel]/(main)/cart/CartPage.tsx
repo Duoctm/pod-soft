@@ -104,12 +104,10 @@ export default function CartPage({ params, checkout, checkoutId }: { params: { c
                                         {Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && <DesignButton colorId={item.variant.attributes[0].values[0].id} productId={item.variant.product.id} params={params} quantity={1} selectedVariantId={item.variant.id} />}
                                     </div>
 
-                                    <DeleteLineButton checkoutId={checkoutId} lineId={item.id} />
+                                    <DeleteLineButton checkoutId={checkoutId} lineId={item.id} onRemove={() => {
+                                        setItems((prev: any) => prev.filter((line: any) => line.id !== item.id));
+                                    }} />
                                 </div>
-
-
-
-
                             </div>
                         </li>
                     ))}

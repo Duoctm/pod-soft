@@ -6,6 +6,7 @@ import { executeGraphQL } from "@/lib/graphql";
 import { LoginForm } from "@/ui/components/LoginForm";
 import { formatDate, formatMoney } from "@/lib/utils";
 import { PaymentStatus } from "@/ui/components/PaymentStatus";
+import { BreadcrumbClient } from "./BreadcrumbClient"
 
 const OrderDetailPage = async ({ params }: { params: { id: string; channel: string } }) => {
 	const { me: user } = await executeGraphQL(CurrentUserOrderListDocument, {
@@ -20,8 +21,15 @@ const OrderDetailPage = async ({ params }: { params: { id: string; channel: stri
 	const orderDetail = orders.find((order) => order.node.id === params.id);
 	const products = orderDetail?.node?.lines || [];
 
+	//BreadcrumbClient({ channel: channel, id: orderDetail?.node.number });
+	//useBreadcrumbClient(channel, orderDetail?.node.number);
+
+
 	return (
+
 		<div className="container mx-auto px-4 py-8">
+			{/* <BreadcrumbClient channel={channel} id={orderDetail?.node.number} /> */}
+			<BreadcrumbClient channel={params.channel} id={orderDetail?.node.number} />
 			<div className="mb-6">
 				<Link
 					href={`/${params.channel}/orders`}

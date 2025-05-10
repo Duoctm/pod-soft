@@ -1,0 +1,22 @@
+query CheckoutOfMe {
+  me {
+    checkouts(first: 10) {
+      edges {
+        node {
+          id
+          created
+          lastChange
+          lines {
+            quantity
+            variant {
+              name
+              product {
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

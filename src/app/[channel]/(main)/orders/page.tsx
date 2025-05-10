@@ -76,7 +76,7 @@ export default async function OrderPage({ params }: { params: { channel: string 
 										<td className="px-6 py-4 text-center">
 											<OrderStatusBadge status={order.paymentStatus} />
 										</td>
-										<td className="px-6 py-4 text-right text-sm text-gray-900">{order.lines.length}</td>
+										<td className="px-6 py-4 text-right text-sm text-gray-900">{order.lines.reduce((total, line) => total + line.quantity, 0)}</td>
 										<td className="px-6 py-4 text-right">
 											<Link
 												href={`orders/${order.id}`}
