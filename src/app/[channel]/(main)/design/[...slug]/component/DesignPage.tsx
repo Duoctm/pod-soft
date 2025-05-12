@@ -1,5 +1,4 @@
 "use client"
-
 import { useEffect, useRef, useState } from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { Typography, IconButton, Box, Paper, Modal, Button } from '@mui/material';
@@ -360,6 +359,23 @@ function DesignPage(param: DesignPageProps) {
             >
               <i className="fas fa-font text-2xl"></i>
               <span className="text-xs">Text</span>
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                // const data = designerRef.current?.exportFinalDesignOfStage(designerRef.current.currentStage);
+                // console.log('du lieu', data);
+                for (const item in sort_data) {
+                  let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
+                  const r = await designerRef.current?.exportStage(designerRef.current.currentStage, imageDom);
+                  console.log('aaaaaaaaaaaaaaaaaa', r);
+                }
+
+              }}
+              className="bg-transparent border-none p-1.5 rounded cursor-pointer text-white hover:bg-white/10 hover:translate-x-1 transition-all flex flex-col items-center gap-0.5"
+            >
+              <i className="fas fa-upload text-base"></i>
+              <span className="text-[10px]">Export Image</span>
             </button>
             {/* <button 
               type="button" 
@@ -1539,13 +1555,13 @@ function DesignPage(param: DesignPageProps) {
                       }
                       if (hasObjectInStage == true) {
                         metaData = await designerRef.current.exportDesignToJson();
+                        console.log('aaaaaaaaaaaaaaaaaaaaaaa', metaData);
                       }
                       var result = false;
                       if (param.typeDesign == 1) {
                         result = (await addItem(cartItem.params, /*cartItem.selectedVariantId*/variantId, cartItem.quantity, metaData)) as boolean;
                       }
                       else {
-                        console.log('checkkkkkkkkkk neffffff', variantId, variantIdOfUpdate);
                         result = (await addItem(cartItem.params, /*cartItem.selectedVariantId*/variantId, 1, metaData)) as boolean;
                       }
                       if (result === true) {
@@ -1584,7 +1600,7 @@ function DesignPage(param: DesignPageProps) {
                   if (cartId != null && cartId != undefined) {
                     if (designerRef.current != null) {
                       const metaData = await designerRef.current.exportDesignToJson();
-
+                      console.log('aaaaaaaaaaaaaaaaaaaaaaa', metaData);
                       const result = await UpdateDesign(cartId, metaData);
                       if (result == true) {
                         toast.success('Design updated successfully');
@@ -1678,8 +1694,8 @@ function DesignPage(param: DesignPageProps) {
                         for (const item in sort_data) {
                           const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
                           const previewDom = document.getElementById('preview-' + sort_data[item].code);
-                          imageDom.style.display = 'none';
-                          previewDom!.style.display = 'none';
+                          imageDom.style.display = 'hidden';
+                          previewDom!.style.display = 'hidden';
                         }
 
                         for (const item in sort_data) {
@@ -1773,7 +1789,7 @@ function DesignPage(param: DesignPageProps) {
             <button
               onClick={() => {
                 if (designerRef.current) {
-                  designerRef.current.exportImages('image');
+                  //designerRef.current.exportImages('image');
                   setIsExportModalOpen(false);
                 }
               }}
@@ -1785,7 +1801,7 @@ function DesignPage(param: DesignPageProps) {
             <button
               onClick={() => {
                 if (designerRef.current) {
-                  designerRef.current.exportImages('json');
+                  //designerRef.current.exportImages('json');
                   setIsExportModalOpen(false);
                 }
               }}

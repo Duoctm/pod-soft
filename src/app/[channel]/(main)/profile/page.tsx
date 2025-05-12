@@ -146,7 +146,7 @@ const ProfilePage = () => {
 						<label className="mb-1 block text-sm font-medium text-gray-700">Country Name</label>
 						<input
 							type="text"
-							name="Country"
+							name="country.country"
 							value={companyFormik.values.country.country}
 							onChange={companyFormik.handleChange}
 							onBlur={companyFormik.handleBlur}

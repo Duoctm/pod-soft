@@ -54,8 +54,6 @@ export const updateAddress = async (
 	},
 ) => {
 	try {
-		console.log(payload);
-
 		const { accountAddressUpdate } = await executeGraphQL(AccountAddressUpdateDocument, {
 			variables: {
 				id: address_id,
@@ -70,6 +68,8 @@ export const updateAddress = async (
 		if (!accountAddressUpdate) {
 			return null;
 		}
+
+		console.log("accountAddressUpdate", accountAddressUpdate);
 		return accountAddressUpdate;
 	} catch (error) {
 		console.error("Error fetching user data:", error);

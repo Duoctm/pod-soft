@@ -1,4 +1,3 @@
-
 // import Image from "next/image";
 // import { CheckoutLink } from "./CheckoutLink";
 // import { DeleteLineButton } from "./DeleteLineButton";
@@ -9,43 +8,48 @@
 // import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
 // import Quanlity from "./quanlity"
 import * as Checkout from "@/lib/checkout";
-import CartPage from './CartPage'
+import { Checkout as CheckoutType } from "@/gql/graphql";
+
+import CartPage from "./CartPage";
+import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
+
 export const metadata = {
 	title: "Shopping Cart - ZoomPrints",
 	description: "ZoomPrints is your gateway to rapid fast fulfillment minus the steep investment.",
 };
 
+export type checkoutType = Pick<CheckoutType, "__typename" | "id" | "email" | "lines" | "totalPrice">;
 
 export default async function Page({ params }: { params: { channel: string } }) {
 	const checkoutId = Checkout.getIdFromCookies(params.channel);
+	console.log(checkoutId);
 
 	const checkout = await Checkout.find(checkoutId);
 	return (
-		<CartPage params={params} checkout={checkout} checkoutId={checkoutId}></CartPage>
+		<>
+			{!checkout || !checkout.lines || checkout.lines.length < 1 ? (
+				<section className="mx-auto max-w-7xl p-8">
+					<h1 className="mt-8 text-3xl font-bold text-neutral-900">Your Shopping Cart is empty</h1>
+					<p className="my-12 text-sm text-neutral-500">
+						Looks like you haven’t added any items to the cart yet.
+					</p>
+					<LinkWithChannel
+						href="/products"
+						className="inline-block max-w-full rounded border border-transparent bg-neutral-900 px-6 py-3 text-center font-medium text-neutral-50 hover:bg-neutral-800 aria-disabled:cursor-not-allowed aria-disabled:bg-neutral-500 sm:px-16"
+					>
+						Explore products
+					</LinkWithChannel>
+				</section>
+			) : (
+				<CartPage params={params} checkout={checkout as checkoutType} checkoutId={checkoutId} />
+			)}
+		</>
+
 	);
 	// const checkoutId = Checkout.getIdFromCookies(params.channel);
 
-
-
 	// const checkout = await Checkout.find(checkoutId);
 
-
-	// if (!checkout || checkout.lines.length < 1) {
-	// 	return (
-	// 		<section className="mx-auto max-w-7xl p-8">
-	// 			<h1 className="mt-8 text-3xl font-bold text-neutral-900">Your Shopping Cart is empty</h1>
-	// 			<p className="my-12 text-sm text-neutral-500">
-	// 				Looks like you haven’t added any items to the cart yet.
-	// 			</p>
-	// 			<LinkWithChannel
-	// 				href="/products"
-	// 				className="inline-block max-w-full rounded border border-transparent bg-neutral-900 px-6 py-3 text-center font-medium text-neutral-50 hover:bg-neutral-800 aria-disabled:cursor-not-allowed aria-disabled:bg-neutral-500 sm:px-16"
-	// 			>
-	// 				Explore products
-	// 			</LinkWithChannel>
-	// 		</section>
-	// 	);
-	// }
 
 	// return (
 	// 	<section className="mx-auto max-w-7xl p-8">
@@ -101,9 +105,6 @@ export default async function Page({ params }: { params: { channel: string } }) 
 
 	// 								<DeleteLineButton checkoutId={checkoutId} lineId={item.id} />
 	// 							</div>
-
-
-
 
 	// 						</div>
 	// 					</li>

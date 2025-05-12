@@ -19,7 +19,6 @@ export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> =
 		const newColor = [...values];
 		values = sortColorsByLuminance(newColor);
 	}
-	console.log(values)
 
 	return (
 		<div className="my-6">

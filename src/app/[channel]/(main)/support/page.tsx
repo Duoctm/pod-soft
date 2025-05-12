@@ -50,8 +50,7 @@ const SupportPage = () => {
 
 	const handleSubmit = async (values: FormData, { resetForm }: any) => {
 		try {
-			console.log("Sending request with values:", values);
-			const { data, error } = await createSupport({
+			const { data } = await createSupport({
 				input: {
 					firstName: values.firstName,
 					lastName: values.lastName,
@@ -62,9 +61,6 @@ const SupportPage = () => {
 					details: values.details
 				},
 			});
-			console.log("Response data:", data);
-			console.log("Response error:", error);
-
 			if (data?.createSupport?.success) {
 				resetForm();
 				alert("Your support request has been submitted successfully!");

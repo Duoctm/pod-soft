@@ -12,15 +12,15 @@ fragment OrderDetails on Order {
 		variant {
 			id
 			name
+			media {
+				url
+				alt
+			}
 			product {
 				id
 				name
 				description
 				slug
-				thumbnail {
-					url
-					alt
-				}
 				category {
 					id
 					name

@@ -20,7 +20,7 @@ class TShirtDesigner {
   private colorData: Map<string, object>;
   public stages: StageConfig[] = [];
 
-  private currentStage: StageConfig;
+  public currentStage: StageConfig;
   private textColor: string = '#000000';
   private fontWeight: string = 'normal';
   private fontStyle: string = 'normal';
@@ -270,7 +270,7 @@ class TShirtDesigner {
             this.currentStage = this.stages[index];
           }
           else {
-            this.stages[index].stage!.container().style.display = 'none';
+            this.stages[index].stage!.container().style.display = 'hidden';
           }
 
 
@@ -352,8 +352,8 @@ class TShirtDesigner {
     borderDiv.style.left = `${stageX}px`;
     borderDiv.style.top = `${stageY}px`;
     borderDiv.style.border = '1px dashed black';
-    borderDiv.style.pointerEvents = 'none';
-    borderDiv.style.display = 'none';
+    borderDiv.style.pointerEvents = 'hidden';
+    borderDiv.style.display = 'hidden';
     document.body.appendChild(borderDiv);
     stageConfig.borderDiv = borderDiv;
 
@@ -392,11 +392,11 @@ class TShirtDesigner {
 
     if (this.currentStage.stage) {
       const currentContainer = this.currentStage.stage.container();
-      currentContainer.style.display = 'none';
+      currentContainer.style.display = 'hidden';
       currentContainer.style.zIndex = '0';
     }
     if (this.currentStage.borderDiv) {
-      this.currentStage.borderDiv.style.display = 'none';
+      this.currentStage.borderDiv.style.display = 'hidden';
     }
     this.currentStage.selectedNode = null;
 
@@ -422,7 +422,7 @@ class TShirtDesigner {
         domImage.style.zIndex = '0';
       }
       else {
-        domImage.style.display = 'none';
+        domImage.style.display = 'hidden';
         domImage.style.zIndex = '0';
       }
     }
@@ -1206,6 +1206,10 @@ class TShirtDesigner {
         //const file = this.base64ToFile(stageBase64, 'image.png');
         //const response = await uploadImage(file);
         //designOfStage.final_image_url = response.file.cloudinary_url;
+        const base64 = await this.exportStage(this.stages[item], imageDom);
+        const file = this.base64ToFile(base64, 'image.png');
+        const response = await uploadImage(file);
+        designOfStage.final_image_url = response.file.cloudinary_url;
         designOfStage.designs = await getStageInfo(this.stages[item]);
         designs.push(designOfStage);
       } catch (error) {
@@ -1228,23 +1232,8 @@ class TShirtDesigner {
     return JSON.stringify(designInfo, null, 2);
   }
 
-  public exportStage = async (stageConfig: StageConfig, image: HTMLImageElement, side: string): Promise<string> => {
+  public exportStage = async (stageConfig: StageConfig, image: HTMLImageElement): Promise<string> => {
     if (!stageConfig.stage || !stageConfig.layer) return '';
-
-
-    for (const item in this.data) {
-      const stageContainerDom = document.getElementById('preview-' + this.data[item].code) as HTMLImageElement;
-      const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
-      if (side == this.data[item].code) {
-        imageDom.style.display = 'block';
-        if (stageContainerDom) stageContainerDom.style.display = 'block';
-      }
-      else {
-        imageDom.style.display = 'none';
-        if (stageContainerDom) stageContainerDom.style.display = 'none';
-      }
-    }
-
     const tempCanvas = document.createElement('canvas');
     const ctx = tempCanvas.getContext('2d');
     if (!ctx) return '';
@@ -1366,7 +1355,12 @@ class TShirtDesigner {
     return tempCanvas.toDataURL('image/png');
   };
 
-  public async exportImages(type: 'image' | 'json' = 'image') {
+  public exportFinalDesignOfStage(stage: StageConfig) {
+    var result = stage.stage?.toDataURL();
+    return result;
+  }
+
+  /*public async exportImages(type: 'image' | 'json' = 'image') {
     if (type === 'json') {
 
       const jsonContent = await this.exportDesignToJson();
@@ -1399,7 +1393,7 @@ class TShirtDesigner {
         downloadImage(itemDataURL, this.data[item].name + '.png');
       }
     }
-  }
+  }*/
 
   public async importDesignFromJson(/*jsonContent: string*/designs: object[][]) {
     try {
@@ -1665,7 +1659,7 @@ class TShirtDesigner {
 
   public setWHOfNode(width: number | null, height: number | null) {
     if (this.currentStage.selectedNode != null) {
-      const node = this.currentStage.selectedNode ;
+      const node = this.currentStage.selectedNode;
       const clone = node.clone();
       if (width != null) {
         clone.width(width);
@@ -1691,7 +1685,7 @@ class TShirtDesigner {
 
   public setRSOfNode(instance: number | null) {
     if (this.currentStage.selectedNode != null) {
-      const node = this.currentStage.selectedNode ;
+      const node = this.currentStage.selectedNode;
       const clone = node.clone();
       if (instance != null) {
         clone.fontSize(instance);

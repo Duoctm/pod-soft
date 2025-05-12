@@ -47,17 +47,18 @@ const OrderDetailPage = async ({ params }: { params: { id: string; channel: stri
 							{products.map((item) => {
 								if (!item.variant) return null;
 								const product = item.variant.product;
-
+								const media = item.variant.media
+								
 								return (
 									<div
 										key={product.id}
 										className="flex items-start space-x-6 rounded-lg border border-neutral-200 p-6 transition-all hover:border-neutral-300 hover:shadow-md"
 									>
-										{product.thumbnail && (
+										{media  && (
 											<div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg border border-neutral-200 bg-white">
 												<Image
-													src={product.thumbnail.url}
-													alt={product.thumbnail.alt ?? ""}
+													src={media[0].url}
+													alt={media[0].alt ?? ""}
 													width={200}
 													height={200}
 													className="h-full w-full object-contain transition-transform hover:scale-105"

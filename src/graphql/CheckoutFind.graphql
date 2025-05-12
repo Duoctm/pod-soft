@@ -16,14 +16,14 @@ query CheckoutFind($id: ID!) {
 				value
 			}
 			variant {
+				media{
+					url 
+					alt
+				}
 				product {
 					id
 					name
 					slug
-					thumbnail {
-						url
-						alt
-					}
 					category {
 						name
 					}

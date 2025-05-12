@@ -20,6 +20,7 @@ import { ProductAttributeSelector } from "./_components/ProductAttributeSelector
 import { Loader } from "@/ui/atoms/Loader";
 // import { useBreadcrumb } from "@/ui/components/BreadcrumbProvider";
 import "react-toastify/dist/ReactToastify.css";
+import { formatMoney } from "@/lib/utils";
 
 // Initialize the parser once
 const parser = edjsHTML();
@@ -177,15 +178,21 @@ export default function Page({ params }: PageProps) {
 		return name1.localeCompare(name2);
 	};
 
-	const updateSizeQuantity = (size: string, quantity: number) => {
+	const updateSizeQuantity = (sizeOfSelect: string, quantity: number) => {
+		// for (const [size, variantId] of Object.entries(variantIds)) {
+		for (const [size] of Object.entries(variantIds)) {
+			if (size != sizeOfSelect) {
+				setSizeQuantities((prev) => ({
+					...prev,
+					[size]: 0,
+				}));
+			}
+		}
 		setSizeQuantities((prev) => ({
 			...prev,
-			[size]: quantity,
+			[sizeOfSelect]: quantity,
 		}));
 	};
-
-
-
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -223,7 +230,7 @@ export default function Page({ params }: PageProps) {
 
 					const attribute_standarn = [];
 					for (const attr of variant.attributes) {
-						if (attr.attribute.name == 'COLOR' || attr.attribute.name == 'SIZE') {
+						if (attr.attribute.name == "COLOR" || attr.attribute.name == "SIZE") {
 							attribute_standarn.push(attr);
 						}
 					}
@@ -246,7 +253,7 @@ export default function Page({ params }: PageProps) {
 
 				if (defaultVariant?.attributes != null) {
 					for (const atr of defaultVariant?.attributes) {
-						if (atr.attribute.name == 'SIZE') {
+						if (atr.attribute.name == "SIZE") {
 							updateSizeQuantity(atr.values[0].name, 1);
 							break;
 						}
@@ -307,7 +314,7 @@ export default function Page({ params }: PageProps) {
 				block.data.text = removeText;
 			});
 
-			console.log(parsedData);
+			// console.log(parsedData);
 			return parser.parse(parsedData);
 		} catch (parseError) {
 			console.error("Error parsing product description:", parseError);
@@ -326,7 +333,7 @@ export default function Page({ params }: PageProps) {
 				block.data.text = removeText;
 			});
 
-			console.log(parsedData);
+			// console.log(parsedData);
 			return parser.parse(parsedData);
 		} catch (parseError) {
 			console.error("Error parsing product description:", parseError);
@@ -402,22 +409,16 @@ export default function Page({ params }: PageProps) {
 	useEffect(() => {
 		const searchKeyList: string[] = [];
 		optionList.forEach((option) => {
-			//console.log('uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu', option);
-			if (option.name == 'COLOR' || option.name == 'SIZE') {
+			if (option.name == "COLOR" || option.name == "SIZE") {
 				searchKeyList.push(opstions[option.name]);
 			}
 		});
-		// console.log('uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu', searchKeyList);
 		const searchKey = searchKeyList.join("_");
-		// console.log('uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu', searchKey);
-		console.log('nônnonononno', productData?.seachKey);
 		setVariantIds((prev) => {
 			const updated = {
 				...prev,
 				[searchKey.split("_")[1]]: productData?.seachKey[searchKey] ?? "",
 			};
-
-
 
 			// Xóa key 'undefined' nếu tồn tại
 			const { undefined: _omit, ...rest } = updated;
@@ -444,7 +445,6 @@ export default function Page({ params }: PageProps) {
 	// 	}
 	// }, [sizeQuantities, variantIds]);
 
-
 	const handlePrev = () => {
 		if (currentImages.length === 0) return;
 		setCurrentImageIndex((prev) => (prev === 0 ? currentImages.length - 1 : prev - 1));
@@ -463,6 +463,8 @@ export default function Page({ params }: PageProps) {
 		);
 	}
 
+	// console.log("Selected variant:", selectedVariant);
+	console.log("Product data:", selectedVariant?.pricing?.price?.gross.currency);
 
 	return (
 		<div className="flex min-h-screen flex-col items-center py-8 font-sans">
@@ -514,6 +516,18 @@ export default function Page({ params }: PageProps) {
 						<ProductTitle name={productData?.product?.name} />
 						<ProductDescription descriptionHtml={features} />
 
+						<div className="mt-4">
+							<div className="flex flex-row items-center justify-between">
+								<span className="text-sm font-semibold">PRICE:</span>
+								<div className="ml-2 text-3xl font-bold text-slate-700">
+									{formatMoney(
+										selectedVariant?.pricing?.price?.gross.amount as number,
+										selectedVariant?.pricing?.price?.gross.currency as string,
+									)}
+								</div>
+							</div>
+						</div>
+
 						{/* Interactive Product Options */}
 						<div className="space-y-4">
 							{/* {optionList.map((option) => (
@@ -549,7 +563,7 @@ export default function Page({ params }: PageProps) {
 								/>
 							))} */}
 							{optionList.map((option) => {
-								const isColorOrSize = option.name === 'COLOR' || option.name === 'SIZE';
+								const isColorOrSize = option.name === "COLOR" || option.name === "SIZE";
 
 								if (!isColorOrSize) {
 									return null; // Không render ProductAttributeSelector nếu không phải 'COLOR' hoặc 'SIZE'
@@ -563,7 +577,7 @@ export default function Page({ params }: PageProps) {
 										selectedValue={opstions[option.name]}
 										onSelect={(value) => {
 											// COLOR logic
-											if (option.name === 'COLOR') {
+											if (option.name === "COLOR") {
 												const selectedId = attributeValueIds.current.get(value) || null;
 												setSelectColorAttributeValueId(selectedId);
 
@@ -575,7 +589,7 @@ export default function Page({ params }: PageProps) {
 											}
 
 											// SIZE logic
-											if (option.name === 'SIZE') {
+											if (option.name === "SIZE") {
 												// for (const i of option.values) {
 												// 	updateSizeQuantity(i, 0);
 												// }
@@ -587,7 +601,6 @@ export default function Page({ params }: PageProps) {
 									/>
 								);
 							})}
-
 						</div>
 
 						{/* Size Selector with Quantity */}
@@ -614,18 +627,23 @@ export default function Page({ params }: PageProps) {
 													disabled={!isSelected}
 													value={sizeQuantities[size] ?? 0}
 													onChange={(e) => {
-														const inputValue = parseInt(e.target.value);
+														const rawValue = e.target.value;
+														const normalized = String(Number(rawValue));
+
+														e.target.value = normalized;
+														const inputValue = parseInt(normalized);
 														if (inputValue >= 0) {
 															updateSizeQuantity(size, parseInt(e.target.value) || 0);
+														} else {
+															updateSizeQuantity(size, 0);
 														}
-														else {
-															toast.error('Quantity cannot be less than 0');
-														}
-
+														// else {
+														// 	toast.error('Quantity cannot be less than 0');
+														// }
 													}}
 													max={quantityLimitPerCustomer}
 													min="0"
-													className="w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 input-number"
+													className="input-number w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
 													aria-label={`Quantity for size ${size}`}
 													tabIndex={isSelected ? 0 : -1}
 												/>
@@ -635,11 +653,11 @@ export default function Page({ params }: PageProps) {
 												<input
 													type="number"
 													disabled={!isSelected}
-													value={sizeQuantities[size] ?? 0}
+													value={0}
 													onChange={() => updateSizeQuantity(size, 0)}
 													max={quantityLimitPerCustomer}
 													min="0"
-													className="w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 input-number"
+													className="input-number w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
 													aria-label={`Quantity for size ${size}`}
 													tabIndex={isSelected ? 0 : -1}
 												/>
@@ -661,54 +679,47 @@ export default function Page({ params }: PageProps) {
 							// }
 							onClick={async () => {
 								//document.getElementById("add-to-cart-button")?.setAttribute("disabled", "true");
-								var totalQuanlity = 0;
+								let totalQuanlity = 0;
 
 								for (const size in sizeQuantities) {
 									const quantity = sizeQuantities[size];
-									totalQuanlity += quantity
+									totalQuanlity += quantity;
 								}
 								if (totalQuanlity == 0) {
-									toast.error("Total quantity of items must be greater than 0.")
+									toast.error("Total quantity of items must be greater than 0.");
 
 									return;
 								}
-								//console.log('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk', variantIds, sizeQuantities);
 								document.getElementById("add-to-cart-button")?.setAttribute("disabled", "true");
 								const items = getVariantsToAdd(variantIds, sizeQuantities);
-								// console.log('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk', items);
 								const result = await addCart(params, items);
 								if (result?.error == 2) {
 									result.messages.forEach((item) => {
 										toast.error(item.message);
 									});
-								}
-								else if (result?.error == 1) {
+								} else if (result?.error == 1) {
 									// result.messages.forEach((item) => {
 									// 	//toast.error(item.message);
 									// 	window.location.replace(`/${params.channel}/login`);
 									// });
 									window.location.replace(`/${params.channel}/login`);
-								}
-								else if (result?.error == 3) {
-									toast.error('Something went wrong. Please try again later');
-								}
-								else {
+								} else if (result?.error == 3) {
+									toast.error("Something went wrong. Please try again later");
+								} else {
 									toast.success("Product added to cart");
-									const inputs = document.querySelectorAll<HTMLInputElement>('.input-number');
+									const inputs = document.querySelectorAll<HTMLInputElement>(".input-number");
 
-									for (const [size, variantId] of Object.entries(variantIds)) {
-										console.log(`Size: ${size}, Variant ID: ${variantId}`);
+									// for (const [size, variantId] of Object.entries(variantIds)) {
+									for (const [size] of Object.entries(variantIds)) {
 										updateSizeQuantity(size, 0);
 									}
 
-									inputs.forEach(input => {
+									inputs.forEach((input) => {
 										input.value = "0";
 									});
 								}
 								setTimeout(() => {
 									document.getElementById("add-to-cart-button")?.removeAttribute("disabled");
-
-
 								}, 300);
 							}}
 						>

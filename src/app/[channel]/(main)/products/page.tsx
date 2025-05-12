@@ -36,14 +36,14 @@ export default async function Page({
 	// for (const i of products) {
 	// 	console.log(i);y
 	// }
-	console.log(products.edges[0].node.pricing);
+	// console.log(products.edges[0].node.pricing);
 
 	const newSearchParams = new URLSearchParams({
 		...(products.pageInfo.endCursor && { cursor: products.pageInfo.endCursor }),
 	});
 
 	return (
-		<section className="mx-auto max-w-screen-2xl w-full p-8 pb-16">
+		<section className="mx-auto w-full max-w-screen-2xl p-8 pb-16">
 			<h2 className="sr-only">Product list</h2>
 			<ProductList products={products.edges.map((e) => e.node)} />
 			<Pagination
