@@ -19,17 +19,17 @@ export const OrderListItem = ({ order }: Props) => {
 						{order.lines.map((item) => {
 							if (!item.variant) return null;
 							const product = item.variant.product;
-
+							const media = item.variant.media;
 							return (
 								<div
 									key={product.id}
 									className="flex items-start rounded-md border p-4 transition-colors hover:bg-neutral-50"
 								>
-									{product.thumbnail && (
+									{media && (
 										<div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border bg-neutral-50">
 											<Image
-												src={product.thumbnail.url}
-												alt={product.thumbnail.alt ?? ""}
+												src={media[0].url}
+												alt={media[0].alt ?? ""}
 												width={100}
 												height={100}
 												className="h-full w-full object-contain"
@@ -83,7 +83,7 @@ export const OrderListItem = ({ order }: Props) => {
 								<span>{formatMoney(order.total.gross.amount, order.total.gross.currency)}</span>
 							</div>
 						</div>
-						 <button className="w-full mt-3 rounded-md bg-slate-800 text-white  py-2">Confirm</button>
+						<button className="w-full mt-3 rounded-md bg-slate-800 text-white  py-2">Confirm</button>
 					</div>
 				</div>
 			</div>
