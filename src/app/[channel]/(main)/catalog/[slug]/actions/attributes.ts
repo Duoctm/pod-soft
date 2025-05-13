@@ -1,6 +1,6 @@
 "use server";
 
-import {  GetProductAttributesDocument } from "@/gql/graphql";
+import { GetProductAttributesDocument } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
 
 export const getAttributes = async () => {

@@ -1,69 +1,6 @@
 import { gql, GraphQLClient } from "graphql-request";
 //import { UploadDataType } from "./type"
-
-const SALEOR_API_URL = process.env.NEXT_PUBLIC_SALEOR_API_URL as string;
-
-const GET_PRODUCT_DETAIL = gql`
-  query GetProductDetails($id: ID!, $channel: String!) {
-    product(id: $id, channel: $channel) {
-      id
-      name
-      variants {
-        id
-        name
-        sku
-        attributes {
-          attribute {
-            id
-            name
-            slug
-          }
-          values {
-            id
-            name
-            slug
-            value
-          }
-        }
-        metadata {
-          key
-          value
-        }
-      }
-    }
-  }
-`;
-
-interface UploadedFile {
-  id: string;
-  name: string;
-  cloudinary_url: string;
-  file_type: string;
-  file_extension: string;
-}
-
-interface UploadFileResponse {
-  message: string;
-  result: string;
-  file: UploadedFile;
-}
-
-// Dùng cho GraphQL request
-const UPLOAD_IMAGE = gql`
-    mutation UploadFile($file: Upload!) {
-      uploadFile(file: $file) {
-        message
-        result
-        file {
-          id
-          name
-          cloudinary_url
-          file_type
-          file_extension
-        }
-      }
-    }
-  `;
+import { fetchRawProductDetail } from './getProductDetailForDesign'
 
 
 const UPDATE_META_DATA = gql`
@@ -106,53 +43,12 @@ interface UpdateMetadataResponse {
 }
 
 
-
-
-interface ProductDetail {
-  product: {
-    id: string;
-    name: string;
-    variants: {
-      id: string;
-      name: string;
-      sku: string;
-      attributes: {
-        attribute: {
-          id: string;
-          name: string;
-          slug: string;
-        };
-        values: {
-          id: string;
-          name: string;
-          slug: string;
-          value: string;
-        }[];
-      }[];
-      metadata: {
-        key: string;
-        value: string;
-      }[];
-    }[];
-  };
-}
-
-
 const fetchProductDetail = async (productId: string) => {
   const listColorVariant = new Map<string, object>();
 
   try {
-    const client = new GraphQLClient(SALEOR_API_URL);
 
-    // Gửi request và nhận dữ liệu
-    const rawData = await client.request<ProductDetail>(GET_PRODUCT_DETAIL, {
-      id: productId,
-      channel: 'default-channel', // Có thể thay đổi channel nếu cần
-    })
-
-
-
-
+    const rawData = await fetchRawProductDetail(productId);
 
     // Kiểm tra xem rawData có phải là một object và có trường 'product'
     if (rawData && typeof rawData === 'object' && 'product' in rawData) {
@@ -178,64 +74,12 @@ const fetchProductDetail = async (productId: string) => {
       console.error("Dữ liệu không hợp lệ: không tìm thấy trường 'product'");
     }
   } catch (error) {
-    console.error("Lỗi khi truy vấn dữ liệu:", error);
+    console.log("Lỗi khi truy vấn dữ liệu:", error);
   }
 
   return listColorVariant;
 }
 
-
-async function uploadImage(data: string) {
-
-  const file = (JSON.parse(data) as any)?.file; //data.get("file");
-  console.log('iiiiiiiiiiiiiiiiiiiiiiiiiiiiii', file)
-  const formData = new FormData();
-
-  formData.append("operations", JSON.stringify({
-    query: UPLOAD_IMAGE,
-    variables: {
-      file: null,
-    },
-  }));
-
-  formData.append("map", JSON.stringify({
-    "0": ["variables.file"]
-  }));
-  if (file != null) {
-    formData.append("0", file); // actual file
-  }
-
-
-
-  const client = new GraphQLClient(SALEOR_API_URL);
-
-  // Gửi request và nhận dữ liệu
-  try {
-    const res = await client.request<UploadFileResponse>(UPLOAD_IMAGE, {
-      file: file
-    })
-
-
-    // const res = await fetch(endpoint!, {
-    //   method: "POST",
-    //   body: formData,
-    // });
-
-    // const json = await res.json() as { data: any, errors?: any[] };
-
-    // if (json.errors) {
-    //   console.error("Upload failed", json.errors);
-    //   throw new Error("Upload failed");
-    // }
-
-    // return json.data.uploadFile;
-    console.log('ressssssssssssssssssss', res);
-    return res;
-  }
-  catch (error) {
-    console.log(error);
-  }
-}
 
 
 // async function uploadImage(data: FormData) {
@@ -316,4 +160,4 @@ async function updateCheckoutLineMetadata(id: string, metadata: { key: string; v
 }
 
 
-export { fetchProductDetail, uploadImage, updateCheckoutLineMetadata }
+export { fetchProductDetail, updateCheckoutLineMetadata }

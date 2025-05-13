@@ -171,9 +171,6 @@ const fetchProductDetail = async (productId: string) => {
     })
 
 
-
-
-
     // Kiểm tra xem rawData có phải là một object và có trường 'product'
     if (rawData && typeof rawData === 'object' && 'product' in rawData) {
       const product = (rawData as { product: { variants: any[] } }).product;

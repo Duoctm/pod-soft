@@ -7,7 +7,7 @@ import { styled } from '@mui/material/styles';
 import { toast, ToastContainer } from 'react-toastify';
 import TShirtDesigner from '../utils/design';
 import { type DesignInfo, type PrintFaceData } from '..//utils/type';
-import {/*fetchProductDetail, */getMetaDtataFromColorVariant, getVariantIdFromColorVariant } from '../utils/data'
+import { getMetaDtataFromColorVariant, getVariantIdFromColorVariant } from '../utils/data'
 import { addItem, UpdateDesign } from '../utils/checkout'
 import { fetchProductDetail } from '../utils/test'
 import 'react-toastify/dist/ReactToastify.css';
@@ -132,12 +132,6 @@ function DesignPage(param: DesignPageProps) {
 
             const designs: object[][] = [];
             let index = -1;
-            // for (const design of param.designInfor.get("designs")){
-            //     index++;
-            //     designs[index] = design.designs;
-            // }
-
-
             for (const design of param.designInfor.designs) {
               index++;
               designs[index] = design.designs;
@@ -235,6 +229,7 @@ function DesignPage(param: DesignPageProps) {
   const handleResizeWidthChange = (value: number | undefined) => {
     setResizeWidth(value);
     if (designerRef.current && value !== undefined) {
+      designerRef.current.currentlyUsingTool = true;
       designerRef.current.setWHOfNode(value, null);
     }
   };
@@ -254,7 +249,6 @@ function DesignPage(param: DesignPageProps) {
   };
 
   const handleFontSizeChange = (value: number | undefined) => {
-    setFontSize(value);
     if (designerRef.current && value !== undefined) {
       designerRef.current.setRSOfNode(value);
     }
@@ -628,7 +622,7 @@ function DesignPage(param: DesignPageProps) {
                           }}
                           onClick={() => {
                             if (designerRef.current) {
-                              designerRef.current.copySelectedNode();
+                              designerRef.current.copySelectedNode(true);
                             }
                           }}
                         >
@@ -1085,7 +1079,7 @@ function DesignPage(param: DesignPageProps) {
                           }}
                           onClick={() => {
                             if (designerRef.current) {
-                              designerRef.current.copySelectedNode();
+                              designerRef.current.copySelectedNode(true);
                             }
                           }}
                         >
@@ -1539,12 +1533,6 @@ function DesignPage(param: DesignPageProps) {
                     //window.location.replace(`/${param.channel}/cart`);
                   }
                   setSpinner(false);
-
-
-                  // if (designerRef.current != null){
-                  //   const metaData = await designerRef.current.exportDesignToJson();
-                  //   //await addItem(cartItem.params, cartItem.selectedVariantId, cartItem.quantity, metaData )
-                  // }
                 }}
               >
                 Update

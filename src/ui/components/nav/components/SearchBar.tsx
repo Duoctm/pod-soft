@@ -1,13 +1,62 @@
-import { redirect } from "next/navigation";
+"use client";
 import { SearchIcon } from "lucide-react";
+import { redirectSearchPage } from "@/actions/redirect";
+import { useState, useEffect } from "react";
+import { useDebounceValue } from "usehooks-ts";
+import Image from "next/image";
+import { searchProduct } from "@/app/[channel]/(main)/search/actions/search";
+import { ProductsPerPage } from "@/app/config";
+import { OrderDirection, ProductListItemFragment, ProductOrderField } from "@/gql/graphql";
+import Link from "next/link";
+
 
 export const SearchBar = ({ channel }: { channel: string }) => {
+	const [searchValue, setSearchValue] = useState<string>("");
+	const [debouncedValue] = useDebounceValue(searchValue, 500);
+	const [isLoading, setIsLoading] = useState(false);
+	const [searchResults, setSearchResults] = useState<readonly ProductListItemFragment[]>([]);
+
+	useEffect(() => {
+		const fetchSearchResults = async () => {
+			if (!debouncedValue) {
+				setSearchResults([]);
+				return;
+			}
+
+			setIsLoading(true);
+			try {
+				const products = await searchProduct({
+					first: ProductsPerPage,
+					after:  "",
+					search: debouncedValue,
+					sortBy: ProductOrderField.Rating,
+					sortDirection: OrderDirection.Asc,
+					channel: channel,
+				}); 
+				if(!products){
+					console.log("")
+				}
+				const productResult = products?.edges.map((e) => e.node)
+
+				console.log(productResult)
+				// Replace with your actual API call
+				setSearchResults(productResult?.slice(0, 3) as ProductListItemFragment[]);
+			} catch (error) {
+				console.error("Search error:", error);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchSearchResults();
+
+		setIsLoading(true);
+	}, [debouncedValue, channel]);
+
 	async function onSubmit(formData: FormData) {
-		"use server";
-		const search = formData.get("search") as string;
-		if (search && search.trim().length > 0) {
-			redirect(`/${encodeURIComponent(channel)}/search?query=${encodeURIComponent(search)}`);
-		}
+		redirectSearchPage(formData, channel);
+		setSearchValue("")
+		setSearchResults([])
 	}
 
 	return (
@@ -19,21 +68,54 @@ export const SearchBar = ({ channel }: { channel: string }) => {
 				<span className="sr-only">search for products</span>
 				<input
 					type="text"
+					value={searchValue}
+					onChange={(e) => setSearchValue(e.target.value)}
 					name="search"
 					placeholder="Search for products..."
 					autoComplete="on"
 					required
-					className="h-10 w-full rounded-md border border-[#8B3958] bg-transparent bg-white px-4 py-2 pr-10 text-sm text-black placeholder:text-neutral-500 focus:border-[#8B3958] focus:ring-[#8B3958]"
+					className="h-12 w-full rounded-t-lg border border-[#8B3958] bg-white px-4 py-2 pr-12 text-sm text-black placeholder:text-neutral-500 focus:border-[#8B3958] focus:outline-none focus:ring-2 focus:ring-[#8B3958] focus:ring-opacity-50"
 				/>
 			</label>
+
 			<div className="absolute inset-y-0 right-0">
 				<button
 					type="submit"
-					className="inline-flex aspect-square w-10 items-center justify-center text-[#8B3958] hover:text-[#8B3958]/80 focus:text-[#8B3958]/80 group-invalid:pointer-events-none group-invalid:opacity-80"
+					className="inline-flex aspect-square w-12 items-center justify-center text-[#8B3958] transition-colors hover:text-[#8B3958]/80 focus:text-[#8B3958]/80 group-invalid:pointer-events-none group-invalid:opacity-80"
 				>
 					<span className="sr-only">search</span>
 					<SearchIcon aria-hidden className="h-5 w-5" />
 				</button>
+			</div>
+
+			<div className="absolute left-0 right-0 top-full z-50 max-h-[300px] overflow-y-auto rounded-b-lg border border-t-0 border-[#8B3958] bg-white shadow-lg">
+				{isLoading && debouncedValue ? (
+					<div className="flex items-center justify-center p-4">
+						<div className="h-6 w-6 animate-spin rounded-full border-2 border-[#8B3958] border-t-transparent"></div>
+					</div>
+				) : (
+					<ul className="divide-y divide-gray-100">
+						{searchResults.map((product) => (
+							<li key={product.id} className="hover:bg-gray-50">
+								<Link href={`/${channel}/search?query=${debouncedValue}`} className="flex items-center gap-4 p-4">
+									<div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md">
+										<Image
+											src={product.thumbnail?.url as string}
+											alt={product.name}
+											width={20}
+											height={20}
+											className="h-full w-full object-cover rounded-md"
+										/>
+									</div>
+									<div className="min-w-0 flex-1">
+										<p className="truncate text-xs font-medium text-gray-900">{product.name}</p>
+										{/* <p className="text-sm text-[#8B3958]">{product.thumbnail?.url}</p> */}
+									</div>
+								</Link>
+							</li>
+						))}
+					</ul>
+				)}
 			</div>
 		</form>
 	);

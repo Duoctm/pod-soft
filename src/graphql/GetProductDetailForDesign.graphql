@@ -1,0 +1,28 @@
+query GetProductDetailForDesign($id: ID!, $channel: String!) {
+    product(id: $id, channel: $channel) {
+      id
+      name
+      variants {
+        id
+        name
+        sku
+        attributes {
+          attribute {
+            id
+            name
+            slug
+          }
+          values {
+            id
+            name
+            slug
+            value
+          }
+        }
+        metadata {
+          key
+          value
+        }
+      }
+    }
+  }

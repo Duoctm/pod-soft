@@ -1,87 +1,28 @@
-//import { executeGraphQL } from '@/lib/graphql'
-import { gql, GraphQLClient } from "graphql-request";
+"use server"
+import { UploadFileDocument } from "@/gql/graphql";
 
-const SALEOR_API_URL = process.env.NEXT_PUBLIC_SALEOR_API_URL as string;
+const uploadImageRaw = async (data: FormData) => {
+    const file = data.get('file') as File;
+    const operations = JSON.stringify({
+        query: UploadFileDocument,
+        variables: { file: null },
+    });
 
-interface UploadedFile {
-    id: string;
-    name: string;
-    cloudinary_url: string;
-    file_type: string;
-    file_extension: string;
-}
+    const map = JSON.stringify({ "0": ["variables.file"] });
 
-interface UploadFileResponse {
-    message: string;
-    result: string;
-    file: UploadedFile;
-}
-
-const UPLOAD_IMAGE = gql`
-    mutation UploadFile($file: Upload!) {
-      uploadFile(file: $file) {
-        message
-        result
-        file {
-          id
-          name
-          cloudinary_url
-          file_type
-          file_extension
-        }
-      }
-    }
-  `;
-
-async function uploadImage(data: FormData) {
-    const file = data.get("file");
-    console.log('iiiiiiiiiiiiiiiiiiiiiiiiiiiiii', file)
     const formData = new FormData();
+    formData.append("operations", operations);
+    formData.append("map", map);
+    formData.append("0", file, file.name);
 
-    formData.append("operations", JSON.stringify({
-        query: UPLOAD_IMAGE,
-        variables: {
-            file: null,
-        },
-    }));
+    const res = await fetch(process.env.NEXT_PUBLIC_SALEOR_API_URL!, {
+        method: "POST",
+        body: formData,
+    });
 
-    formData.append("map", JSON.stringify({
-        "0": ["variables.file"]
-    }));
-    if (file != null) {
-        formData.append("0", file); // actual file
-    }
-
-
-
-    const client = new GraphQLClient(SALEOR_API_URL);
-
-    // Gửi request và nhận dữ liệu
-    try {
-        const res = await client.request<UploadFileResponse>(UPLOAD_IMAGE, {
-            file: file
-        })
-
-
-        // const res = await fetch(endpoint!, {
-        //   method: "POST",
-        //   body: formData,
-        // });
-
-        // const json = await res.json() as { data: any, errors?: any[] };
-
-        // if (json.errors) {
-        //   console.error("Upload failed", json.errors);
-        //   throw new Error("Upload failed");
-        // }
-
-        // return json.data.uploadFile;
-        console.log('ressssssssssssssssssss', res);
-        return res;
-    }
-    catch (error) {
-        console.log(error);
-    }
+    //const json = await res.json();
+    const json = await res.json() as { data?: { uploadFile?: { message: string, result: boolean, file: { cloudinary_url: string } } } };
+    return json.data?.uploadFile;
 }
 
-export default uploadImage;
+export { uploadImageRaw };

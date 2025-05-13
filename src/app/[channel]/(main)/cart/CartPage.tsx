@@ -199,7 +199,7 @@ export default function CartPage({ params }: CartPageProps) {
 						</div>
 						<div className="mt-10 text-center">
 							<CheckoutLink
-
+								
 								checkoutId={checkoutId}
 								disabled={!checkout.lines.length}
 								className="w-full sm:w-1/3"

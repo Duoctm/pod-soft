@@ -3,7 +3,7 @@ import { OrderDirection, ProductOrderField, SearchProductsDocument } from "@/gql
 import { executeGraphQL } from "@/lib/graphql";
 import { ProductsPerPage } from "@/app/config";
 import { Search } from "lucide-react";
-import InfiniteProductList from "@/ui/components/InfiniteProductList";
+import ProductSearchResult from "./_components/ProductSearchResult";
 
 export const metadata = {
 	title: "Search products · ZoomPrints",
@@ -44,6 +44,8 @@ export default async function Page({
 		revalidate: 60,
 	});
 
+	console.log(products);
+
 	if (!products) {
 		notFound();
 	}
@@ -58,8 +60,7 @@ export default async function Page({
 			{products.totalCount && products.totalCount > 0 ? (
 				<div>
 					<h1 className="pb-8 text-xl font-semibold">Search results for &quot;{searchValue}&quot;:</h1>
-
-					<InfiniteProductList channel={params.channel} first={ProductsPerPage} />
+					<ProductSearchResult channel={params.channel} after={cursor as string | ""}  search={searchValue} />
 				</div>
 			) : (
 				<div className="flex min-h-[50vh] flex-col items-center justify-center">
