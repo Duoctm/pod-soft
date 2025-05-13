@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import { ProductListPaginatedDocument } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
-import { Pagination } from "@/ui/components/Pagination";
-import { ProductList } from "@/ui/components/ProductList";
 import { ProductsPerPage } from "@/app/config";
-
+import Wrapper from "@/ui/components/wrapper";
+import InfiniteProductList from "../../../../ui/components/InfiniteProductList";
+ 
 export const metadata = {
 	title: "Products · ZoomPrints",
 	description: "ZoomPrints is your gateway to rapid fast fulfillment minus the steep investment.",
@@ -17,10 +17,10 @@ export default async function Page({
 	params: { channel: string };
 	searchParams: {
 		cursor: string | string[] | undefined;
+		page: number | string  | undefined;
 	};
 }) {
 	const cursor = typeof searchParams.cursor === "string" ? searchParams.cursor : null;
-
 	const { products } = await executeGraphQL(ProductListPaginatedDocument, {
 		variables: {
 			first: ProductsPerPage,
@@ -38,21 +38,25 @@ export default async function Page({
 	// }
 	// console.log(products.edges[0].node.pricing);
 
-	const newSearchParams = new URLSearchParams({
-		...(products.pageInfo.endCursor && { cursor: products.pageInfo.endCursor }),
-	});
+	// const newSearchParams = new URLSearchParams({
+	// 	...(products.pageInfo.endCursor && { cursor: products.pageInfo.endCursor }),
+	// });
 
 	return (
-		<section className="mx-auto w-full max-w-screen-2xl p-8 pb-16">
+		<Wrapper className="mx-auto w-full pb-16">
 			<h2 className="sr-only">Product list</h2>
-			<ProductList products={products.edges.map((e) => e.node)} />
-			<Pagination
+			{/* <ProductList products={products.edges.map((e) => e.node)} /> */}
+			{/* <Pagination
 				pageInfo={{
-					...products.pageInfo,
-					basePathname: `/products`,
+					// ...products.pageInfo,
 					urlSearchParams: newSearchParams,
-				}}
-			/>
-		</section>
+					basePathname: `/products`,
+					itemsPerPage: 12,
+					currentPage: page,
+					totalCount: products.totalCount as number,
+					}}
+					/> */}
+					<InfiniteProductList channel={params.channel} first={ProductsPerPage} />
+		</Wrapper>
 	);
 }

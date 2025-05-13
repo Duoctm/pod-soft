@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { invariant } from "ts-invariant";
-import { checkoutLinesAddMultipleItems } from "./utils/checkoutLinesAddMultipleItems";
+import { checkoutLinesAddMultipleItems } from "../utils/checkoutLinesAddMultipleItems";
 import * as Checkout from "@/lib/checkout";
 import { getUserServer } from "@/checkout/hooks/useUserServer";
 import { type CheckoutLineInput } from "@/gql/graphql";

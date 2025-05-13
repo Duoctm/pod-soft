@@ -1,4 +1,4 @@
-import { ProductElement } from "./ProductElement";
+import ProductElement from "./ProductElement";
 import { type ProductListItemFragment } from "@/gql/graphql";
 
 export const ProductList = ({ products }: { products: readonly ProductListItemFragment[] }) => {
@@ -6,7 +6,7 @@ export const ProductList = ({ products }: { products: readonly ProductListItemFr
 		<ul
 			role="list"
 			data-testid="ProductList"
-			className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 max-w-screen-2xl w-full mx-auto px-4 sm:px-6"
+			className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 w-full mx-auto"
 		>
 			{products.map((product, index) => (
 				<ProductElement

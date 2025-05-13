@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, ChevronRight } from "lucide-react";
+import Wrapper from "./wrapper";
 
 export function Breadcrumb({ channel }: { channel: string }) {
   const pathname = usePathname();
@@ -22,7 +23,7 @@ export function Breadcrumb({ channel }: { channel: string }) {
   });
 
   return (
-    <nav className="bg-white text-sm px-4 py-2 mt-5" aria-label="Breadcrumb">
+    <Wrapper className="bg-white text-sm px-4 py-2 mt-5" aria-label="Breadcrumb">
       <ol className="flex text-gray-700 items-center space-x-2">
         <li className="flex items-center">
           <Link href={`/${channel}`} className="color-[#51525c] hover:underline flex items-center">
@@ -45,6 +46,6 @@ export function Breadcrumb({ channel }: { channel: string }) {
           </li>
         ))}
       </ol>
-    </nav>
+    </Wrapper>
   );
 }

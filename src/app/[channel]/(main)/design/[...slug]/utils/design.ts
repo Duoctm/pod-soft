@@ -1,8 +1,10 @@
+"use client"
+
 import Konva from 'konva';
 import $ from 'jquery';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import { type PrintFaceData, type DesignInfo } from '../utils/type';
-import { uploadImage } from './data';
+import { type PrintFaceData, type DesignInfo/*, UploadDataType*/ } from '../utils/type';
+import { uploadImage } from './test';
 interface StageConfig {
   stage: Konva.Stage | null;
   layer: Konva.Layer | null;
@@ -20,7 +22,7 @@ class TShirtDesigner {
   private colorData: Map<string, object>;
   public stages: StageConfig[] = [];
 
-  public currentStage: StageConfig;
+  private currentStage: StageConfig;
   private textColor: string = '#000000';
   private fontWeight: string = 'normal';
   private fontStyle: string = 'normal';
@@ -270,7 +272,7 @@ class TShirtDesigner {
             this.currentStage = this.stages[index];
           }
           else {
-            this.stages[index].stage!.container().style.display = 'hidden';
+            this.stages[index].stage!.container().style.display = 'none';
           }
 
 
@@ -352,8 +354,8 @@ class TShirtDesigner {
     borderDiv.style.left = `${stageX}px`;
     borderDiv.style.top = `${stageY}px`;
     borderDiv.style.border = '1px dashed black';
-    borderDiv.style.pointerEvents = 'hidden';
-    borderDiv.style.display = 'hidden';
+    borderDiv.style.pointerEvents = 'none';
+    borderDiv.style.display = 'none';
     document.body.appendChild(borderDiv);
     stageConfig.borderDiv = borderDiv;
 
@@ -392,11 +394,11 @@ class TShirtDesigner {
 
     if (this.currentStage.stage) {
       const currentContainer = this.currentStage.stage.container();
-      currentContainer.style.display = 'hidden';
+      currentContainer.style.display = 'none';
       currentContainer.style.zIndex = '0';
     }
     if (this.currentStage.borderDiv) {
-      this.currentStage.borderDiv.style.display = 'hidden';
+      this.currentStage.borderDiv.style.display = 'none';
     }
     this.currentStage.selectedNode = null;
 
@@ -422,7 +424,7 @@ class TShirtDesigner {
         domImage.style.zIndex = '0';
       }
       else {
-        domImage.style.display = 'hidden';
+        domImage.style.display = 'none';
         domImage.style.zIndex = '0';
       }
     }
@@ -1133,8 +1135,18 @@ class TShirtDesigner {
               let cloudinary_url = "";
               if (/^data:image\/[a-zA-Z]+;base64,/.test(imageElement.src)) {
                 const file = this.base64ToFile(imageElement.src, 'image.png');
-                const response = await uploadImage(file);
-                cloudinary_url = response.file.cloudinary_url;
+                try {
+                  console.log('chay toi day');
+                  //const formData = new FormData();
+                  //formData.append('file', file);
+                  const response = await uploadImage(JSON.stringify({ file: file }));
+                  if (response != undefined) {
+                    cloudinary_url = response.file.cloudinary_url ?? "";
+                  }
+                }
+                catch (error) {
+                  console.log('loi vo day', error);
+                }
               }
               else {
                 cloudinary_url = imageElement.src;
@@ -1206,10 +1218,6 @@ class TShirtDesigner {
         //const file = this.base64ToFile(stageBase64, 'image.png');
         //const response = await uploadImage(file);
         //designOfStage.final_image_url = response.file.cloudinary_url;
-        const base64 = await this.exportStage(this.stages[item], imageDom);
-        const file = this.base64ToFile(base64, 'image.png');
-        const response = await uploadImage(file);
-        designOfStage.final_image_url = response.file.cloudinary_url;
         designOfStage.designs = await getStageInfo(this.stages[item]);
         designs.push(designOfStage);
       } catch (error) {
@@ -1232,8 +1240,23 @@ class TShirtDesigner {
     return JSON.stringify(designInfo, null, 2);
   }
 
-  public exportStage = async (stageConfig: StageConfig, image: HTMLImageElement): Promise<string> => {
+  public exportStage = async (stageConfig: StageConfig, image: HTMLImageElement, side: string): Promise<string> => {
     if (!stageConfig.stage || !stageConfig.layer) return '';
+
+
+    for (const item in this.data) {
+      const stageContainerDom = document.getElementById('preview-' + this.data[item].code) as HTMLImageElement;
+      const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
+      if (side == this.data[item].code) {
+        imageDom.style.display = 'block';
+        if (stageContainerDom) stageContainerDom.style.display = 'block';
+      }
+      else {
+        imageDom.style.display = 'none';
+        if (stageContainerDom) stageContainerDom.style.display = 'none';
+      }
+    }
+
     const tempCanvas = document.createElement('canvas');
     const ctx = tempCanvas.getContext('2d');
     if (!ctx) return '';
@@ -1355,12 +1378,7 @@ class TShirtDesigner {
     return tempCanvas.toDataURL('image/png');
   };
 
-  public exportFinalDesignOfStage(stage: StageConfig) {
-    var result = stage.stage?.toDataURL();
-    return result;
-  }
-
-  /*public async exportImages(type: 'image' | 'json' = 'image') {
+  public async exportImages(type: 'image' | 'json' = 'image') {
     if (type === 'json') {
 
       const jsonContent = await this.exportDesignToJson();
@@ -1393,7 +1411,7 @@ class TShirtDesigner {
         downloadImage(itemDataURL, this.data[item].name + '.png');
       }
     }
-  }*/
+  }
 
   public async importDesignFromJson(/*jsonContent: string*/designs: object[][]) {
     try {

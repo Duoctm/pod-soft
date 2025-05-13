@@ -1,7 +1,5 @@
-"use server";
-
-
 import { gql, GraphQLClient } from "graphql-request";
+//import { UploadDataType } from "./type"
 
 const SALEOR_API_URL = process.env.NEXT_PUBLIC_SALEOR_API_URL as string;
 
@@ -187,8 +185,10 @@ const fetchProductDetail = async (productId: string) => {
 }
 
 
-async function uploadImage(file: File) {
+async function uploadImage(data: string) {
 
+  const file = (JSON.parse(data) as any)?.file; //data.get("file");
+  console.log('iiiiiiiiiiiiiiiiiiiiiiiiiiiiii', file)
   const formData = new FormData();
 
   formData.append("operations", JSON.stringify({
@@ -201,8 +201,10 @@ async function uploadImage(file: File) {
   formData.append("map", JSON.stringify({
     "0": ["variables.file"]
   }));
+  if (file != null) {
+    formData.append("0", file); // actual file
+  }
 
-  formData.append("0", file); // actual file
 
 
   const client = new GraphQLClient(SALEOR_API_URL);
@@ -227,12 +229,62 @@ async function uploadImage(file: File) {
     // }
 
     // return json.data.uploadFile;
+    console.log('ressssssssssssssssssss', res);
     return res;
   }
   catch (error) {
     console.log(error);
   }
 }
+
+
+// async function uploadImage(data: FormData) {
+//   const file = data.get("file");
+//   console.log('File:', file);
+
+//   if (!file) {
+//     console.error("No file selected");
+//     return;
+//   }
+
+//   const formData = new FormData();
+
+//   // Append GraphQL operations
+//   formData.append("operations", JSON.stringify({
+//     query: UPLOAD_IMAGE,  // Đây là query GraphQL của bạn
+//     variables: {
+//       file: null,  // Placeholder cho file
+//     },
+//   }));
+
+//   // Mapping phần file tới variables
+//   formData.append("map", JSON.stringify({
+//     "0": ["variables.file"],
+//   }));
+
+//   // Đính kèm file
+//   formData.append("0", file);
+
+//   // Thực hiện request với multipart/form-data
+//   try {
+//     const response = await fetch(SALEOR_API_URL, {
+//       method: "POST",
+//       body: formData,
+//     });
+
+//     const json = await response.json();
+//     if (json.errors) {
+//       console.error("Upload failed", json.errors);
+//       throw new Error("Upload failed");
+//     }
+
+//     console.log("Upload success:", json.data.uploadFile);
+//     return json.data.uploadFile;
+//   } catch (error) {
+//     console.error("Error uploading image:", error);
+//   }
+// }
+
 
 
 

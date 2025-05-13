@@ -1,11 +1,11 @@
 "use client"
+
 import { useEffect, useRef, useState } from 'react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import { Typography, IconButton, Box, Paper, Modal, Button } from '@mui/material';
+import { Typography, IconButton, Box, Paper, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { toast, ToastContainer } from 'react-toastify';
 import TShirtDesigner from '../utils/design';
-import { initializeModals } from '../utils/modal';
 import { type DesignInfo, type PrintFaceData } from '..//utils/type';
 import {/*fetchProductDetail, */getMetaDtataFromColorVariant, getVariantIdFromColorVariant } from '../utils/data'
 import { addItem, UpdateDesign } from '../utils/checkout'
@@ -45,8 +45,6 @@ function DesignPage(param: DesignPageProps) {
   const [loading, setLoading] = useState(true);
   let sort_data = data.sort((a, b) => a.z_index - b.z_index);
   const designerRef = useRef<TShirtDesigner | null>(null);
-  const [isColorModalOpen, setIsColorModalOpen] = useState(false);
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   //const [importError, setImportError] = useState<string | null>(null);
   const [productId, setProductId] = useState<string>(param.productId);
   const [colorId, setColorId] = useState<string>(param.colorId);
@@ -102,10 +100,6 @@ function DesignPage(param: DesignPageProps) {
     if (!colorLoading) {
       const fetchData = async () => {
         try {
-          // const result = await fetchProductVariantData();
-          // setData(result);
-          // const result = getMetaDtataFromColorVariant(colorId, colorData)
-          // setData(result);
           updateVariant(colorId, productId, colorData);
           setLoading(false);
         } catch (error) {
@@ -158,11 +152,6 @@ function DesignPage(param: DesignPageProps) {
         }
         // }
       }
-
-      // Initialize modals
-      initializeModals();
-
-      // Thêm xử lý phím tắt
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.ctrlKey && (e.key === 'c' || e.key === 'C' || e.key === 'v' || e.key === 'V')) {
           e.preventDefault(); // Ngăn chặn hành vi mặc định
@@ -242,10 +231,6 @@ function DesignPage(param: DesignPageProps) {
   ];
 
   const menuWidth = '10vw';
-
-  // if (loading) {
-  //   return <div>Loading...</div>;
-  // }
 
   const handleResizeWidthChange = (value: number | undefined) => {
     setResizeWidth(value);
@@ -360,41 +345,6 @@ function DesignPage(param: DesignPageProps) {
               <i className="fas fa-font text-2xl"></i>
               <span className="text-xs">Text</span>
             </button>
-            <button
-              type="button"
-              onClick={async () => {
-                // const data = designerRef.current?.exportFinalDesignOfStage(designerRef.current.currentStage);
-                // console.log('du lieu', data);
-                for (const item in sort_data) {
-                  let imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-                  const r = await designerRef.current?.exportStage(designerRef.current.currentStage, imageDom);
-                  console.log('aaaaaaaaaaaaaaaaaa', r);
-                }
-
-              }}
-              className="bg-transparent border-none p-1.5 rounded cursor-pointer text-white hover:bg-white/10 hover:translate-x-1 transition-all flex flex-col items-center gap-0.5"
-            >
-              <i className="fas fa-upload text-base"></i>
-              <span className="text-[10px]">Export Image</span>
-            </button>
-            {/* <button 
-              type="button" 
-              id="import"
-              onClick={() => setIsImportModalOpen(true)}
-              className="bg-transparent border-none p-1.5 rounded cursor-pointer text-white hover:bg-white/10 hover:translate-x-1 transition-all flex flex-col items-center gap-0.5"
-            >
-              <i className="fas fa-upload text-base"></i>
-              <span className="text-[10px]">Import</span>
-            </button> */}
-            {/* <button 
-              type="button" 
-              id="export"
-              onClick={() => setIsExportModalOpen(true)}
-              className="bg-transparent border-none p-1.5 rounded cursor-pointer text-white hover:bg-white/10 hover:translate-x-1 transition-all flex flex-col items-center gap-0.5"
-            >
-              <i className="fas fa-download text-2xl"></i>
-              <span className="text-xs">Export</span>
-            </button> */}
           </Paper>
 
           {/* Function Area */}
@@ -504,27 +454,6 @@ function DesignPage(param: DesignPageProps) {
                       <i className="fas fa-font text-3xl" style={{ color: '#282c34' }}></i>
                       <Typography sx={{ fontSize: '0.9rem', color: '#000000' }}>Text</Typography>
                     </Paper>
-
-                    {/* <Paper
-                      elevation={2}
-                      onClick={() => setIsExportModalOpen(true)}
-                      sx={{
-                        p: 2,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 1,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          transform: 'translateY(-4px)',
-                          bgcolor: 'rgba(0,0,0,0.04)'
-                        }
-                      }}
-                    >
-                      <i className="fas fa-download text-3xl" style={{ color: '#282c34' }}></i>
-                      <Typography sx={{ fontSize: '0.9rem', color: '#000000' }}>Export</Typography>
-                    </Paper> */}
                   </Box>
                 </Box>
               )}
@@ -568,7 +497,7 @@ function DesignPage(param: DesignPageProps) {
                             designerRef.current.data = result;
                             designerRef.current.colorValue = key;
                             const selectVariant = getVariantIdFromColorVariant(key, colorData);
-                            designerRef.current.variantId = selectVariant;// getVariantIdFromColorVariant(key, colorData);
+                            designerRef.current.variantId = selectVariant;
                             designerRef.current.updateStagePositions();
                             setVariantId(selectVariant);
                           }
@@ -1555,14 +1484,13 @@ function DesignPage(param: DesignPageProps) {
                       }
                       if (hasObjectInStage == true) {
                         metaData = await designerRef.current.exportDesignToJson();
-                        console.log('aaaaaaaaaaaaaaaaaaaaaaa', metaData);
                       }
                       var result = false;
                       if (param.typeDesign == 1) {
-                        result = (await addItem(cartItem.params, /*cartItem.selectedVariantId*/variantId, cartItem.quantity, metaData)) as boolean;
+                        result = (await addItem(cartItem.params, variantId, cartItem.quantity, metaData)) as boolean;
                       }
                       else {
-                        result = (await addItem(cartItem.params, /*cartItem.selectedVariantId*/variantId, 1, metaData)) as boolean;
+                        result = (await addItem(cartItem.params, variantId, 1, metaData)) as boolean;
                       }
                       if (result === true) {
                         toast.success('Design added to cart successfully');
@@ -1570,8 +1498,6 @@ function DesignPage(param: DesignPageProps) {
                       else {
                         toast.error('An error occurred during processing. Please try again later');
                       }
-                      //localStorage.removeItem('cart');
-                      //window.location.replace(/${param.channel}/cart);
                     }
                   }
                   setSpinner(false);
@@ -1600,7 +1526,7 @@ function DesignPage(param: DesignPageProps) {
                   if (cartId != null && cartId != undefined) {
                     if (designerRef.current != null) {
                       const metaData = await designerRef.current.exportDesignToJson();
-                      console.log('aaaaaaaaaaaaaaaaaaaaaaa', metaData);
+
                       const result = await UpdateDesign(cartId, metaData);
                       if (result == true) {
                         toast.success('Design updated successfully');
@@ -1627,460 +1553,6 @@ function DesignPage(param: DesignPageProps) {
           </Paper>
         </Box>
       </Box>
-
-      <Modal
-        open={isColorModalOpen}
-        onClose={() => setIsColorModalOpen(false)}
-        aria-labelledby="colorModalLabel"
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Box sx={{
-          backgroundColor: 'white',
-          borderRadius: 1,
-          boxShadow: 24,
-          width: '100%',
-          maxWidth: 500,
-          mx: 2,
-        }}>
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            p: 2,
-            borderBottom: '1px solid',
-            borderColor: 'divider'
-          }}>
-            <Typography variant="h6" id="colorModalLabel">
-              Choose a color
-            </Typography>
-            <IconButton
-              onClick={() => setIsColorModalOpen(false)}
-              sx={{ color: 'text.secondary' }}
-            >
-              <i className="fas fa-times"></i>
-            </IconButton>
-          </Box>
-          <Box sx={{ p: 3 }}>
-            <Box sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(6, 1fr)',
-              gap: 2
-            }}>
-              {Array.from(colorData.entries()).map(([key, value]) => (
-                <Box
-                  key={key}
-                  data-color={key}
-                  onClick={() => {
-                    if (designerRef.current) {
-                      setLoading(true);
-                      setIsColorModalOpen(false);
-
-                      const result = getMetaDtataFromColorVariant(key, colorData)
-                      sort_data = result.sort((a, b) => a.z_index - b.z_index);
-
-                      const handleThumbnailClick = (e: Event) => {
-                        const target = e.currentTarget as HTMLDivElement;
-                        const view = target.getAttribute('data-view');
-
-                        // Cập nhật active state
-                        document.querySelectorAll('.thumbnail').forEach(thumb => {
-                          thumb.classList.remove('active');
-                        });
-                        target.classList.add('active');
-                        for (const item in sort_data) {
-                          const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-                          const previewDom = document.getElementById('preview-' + sort_data[item].code);
-                          imageDom.style.display = 'hidden';
-                          previewDom!.style.display = 'hidden';
-                        }
-
-                        for (const item in sort_data) {
-                          const imageDom = document.getElementById(sort_data[item].code + 'Image') as HTMLImageElement;
-                          const previewDom = document.getElementById('preview-' + sort_data[item].code);
-
-                          if (view === sort_data[item].code) {
-                            imageDom.style.display = 'block';
-                            previewDom!.style.display = 'block';
-                            if (designerRef.current) {
-                              designerRef.current.switchToStage(sort_data[item].code);
-                            }
-                          }
-                        }
-                      }
-                      for (const item in result) {
-                        const imageDom = document.getElementById(result[item].code + "Image") as HTMLImageElement;
-                        const thumbnailDom = document.getElementById(`thumb-${result[item].code}`);
-                        imageDom.src = result[item].image
-                        if (thumbnailDom) {
-                          thumbnailDom.setAttribute('src', result[item].image);
-                        }
-
-                      }
-
-                      const thumbnails = document.querySelectorAll('.thumbnail');
-                      thumbnails.forEach(thumb => {
-                        thumb.addEventListener('click', handleThumbnailClick);
-                      });
-                      designerRef.current.data = result;
-                      designerRef.current.colorValue = key;
-                      designerRef.current.variantId = getVariantIdFromColorVariant(key, colorData);
-                      designerRef.current.updateStagePositions();
-                    }
-                  }}
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    backgroundColor: (value as { color_value: string }).color_value,
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s',
-                    '&:hover': {
-                      transform: 'scale(1.1)',
-                    },
-                  }}
-                />
-              ))}
-            </Box>
-          </Box>
-        </Box>
-      </Modal>
-
-      <Modal
-        open={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-        aria-labelledby="exportModalLabel"
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Box sx={{
-          backgroundColor: 'white',
-          borderRadius: 1,
-          boxShadow: 24,
-          width: '100%',
-          maxWidth: 400,
-          mx: 2,
-        }}>
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            p: 2,
-            borderBottom: '1px solid',
-            borderColor: 'divider'
-          }}>
-            <Typography variant="h6" id="exportModalLabel">
-              Choose Export Type
-            </Typography>
-            <IconButton
-              onClick={() => setIsExportModalOpen(false)}
-              sx={{ color: 'text.secondary' }}
-            >
-              <i className="fas fa-times"></i>
-            </IconButton>
-          </Box>
-          <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <button
-              onClick={() => {
-                if (designerRef.current) {
-                  //designerRef.current.exportImages('image');
-                  setIsExportModalOpen(false);
-                }
-              }}
-              className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2"
-            >
-              <i className="fas fa-image"></i>
-              Export as Images
-            </button>
-            <button
-              onClick={() => {
-                if (designerRef.current) {
-                  //designerRef.current.exportImages('json');
-                  setIsExportModalOpen(false);
-                }
-              }}
-              className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center justify-center gap-2"
-            >
-              <i className="fas fa-code"></i>
-              Export as JSON
-            </button>
-          </Box>
-        </Box>
-      </Modal>
-
-      {/*
-         <Modal
-        open={isImportModalOpen}
-        onClose={() => {
-          setIsImportModalOpen(false);
-          setImportError(null);
-        }}
-        aria-labelledby="importModalLabel"
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Box sx={{
-          backgroundColor: 'white',
-          borderRadius: 1,
-          boxShadow: 24,
-          width: '100%',
-          maxWidth: 400,
-          mx: 2,
-        }}>
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            p: 2,
-            borderBottom: '1px solid',
-            borderColor: 'divider'
-          }}>
-            <Typography variant="h6" id="importModalLabel">
-              Import Design
-            </Typography>
-            <IconButton
-              onClick={() => {
-                setIsImportModalOpen(false);
-                setImportError(null);
-              }}
-              sx={{ color: 'text.secondary' }}
-            >
-              <i className="fas fa-times"></i>
-            </IconButton>
-          </Box>
-          <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-            <input
-              type="file"
-              accept=".json"
-              className="hidden"
-              id="jsonFileInput"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (file && designerRef.current) {
-                  try {
-                    const reader = new FileReader();
-                    reader.onload = async (event) => {
-                      try {
-                        const jsonContent = event.target?.result as string
-                        const designInfo = JSON.parse(jsonContent);
-
-                        console.log(designInfo)
-
-
-                        // await loadProductData(designInfo.productId);
-                        // updateVariant(designInfo.colorValue, designInfo.productId, colorData);
-                       
-
-                        const productId = designInfo.productId
-                        // await loadProductData(productId);
-                        setProductId(prev => JSON.stringify(prev) === JSON.stringify(designInfo.productId) ? prev : designInfo.productId)
-                        setColorId(prev => JSON.stringify(prev) === JSON.stringify(designInfo.colorValue) ? prev :  designInfo.colorValue)
-                        setColorLoading(false);
-                        const designs = [[]];
-                        let index = -1;
-                        for (const design of designInfo.designs){
-                          index++;
-                          designs[index] = design.designs;
-                          
-                        }
-                        await designerRef.current?.importDesignFromJson(designs);
-                        setIsImportModalOpen(false);
-                        setImportError(null);
-                        // await designerRef.current?.importDesignFromJson(event.target?.result as string);
-                        // setIsImportModalOpen(false);
-                        // setImportError(null);
-                      } catch (error) {
-                        setImportError('Invalid design file format');
-                      }
-                    };
-                    reader.readAsText(file);
-                  } catch (error) {
-                    setImportError('Error reading file');
-                  }
-                }
-              }}
-            />
-            <label
-              htmlFor="jsonFileInput"
-              className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <i className="fas fa-file-upload"></i>
-              Choose JSON File
-            </label>
-            {importError && (
-              <Typography color="error" sx={{ textAlign: 'center', mt: 1 }}>
-                {importError}
-              </Typography>
-            )}
-          </Box>
-        </Box>
-      </Modal>
-      */}
-      {/* EDITOR TEXT */}
-      <div
-        id="editorTextModal"
-        tabIndex={-1}
-        aria-labelledby="editorTextModalLabel"
-        className="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm"
-        role="dialog"
-      >
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
-          <div className="bg-white rounded-lg shadow-xl">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h5 className="text-xl font-semibold text-center" id="editorTextModalLabel">
-                Add Text
-              </h5>
-              <button
-                type="button"
-                className="text-gray-400 hover:text-gray-500"
-                data-modal-hide="editorTextModal"
-              >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-6" id="editorTextDrawer">
-              <div className="space-y-6">
-                <div>
-                  <textarea
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    id="textInput"
-                    rows={3}
-                    placeholder="Enter your text here..."
-                  ></textarea>
-                </div>
-
-                <div id="fontColorPickerWrap">
-                  <h5 className="text-lg font-medium mb-3">Text Color</h5>
-                  <div id="fontColorPicker">
-                    <div className="grid grid-cols-10 gap-1">
-                      {colors.map((color) => (
-                        <div
-                          key={color}
-                          className="w-7 h-7 rounded-full cursor-pointer transform hover:scale-110 transition-transform"
-                          style={{ backgroundColor: color }}
-                          data-color={color}
-                          onClick={() => {
-                            if (designerRef.current) {
-                              designerRef.current.changeTextColor(color);
-                              const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
-                              if (textInput) {
-                                textInput.style.color = color;
-                              }
-                            }
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div id="fontStyle">
-                  <h5 className="text-lg font-medium mb-3">Font Style</h5>
-                  <div className="flex justify-center gap-4">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="boldCheck"
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                        onChange={(e) => {
-                          if (designerRef.current) {
-                            const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
-                            if (textInput) {
-                              textInput.style.fontWeight = e.target.checked ? 'bold' : 'normal';
-                              designerRef.current.changeFontStyle(e.target.checked ? 'bold' : 'normal');
-                            }
-                          }
-                        }}
-                      />
-                      <span>Bold</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="italicCheck"
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                        onChange={(e) => {
-                          if (designerRef.current) {
-                            const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
-                            if (textInput) {
-                              textInput.style.fontStyle = e.target.checked ? 'italic' : 'normal';
-                              designerRef.current.changeFontStyle(e.target.checked ? 'italic' : 'normal');
-                            }
-                          }
-                        }}
-                      />
-                      <span>Italic</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div id="fontFamily">
-                  <h5 className="text-lg font-medium mb-3">Font Family</h5>
-                  <select
-                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    id="chooseFontFamily"
-                    onChange={(e) => {
-                      if (designerRef.current) {
-                        designerRef.current.changeFontFamily(e.target.value);
-                        const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
-                        if (textInput) {
-                          textInput.style.fontFamily = e.target.value;
-                        }
-                      }
-                    }}
-                  >
-                    <option value="Montserrat">Montserrat</option>
-                    <option value="Sans Serif">Sans Serif</option>
-                    <option value="Arial">Arial</option>
-                    <option value="Comic Sans MS">Comic Sans MS</option>
-                    <option value="Times New Roman">Times New Roman</option>
-                    <option value="Courier New">Courier New</option>
-                    <option value="Verdana">Verdana</option>
-                    <option value="Trebuchet MS">Trebuchet MS</option>
-                    <option value="Arial Black">Arial Black</option>
-                    <option value="Impact">Impact</option>
-                    <option value="Bookman">Bookman</option>
-                    <option value="Garamond">Garamond</option>
-                    <option value="Palatino">Palatino</option>
-                    <option value="Georgia">Georgia</option>
-                  </select>
-                </div>
-
-                <div className="text-center">
-                  <button
-                    type="button"
-                    className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    id="submitText"
-                    onClick={() => {
-                      const text = (document.getElementById('textInput') as HTMLTextAreaElement).value.trim();
-                      if (text && designerRef.current) {
-                        designerRef.current.addText(text);
-                        const modalElement = document.getElementById('editorTextModal');
-                        if (modalElement) {
-                          modalElement.classList.add('hidden');
-                        }
-                      }
-                    }}
-                  >
-                    Add Text
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <div className="fixed inset-0 z-50 hidden items-center justify-center" role="status">
         <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>

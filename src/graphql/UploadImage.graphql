@@ -1,0 +1,13 @@
+mutation UploadFile($file: Upload!) {
+    uploadFile(file: $file) {
+    message
+    result
+    file {
+        id
+        name
+        cloudinary_url
+        file_type
+        file_extension
+    }
+    }
+}

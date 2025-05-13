@@ -1,10 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import { OrderDirection, ProductOrderField, SearchProductsDocument } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
-import { Pagination } from "@/ui/components/Pagination";
-import { ProductList } from "@/ui/components/ProductList";
 import { ProductsPerPage } from "@/app/config";
 import { Search } from "lucide-react";
+import InfiniteProductList from "@/ui/components/InfiniteProductList";
 
 export const metadata = {
 	title: "Search products · ZoomPrints",
@@ -49,24 +48,18 @@ export default async function Page({
 		notFound();
 	}
 
-	const newSearchParams = new URLSearchParams({
-		query: searchValue,
-		...(products.pageInfo.endCursor && { cursor: products.pageInfo.endCursor }),
-	});
+	// const newSearchParams = new URLSearchParams({
+	// 	query: searchValue,
+	// 	...(products.pageInfo.endCursor && { cursor: products.pageInfo.endCursor }),
+	// });
 
 	return (
 		<section className="mx-auto min-h-screen max-w-7xl p-8 pb-16">
 			{products.totalCount && products.totalCount > 0 ? (
 				<div>
 					<h1 className="pb-8 text-xl font-semibold">Search results for &quot;{searchValue}&quot;:</h1>
-					<ProductList products={products.edges.map((e) => e.node)} />
-					<Pagination
-						pageInfo={{
-							...products.pageInfo,
-							basePathname: `/search`,
-							urlSearchParams: newSearchParams,
-						}}
-					/>
+
+					<InfiniteProductList channel={params.channel} first={ProductsPerPage} />
 				</div>
 			) : (
 				<div className="flex min-h-[50vh] flex-col items-center justify-center">

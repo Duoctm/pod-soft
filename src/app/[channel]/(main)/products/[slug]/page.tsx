@@ -8,8 +8,8 @@ import Image from "next/image";
 import xss from "xss";
 import { toast, ToastContainer } from "react-toastify";
 import Link from "next/link";
-import { getProductDetails } from "./getProductDetails";
-import { addCart } from "./addCart";
+import { getProductDetails } from "./actions/getProductDetails";
+import { addCart } from "./actions/addCart";
 
 import { NavigationButton } from "./_components/NavigationButton";
 import { ThumbnailGallery } from "./_components/ThumbnailGallery";
