@@ -1,0 +1,6 @@
+mutation SupportCreate($input: SupportInput!) {
+	createSupport(input: $input) {
+		success
+		message
+	}
+}
