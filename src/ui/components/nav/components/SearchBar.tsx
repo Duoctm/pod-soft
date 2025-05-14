@@ -9,12 +9,16 @@ import { ProductsPerPage } from "@/app/config";
 import { OrderDirection, ProductListItemFragment, ProductOrderField } from "@/gql/graphql";
 import Link from "next/link";
 
-
 export const SearchBar = ({ channel }: { channel: string }) => {
 	const [searchValue, setSearchValue] = useState<string>("");
 	const [debouncedValue] = useDebounceValue(searchValue, 500);
 	const [isLoading, setIsLoading] = useState(false);
 	const [searchResults, setSearchResults] = useState<readonly ProductListItemFragment[]>([]);
+
+	const resetToDefault = () => {
+		setSearchValue("");
+		setSearchResults([]);
+	};
 
 	useEffect(() => {
 		const fetchSearchResults = async () => {
@@ -27,20 +31,20 @@ export const SearchBar = ({ channel }: { channel: string }) => {
 			try {
 				const products = await searchProduct({
 					first: ProductsPerPage,
-					after:  "",
+					after: "",
 					search: debouncedValue,
 					sortBy: ProductOrderField.Rating,
 					sortDirection: OrderDirection.Asc,
 					channel: channel,
-				}); 
-				if(!products){
-					console.log("")
+				});
+				if (!products) {
+					console.log("");
 				}
-				const productResult = products?.edges.map((e) => e.node)
+				const productResult = products?.edges.map((e) => e.node);
 
-				console.log(productResult)
+				console.log(productResult);
 				// Replace with your actual API call
-				setSearchResults(productResult?.slice(0, 3) as ProductListItemFragment[]);
+				setSearchResults(productResult?.slice(0, 5) as ProductListItemFragment[]);
 			} catch (error) {
 				console.error("Search error:", error);
 			} finally {
@@ -54,15 +58,15 @@ export const SearchBar = ({ channel }: { channel: string }) => {
 	}, [debouncedValue, channel]);
 
 	async function onSubmit(formData: FormData) {
-		redirectSearchPage(formData, channel);
-		setSearchValue("")
-		setSearchResults([])
+	redirectSearchPage(formData, channel);
+		resetToDefault();
 	}
 
 	return (
 		<form
 			action={onSubmit}
 			className="group relative my-2 flex w-full items-center justify-items-center text-sm lg:max-w-[335px]"
+			onMouseLeave={resetToDefault}
 		>
 			<label className="w-full">
 				<span className="sr-only">search for products</span>
@@ -98,13 +102,11 @@ export const SearchBar = ({ channel }: { channel: string }) => {
 						{searchResults.map((product) => (
 							<li key={product.id} className="hover:bg-gray-50">
 								<Link href={`/${channel}/search?query=${debouncedValue}`} className="flex items-center gap-4 p-4">
-									<div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md">
+									<div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md relative">
 										<Image
 											src={product.thumbnail?.url as string}
 											alt={product.name}
-											width={20}
-											height={20}
-											className="h-full w-full object-cover rounded-md"
+											fill
 										/>
 									</div>
 									<div className="min-w-0 flex-1">

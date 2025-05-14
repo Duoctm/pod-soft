@@ -24,7 +24,7 @@ export default function CheckoutPage({
 				<div className="flex items-center font-bold">
 					<div className="flex items-center font-bold">
 						<LinkWithChannel aria-label="homepage" href="/" className="flex items-center gap-2">
-							<Image src="/images/main-logo.png" alt="SwiftPod Logo" width={150} height={70} priority />
+							<Image src="/images/main-logo.png" alt="SwiftPod Logo" width={150} height={70}/>
 						</LinkWithChannel>
 					</div>
 				</div>

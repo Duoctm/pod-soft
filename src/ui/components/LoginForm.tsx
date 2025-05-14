@@ -43,6 +43,7 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 					router.push("/");
 				} else if (result.errors && result.errors.length > 0) {
 					toast.error("Email or password is incorrect");
+					return
 				}
 			} catch (error) {
 				console.error("Login error:", error);

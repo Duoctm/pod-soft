@@ -164,6 +164,19 @@ function DesignPage(param: DesignPageProps) {
 
       // Xử lý sự kiện click cho thumbnail
       const handleThumbnailClick = (e: Event) => {
+        if (designerRef.current != null && designerRef.current.currentStage.stage && designerRef.current.currentStage.stage?.getChildren().length > 0) {
+          for (const item in designerRef.current.data) {
+            if (designerRef.current.stages[item] == designerRef.current.currentStage) {
+              const domImage = document.getElementById(designerRef.current.data[item].code + 'Image') as HTMLImageElement;
+              designerRef.current.exportStage(designerRef.current.currentStage, domImage).then(base64 => {
+                if (designerRef.current != null) {
+                  designerRef.current.faceImage[designerRef.current.data[item].code] = base64;
+                }
+
+              });
+            }
+          }
+        }
         const target = e.currentTarget as HTMLDivElement;
         const view = target.getAttribute('data-view');
 
@@ -255,7 +268,19 @@ function DesignPage(param: DesignPageProps) {
   };
 
   const handleThumbnailClick = (e: Event) => {
-    console.log('dang chay ne')
+    if (designerRef.current != null) {
+      for (const item in designerRef.current.data) {
+        if (designerRef.current.stages[item] == designerRef.current.currentStage) {
+          const domImage = document.getElementById(designerRef.current.data[item].code + 'Image') as HTMLImageElement;
+          designerRef.current.exportStage(designerRef.current.currentStage, domImage).then(base64 => {
+            if (designerRef.current != null) {
+              designerRef.current.faceImage[designerRef.current.data[item].code] = base64;
+            }
+
+          });
+        }
+      }
+    }
     const target = e.currentTarget as HTMLDivElement;
     const view = target.getAttribute('data-view');
 
@@ -1478,6 +1503,7 @@ function DesignPage(param: DesignPageProps) {
                       }
                       if (hasObjectInStage == true) {
                         metaData = await designerRef.current.exportDesignToJson();
+                        console.log('final', metaData);
                       }
                       var result = false;
                       if (param.typeDesign == 1) {

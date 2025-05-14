@@ -3,55 +3,23 @@
 import edjsHTML from "editorjs-html";
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { notFound } from "next/navigation";
-import Image from "next/image";
-
 import xss from "xss";
 import { toast, ToastContainer } from "react-toastify";
 import Link from "next/link";
 import { getProductDetails } from "./actions/getProductDetails";
 import { addCart } from "./actions/addCart";
 
-import { NavigationButton } from "./_components/NavigationButton";
-import { ThumbnailGallery } from "./_components/ThumbnailGallery";
 import { ProductTitle } from "./_components/ProductTitle";
 import { ProductDescription } from "./_components/ProductDescription";
 import { ProductAttributeSelector } from "./_components/ProductAttributeSelector";
-// import {Breadcrumb} from "./Breadcrumb"
-import { Loader } from "@/ui/atoms/Loader";
-// import { useBreadcrumb } from "@/ui/components/BreadcrumbProvider";
 import "react-toastify/dist/ReactToastify.css";
 import { formatMoney } from "@/lib/utils";
+import { Product, ProductVariant, TaxedMoney } from "@/gql/graphql";
+import Swipper from "./_components/Swipper";
 
 // Initialize the parser once
 const parser = edjsHTML();
 
-//  Define interfaces for the data returned from the API
-interface Money {
-	currency: string;
-	amount: number;
-}
-interface Media {
-	id: string;
-	alt: string;
-	url: string;
-}
-interface Thumbnail {
-	alt: string;
-	url: string;
-}
-interface Price {
-	gross: Money;
-}
-interface PriceRange {
-	start: Money | null;
-	stop: Money | null;
-}
-interface VariantPricing {
-	price: Price | null;
-}
-interface ProductPricing {
-	priceRange: PriceRange | null;
-}
 interface AttributeValue {
 	id: string;
 	name: string;
@@ -65,36 +33,8 @@ interface Attribute {
 	values: AttributeValue[];
 }
 
-interface ProductVariant {
-	id: string;
-	sku: string | null;
-	name: string;
-	media: Media[];
-	quantityAvailable: number;
-	pricing: VariantPricing | null;
-	attributes: Attribute[];
-	quantityLimitPerCustomer: number | null;
-}
-interface Category {
-	id: string;
-	name: string;
-	slug: string;
-}
-interface ProductDetails {
-	id: string;
-	slug: string;
-	name: string;
-	description: string | null;
-	category: Category;
-	defaultVariant: ProductVariant | null;
-	seoTitle: string | null;
-	seoDescription: string | null;
-	variants: ProductVariant[] | null;
-	thumbnail: Thumbnail | null;
-	pricing: ProductPricing | null;
-}
 interface GetProductDetailsQueryResult {
-	product: ProductDetails | null;
+	product: Product | null;
 }
 interface ProductDetailsState extends GetProductDetailsQueryResult {
 	seachKey: { [key: string]: string };
@@ -123,7 +63,7 @@ interface BlocksProps {
 
 const getSearchKey = (attributes: Attribute[]): string => {
 	return [...attributes]
-		.sort((a, b) => a.attribute.name.localeCompare(b.attribute.name))
+		.sort((a, b) => a.attribute.name.localeCompare(b.attribute.id))
 		.map((attr) => attr.values.map((v) => v.name).join(""))
 		.join("_");
 };
@@ -142,18 +82,11 @@ function getVariantsToAdd(
 }
 
 export default function Page({ params }: PageProps) {
-	// const { setBreadcrumb } = useBreadcrumb();
 	const { slug, channel } = params;
-	// const [productSlug, setProductSlug] = useState<string | null>(null);
-	// const [productName, setProductName] = useState<string | null>(null);
-	// const [catalogSlug, setCatalogSlug] = useState<string | null>(null);
-	// const [catalogName, setCatalogName] = useState<string | null>(null);
-
 	const [productData, setProductData] = useState<ProductDetailsState | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<Error | null>(null);
 	const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
-	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [opstions, setOptions] = useState<{ [key: string]: string }>({});
 	const [quantity, _setQuantity] = useState(1);
 	const [selectColorAttributeValueId, setSelectColorAttributeValueId] = useState<string | null>(null);
@@ -162,21 +95,19 @@ export default function Page({ params }: PageProps) {
 	const [sizeQuantities, setSizeQuantities] = useState<{ [size: string]: number }>({});
 	const [variantIds, setVariantIds] = useState<{ [size: string]: string }>({});
 	const [isCustomDesign, setIsCustomDesign] = useState<boolean>(true);
+
+	const imageAttributeValueId = useRef<Map<string, string>>(new Map());
+	const [imageSlider, setImageSlider] = useState<string[]>([""]);
+	const [defaultPricing, setDefaultPricing] = useState<TaxedMoney | null>(null);
 	const sizeValues = Array.from(
 		new Set(
 			productData?.product?.variants?.flatMap((variant) =>
 				variant.attributes
-					.filter((attr) => attr.attribute.name.toLowerCase() === "size")
+					.filter((attr) => attr.attribute?.name?.toLocaleUpperCase() === "SIZE")
 					.flatMap((attr) => attr.values.map((v) => v.name)),
 			),
 		),
 	);
-
-	const commpareFunc = (attr1: Attribute, attr2: Attribute) => {
-		const name1 = attr1.attribute.name.toLowerCase();
-		const name2 = attr2.attribute.name.toLowerCase();
-		return name1.localeCompare(name2);
-	};
 
 	const updateSizeQuantity = (sizeOfSelect: string, quantity: number) => {
 		// for (const [size, variantId] of Object.entries(variantIds)) {
@@ -203,12 +134,6 @@ export default function Page({ params }: PageProps) {
 				if (!data.product) {
 					notFound();
 				}
-				// const newData = data.product as ProductDetails;
-				// setCatalogSlug(newData.category.slug);
-				// setCatalogName(newData.category.name);
-				// setProductSlug(newData.slug);
-				// setProductName(newData.name);
-
 				if (data.product.variants != null) {
 					for (const item of data.product.variants) {
 						const variant = item as typeof item & { metadata?: { key: string; value: string }[] };
@@ -234,19 +159,23 @@ export default function Page({ params }: PageProps) {
 							attribute_standarn.push(attr);
 						}
 					}
-					// const value = getSearchKey(variant.attributes as Attribute[]);
 					const value = getSearchKey(attribute_standarn as Attribute[]);
 					searchKey[value] = variantId;
 				});
 
 				setProductData({
-					product: data.product as ProductDetails,
+					product: data.product as Product,
 					seachKey: searchKey,
 				});
 
 				let defaultVariant: ProductVariant | null = null;
 				if (data.product?.defaultVariant) {
 					defaultVariant = data.product.defaultVariant as ProductVariant;
+
+					const defaultImageSelected = defaultVariant.media?.map((media) => media.url) || [];
+					setImageSlider(defaultImageSelected);
+					const defaultPricing = defaultVariant.pricing?.price;
+					setDefaultPricing(defaultPricing as TaxedMoney);
 				} else if (data.product?.variants && data.product.variants.length > 0) {
 					defaultVariant = data.product.variants[0] as ProductVariant;
 				}
@@ -254,14 +183,12 @@ export default function Page({ params }: PageProps) {
 				if (defaultVariant?.attributes != null) {
 					for (const atr of defaultVariant?.attributes) {
 						if (atr.attribute.name == "SIZE") {
-							updateSizeQuantity(atr.values[0].name, 1);
+							updateSizeQuantity(atr.values[0].name as string, 1);
 							break;
 						}
 					}
 				}
 
-				//updateSizeQuantity(defaultVariant?.attributes[1].values[0].name, 1);
-				//updateSizeQuantity(defaultVariant.)
 				setSelectedVariantId(() => defaultVariant?.id || null);
 				setSelectColorAttributeValueId(defaultVariant?.attributes[0].values[0].id ?? null);
 				if (
@@ -274,8 +201,8 @@ export default function Page({ params }: PageProps) {
 				}
 
 				const optionValue: { [key: string]: string } = {};
-				defaultVariant?.attributes.sort(commpareFunc).map((attr) => {
-					const key = attr.attribute.name.toUpperCase();
+				defaultVariant?.attributes.sort().map((attr) => {
+					const key = attr?.attribute?.name?.toUpperCase() as string;
 					const value = attr.values.map((v) => v.name).join("");
 					optionValue[key] = value;
 					//atrrubuteValueIds.current.set(value, attr.values[0].id)
@@ -289,15 +216,6 @@ export default function Page({ params }: PageProps) {
 		};
 		void fetchData();
 	}, [channel, slug]);
-
-	// useEffect(() => {
-	// 	if (productName != null && productSlug != null && catalogSlug != null && catalogName != null) {
-	// 		setBreadcrumb(
-	// 			<Breadcrumb channel={channel} catalogName={catalogName} catalogSlug={catalogSlug} productName={productName} productSlug={productSlug} />
-	// 		);
-	// 	}
-	// 	return () => setBreadcrumb(null);
-	// }, [setBreadcrumb, channel, catalogName, catalogSlug, productName, productSlug]);
 
 	if (error) {
 		console.error("Error fetching product data:", error);
@@ -314,7 +232,6 @@ export default function Page({ params }: PageProps) {
 				block.data.text = removeText;
 			});
 
-			// console.log(parsedData);
 			return parser.parse(parsedData);
 		} catch (parseError) {
 			console.error("Error parsing product description:", parseError);
@@ -333,7 +250,6 @@ export default function Page({ params }: PageProps) {
 				block.data.text = removeText;
 			});
 
-			// console.log(parsedData);
 			return parser.parse(parsedData);
 		} catch (parseError) {
 			console.error("Error parsing product description:", parseError);
@@ -352,30 +268,6 @@ export default function Page({ params }: PageProps) {
 		return selectedVariant?.quantityLimitPerCustomer || 5000;
 	}, [selectedVariant]);
 
-	const currentImages: Media[] = useMemo(() => {
-		if (selectedVariant?.media && selectedVariant.media.length > 0) {
-			return selectedVariant.media;
-		}
-		if (productData?.product?.thumbnail) {
-			return [
-				{
-					id: `thumbnail-${productData?.product.id}`,
-					url: productData?.product.thumbnail.url,
-					alt: productData?.product.thumbnail.alt,
-				},
-			];
-		}
-		return [];
-	}, [selectedVariant, productData?.product?.thumbnail, productData?.product?.id]);
-
-	useEffect(() => {
-		setCurrentImageIndex(0);
-	}, [selectedVariantId]);
-
-	const handleThumbnailClick = (index: number) => {
-		setCurrentImageIndex(index);
-	};
-
 	const handleAttributeSelect = (attributeName: string, attributeValue: string) => {
 		setOptions((prev) => ({
 			...prev,
@@ -383,16 +275,21 @@ export default function Page({ params }: PageProps) {
 		}));
 	};
 
-	const extractAttributes = (variants: ProductVariant[]): { name: string; values: string[] }[] => {
+	const extractAttributes = (variants: ProductVariant[]) => {
 		const map = new Map<string, Set<string>>();
-
-		variants.forEach((variant) => {
+		variants.map((variant: ProductVariant) => {
 			variant.attributes.forEach(({ attribute, values }) => {
-				const key = attribute.name.toUpperCase();
-				if (!map.has(key)) map.set(key, new Set());
-				values.forEach((v) => map.get(key)?.add(v.name));
-				if (key == "COLOR") {
-					values.forEach((v) => attributeValueIds.current.set(v.name, v.id));
+				if (attribute.name) {
+					const key = attribute?.name.toUpperCase();
+					if (!map.has(key)) map.set(key, new Set());
+
+					if (values) {
+						values.map((v) => map.get(key)?.add(v.name as string));
+					}
+					if (key == "COLOR") {
+						values.map((v) => imageAttributeValueId.current.set(v.name as string, variant.id));
+						values.map((v) => attributeValueIds.current.set(v.name as string, v.id));
+					}
 				}
 			});
 		});
@@ -431,138 +328,43 @@ export default function Page({ params }: PageProps) {
 		});
 	}, [opstions, optionList, productData?.seachKey]);
 
-	// useEffect(() => {
-	// 	const shouldDisable = !Object.entries(sizeQuantities).some(
-	// 		([size, quantity]) => quantity > 0 && variantIds[size]
-	// 	);
-	// 	const button = document.getElementById("add-to-cart-button");
-	// 	if (button) {
-	// 		if (!shouldDisable) {
-	// 			button.setAttribute("disabled", "true");
-	// 		} else {
-	// 			button.removeAttribute("disabled");
-	// 		}
-	// 	}
-	// }, [sizeQuantities, variantIds]);
-
-	const handlePrev = () => {
-		if (currentImages.length === 0) return;
-		setCurrentImageIndex((prev) => (prev === 0 ? currentImages.length - 1 : prev - 1));
-	};
-
-	const handleNext = () => {
-		if (currentImages.length === 0) return;
-		setCurrentImageIndex((prev) => (prev === currentImages.length - 1 ? 0 : prev + 1));
-	};
-
-	if (loading) {
-		return (
-			<div className="flex min-h-screen items-center justify-center">
-				<Loader />
-			</div>
-		);
-	}
-
-	// console.log("Selected variant:", selectedVariant);
-	console.log("Product data:", selectedVariant?.pricing?.price?.gross.currency);
-
 	return (
 		<div className="flex min-h-screen flex-col items-center py-8 font-sans">
 			<ToastContainer position="top-center" />
 			<div className="relative flex w-[95%] max-w-7xl flex-col gap-8 rounded-lg p-4 md:flex-row md:p-8">
 				{/* Image Section */}
-				<div className="w-full md:w-1/2 lg:w-3/5">
-					<div className="group relative mx-auto aspect-square w-full max-w-2xl overflow-hidden rounded-lg bg-white">
-						{currentImages.length > 0 ? (
-							<div className="relative h-full transition-transform duration-300 hover:scale-110">
-								<Image
-									width={1440}
-									height={1440}
-									src={currentImages[currentImageIndex]?.url}
-									alt={currentImages[currentImageIndex]?.alt ?? productData?.product?.name}
-									className="h-full w-full object-contain"
-									quality={100}
-								/>
-								<div className="absolute inset-0 bg-black bg-opacity-0 transition-opacity duration-300 group-hover:bg-opacity-10" />
-							</div>
-						) : (
-							<div className="flex h-full w-full items-center justify-center rounded-lg bg-gray-100 text-gray-500">
-								No Image Available
-							</div>
-						)}
-						{currentImages.length > 1 && (
-							<>
-								<NavigationButton direction="prev" onClick={handlePrev} />
-								<NavigationButton direction="next" onClick={handleNext} />
-							</>
-						)}
-					</div>
-					{/* Enhanced Thumbnail Gallery */}
-					<div className="mt-6 flex flex-wrap justify-center gap-3">
-						<ThumbnailGallery
-							images={currentImages}
-							currentIndex={currentImageIndex}
-							onThumbnailClick={handleThumbnailClick}
-						/>
-					</div>
+				<div className="w-full md:w-1/2 lg:w-2/5">
+					<Swipper images={imageSlider} loading={loading} />
 					<div className="w-full">
 						<ProductDescription descriptionHtml={descriptionHtml} title="Descriptions" />
 					</div>
 				</div>
 
 				{/* Product Details Section */}
-				<div className="relative flex w-full flex-col rounded-lg px-4 md:w-1/2 md:px-6 lg:w-2/5">
+				<div className="relative flex w-full flex-col rounded-lg px-4 md:w-1/2 md:px-6 lg:w-3/5">
 					<div className="mb-24 flex-grow space-y-6">
-						<ProductTitle name={productData?.product?.name} />
-						<ProductDescription descriptionHtml={features} />
+						<ProductTitle name={productData?.product?.name} isLoading={loading} />
+						<ProductDescription descriptionHtml={features} isLoading={loading} />
 
 						<div className="mt-4">
 							<div className="flex flex-row items-center justify-between">
 								<span className="text-sm font-semibold">PRICE:</span>
 								<div className="ml-2 text-3xl font-bold text-slate-700">
-									{formatMoney(
-										selectedVariant?.pricing?.price?.gross.amount as number,
-										selectedVariant?.pricing?.price?.gross.currency as string,
+									{loading || !defaultPricing ? (
+										<div className="h-8 w-32 animate-pulse rounded bg-gray-200"></div>
+									) : (
+										formatMoney(
+											defaultPricing.gross.amount as number,
+											defaultPricing.gross.currency as string,
+										)
 									)}
 								</div>
 							</div>
 						</div>
-
 						{/* Interactive Product Options */}
 						<div className="space-y-4">
-							{/* {optionList.map((option) => (
-								<ProductAttributeSelector
-									key={option.name}
-									name={option.name}
-									values={option.values}
-									selectedValue={opstions[option.name]}
-									onSelect={(value) => {
-										//setSelectColorAttributeValueId(attributeValueIds.current.get(value)|| null);
-										const selectedId = attributeValueIds.current.get(value) || null;
-										setSelectColorAttributeValueId(selectedId);
-										if (selectedId != null && attributeValueIdMetadata.current.has(selectedId)) {
-											setIsCustomDesign(true);
-										} else {
-											setIsCustomDesign(false);
-										}
-
-										for (const option of optionList) {
-											if (option.name == "SIZE") {
-												//updateSizeQuantity(option.name, 0);
-												//console.log('aaaaaaaaaaaaaaaaaaaaaaa', option.values);
-												for (const i of option.values) {
-													updateSizeQuantity(i, 0);
-													//console.log(i);
-												}
-											}
-
-										}
-										updateSizeQuantity(value, 1);
-										return handleAttributeSelect(option.name, value);
-									}}
-								/>
-							))} */}
 							{optionList.map((option) => {
+								// console.log(option)
 								const isColorOrSize = option.name === "COLOR" || option.name === "SIZE";
 
 								if (!isColorOrSize) {
@@ -571,15 +373,29 @@ export default function Page({ params }: PageProps) {
 
 								return (
 									<ProductAttributeSelector
+										loading={loading}
 										key={option.name}
 										name={option.name}
 										values={option.values}
 										selectedValue={opstions[option.name]}
 										onSelect={(value) => {
 											// COLOR logic
+
+											console.log(value);
+
 											if (option.name === "COLOR") {
 												const selectedId = attributeValueIds.current.get(value) || null;
 												setSelectColorAttributeValueId(selectedId);
+
+												const currentColorAttributeValueId = imageAttributeValueId.current.get(value) || null;
+												const itemSelected =
+													productData?.product?.variants?.find(
+														(variant) => variant.id === currentColorAttributeValueId,
+													) || null;
+												const imageUrls = itemSelected?.media?.map((media) => media.url) || [];
+												setImageSlider(imageUrls);
+												const newPricing = itemSelected?.pricing?.price;
+												setDefaultPricing(newPricing as TaxedMoney);
 
 												if (selectedId != null && attributeValueIdMetadata.current.has(selectedId)) {
 													setIsCustomDesign(true);
@@ -593,8 +409,16 @@ export default function Page({ params }: PageProps) {
 												// for (const i of option.values) {
 												// 	updateSizeQuantity(i, 0);
 												// }
+
 												updateSizeQuantity(value, 1);
 											}
+
+											const items = getVariantsToAdd(variantIds, sizeQuantities);
+
+											const pricing = productData?.product?.variants?.find((val) => {
+												return val.id === items[0].variantId;
+											});
+											setDefaultPricing(pricing?.pricing?.price as TaxedMoney);
 
 											return handleAttributeSelect(option.name, value);
 										}}
@@ -654,7 +478,7 @@ export default function Page({ params }: PageProps) {
 													type="number"
 													disabled={!isSelected}
 													value={0}
-													onChange={() => updateSizeQuantity(size, 0)}
+													onChange={() => updateSizeQuantity(size as string, 0)}
 													max={quantityLimitPerCustomer}
 													min="0"
 													className="input-number w-[65px] appearance-none rounded-md border border-gray-200 px-2 py-1 text-center text-sm transition-all duration-200 focus:border-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FD8C6E] focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
@@ -692,16 +516,15 @@ export default function Page({ params }: PageProps) {
 								}
 								document.getElementById("add-to-cart-button")?.setAttribute("disabled", "true");
 								const items = getVariantsToAdd(variantIds, sizeQuantities);
+
+								console.log(items);
+
 								const result = await addCart(params, items);
 								if (result?.error == 2) {
 									result.messages.forEach((item) => {
 										toast.error(item.message);
 									});
 								} else if (result?.error == 1) {
-									// result.messages.forEach((item) => {
-									// 	//toast.error(item.message);
-									// 	window.location.replace(`/${params.channel}/login`);
-									// });
 									window.location.replace(`/${params.channel}/login`);
 								} else if (result?.error == 3) {
 									toast.error("Something went wrong. Please try again later");

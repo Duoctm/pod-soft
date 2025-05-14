@@ -22,7 +22,7 @@ class TShirtDesigner {
   private colorData: Map<string, object>;
   public stages: StageConfig[] = [];
 
-  private currentStage: StageConfig;
+  public currentStage: StageConfig;
   private textColor: string = '#000000';
   private fontWeight: string = 'normal';
   private fontStyle: string = 'normal';
@@ -36,7 +36,7 @@ class TShirtDesigner {
   private rotationAngleSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
   private fontSizeSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
 
-  private faceImage: Record<string, string> = {};
+  public faceImage: Record<string, string> = {};
 
   public currentlyUsingTool: boolean = false;
 
@@ -401,15 +401,6 @@ class TShirtDesigner {
   }
 
   public switchToStage(side: string) {
-    for (const item in this.data) {
-      if (this.stages[item] == this.currentStage) {
-        const domImage = document.getElementById(this.data[item].code + "Image") as HTMLImageElement;
-        this.exportStage(this.currentStage, domImage).then(base64 => {
-          this.faceImage[this.data[item].code] = base64;
-          console.log('-----------------------------', this.faceImage[this.data[item].code]);
-        });
-      }
-    }
     this.clearBorderNode(this.currentStage);
 
     if (this.currentStage.stage) {
@@ -1298,6 +1289,37 @@ class TShirtDesigner {
         const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
         imageDom.crossOrigin = 'anonymous';
 
+
+        if (this.stages[item] == this.currentStage) {
+          //if (this.currentStage.stage?.getChildren() > 0) {
+          const stageBase64 = await this.exportStage(this.stages[item], imageDom);
+          const file = this.base64ToFile(stageBase64, 'image.png');
+
+          const formData = new FormData();
+          formData.append('file', file);
+          const response = await uploadImageRaw(formData);
+          designOfStage.final_image_url = (response as { file?: { cloudinary_url?: string } }).file?.cloudinary_url ?? "";
+          // }
+          // else {
+          //   designOfStage.final_image_url = this.data[item].image;
+          // }
+        }
+        else {
+          if (this.faceImage[this.data[item].code] != "" && this.faceImage[this.data[item].code] != null) {
+            const stageBase64 = this.faceImage[this.data[item].code];
+            const file = this.base64ToFile(stageBase64, 'image.png');
+
+            const formData = new FormData();
+            formData.append('file', file);
+            const response = await uploadImageRaw(formData);
+            designOfStage.final_image_url = (response as { file?: { cloudinary_url?: string } }).file?.cloudinary_url ?? "";
+          }
+          else {
+            designOfStage.final_image_url = this.data[item].image;
+          }
+
+        }
+
         //const stageBase64 = await this.exportStage(this.stages[item], imageDom, this.data[item].code);
 
         //console.log('dang debug ne', stageBase64);
@@ -1327,7 +1349,6 @@ class TShirtDesigner {
 
     return JSON.stringify(designInfo, null, 2);
   }
-
   public exportStage = async (stageConfig: StageConfig, image: HTMLImageElement): Promise<string> => {
     if (!stageConfig.stage || !stageConfig.layer) return '';
     const tempCanvas = document.createElement('canvas');
@@ -1450,6 +1471,129 @@ class TShirtDesigner {
 
     return tempCanvas.toDataURL('image/png');
   };
+
+  // public exportStage = async (stageConfig: StageConfig, image: HTMLImageElement): Promise<string> => {
+  //   if (!stageConfig.stage || !stageConfig.layer) return '';
+  //   const tempCanvas = document.createElement('canvas');
+  //   const ctx = tempCanvas.getContext('2d');
+  //   if (!ctx) return '';
+
+  //   tempCanvas.width = image.naturalWidth;
+  //   tempCanvas.height = image.naturalHeight;
+
+  //   ctx.fillStyle = this.backgroundColor;
+  //   ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+  //   ctx.globalCompositeOperation = 'source-atop';
+  //   ctx.drawImage(image, 0, 0, tempCanvas.width, tempCanvas.height);
+  //   ctx.globalCompositeOperation = 'source-over';
+
+  //   const scaleX = image.naturalWidth / image.offsetWidth;
+  //   const scaleY = image.naturalHeight / image.offsetHeight;
+
+  //   const stageWidth = stageConfig.stage.width();
+  //   const stageHeight = stageConfig.stage.height();
+  //   const stageRect = stageConfig.stage.container().getBoundingClientRect();
+  //   const imageRect = image.getBoundingClientRect();
+
+  //   const offsetX = (stageRect.left - imageRect.left) * scaleX;
+  //   const offsetY = (stageRect.top - imageRect.top) * scaleY;
+
+  //   const stageCanvas = document.createElement('canvas');
+  //   // stageCanvas.width = 1000; 
+  //   // stageCanvas.height = 1000;
+  //   stageCanvas.width = stageWidth;
+  //   stageCanvas.height = stageHeight;
+  //   const stageCtx = stageCanvas.getContext('2d');
+  //   // if (stageCtx) {
+  //   //   stageCtx.fillStyle = 'green';
+  //   //   stageCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+  //   // }
+  //   if (!stageCtx) return '';
+
+  //   // const scale = Math.min(1000 / stageWidth, 1000 / stageHeight);
+  //   const scale = 1;
+  //   stageCtx.scale(scale, scale);
+
+  //   const nodes = Array.from(stageConfig.layer.children);
+  //   for (const node of nodes) {
+  //     if (node instanceof Konva.Transformer) continue;
+
+  //     if (node instanceof Konva.Text) {
+  //       stageCtx.save();
+
+  //       // Thiết lập font như Konva
+  //       stageCtx.font = `${node.fontStyle()} ${node.attrs.fontWeight || 'normal'} ${node.fontSize()}px ${node.fontFamily()}`;
+  //       stageCtx.fillStyle = node.fill() as string;
+  //       stageCtx.textAlign = node.align() as CanvasTextAlign;
+  //       stageCtx.textBaseline = 'middle'; // Cho căn theo chiều dọc giống Konva (giữa baseline)
+
+  //       const x = node.x();
+  //       const y = node.y();
+  //       //const offsetX = node.offsetX();
+  //       //const offsetY = node.offsetY();
+
+  //       stageCtx.translate(x, y);
+  //       stageCtx.rotate(node.rotation() * Math.PI / 180);
+  //       stageCtx.scale(node.scaleX(), node.scaleY());
+
+  //       // Vẽ chữ tại tâm
+  //       stageCtx.fillText(node.text(), 0, 0);
+
+  //       stageCtx.restore();
+
+  //     } else if (node instanceof Konva.Image) {
+  //       const nodeImage = node.image();
+  //       if (nodeImage) {
+  //         const x = node.x();
+  //         const y = node.y();
+  //         const rotation = node.rotation();
+  //         const scaleX = node.scaleX();
+  //         const scaleY = node.scaleY();
+  //         const width = node.width();
+  //         const height = node.height();
+  //         const offsetX = node.offsetX();
+  //         const offsetY = node.offsetY();
+
+  //         stageCtx.save();
+
+  //         // Dịch gốc tọa độ về vị trí của node
+  //         stageCtx.translate(x, y);
+
+  //         // Xoay theo góc node (đổi sang radian)
+  //         stageCtx.rotate((rotation * Math.PI) / 180);
+
+  //         // Scale node
+  //         stageCtx.scale(scaleX, scaleY);
+
+  //         // Vẽ ảnh, trừ offset để căn theo tâm
+  //         stageCtx.drawImage(
+  //           nodeImage,
+  //           -offsetX,
+  //           -offsetY,
+  //           width,
+  //           height
+  //         );
+
+  //         stageCtx.restore();
+  //       }
+
+  //     }
+  //   }
+
+  //   if (nodes.length > 0) {
+  //     const finalWidth = stageWidth * scale;
+  //     const finalHeight = stageHeight * scale;
+
+  //     ctx.drawImage(
+  //       stageCanvas,
+  //       0, 0, finalWidth, finalHeight,
+  //       offsetX, offsetY, stageWidth * scaleX, stageHeight * scaleY
+  //     );
+  //   }
+
+  //   return tempCanvas.toDataURL('image/png');
+  // };
 
   /*public async exportImages(type: 'image' | 'json' = 'image') {
     if (type === 'json') {

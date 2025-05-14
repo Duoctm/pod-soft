@@ -6,6 +6,7 @@ type ProductAttributeSelectorProps = {
 	values: string[];
 	selectedValue: string | null;
 	onSelect: (value: string) => void;
+	loading?: boolean;
 };
 
 export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> = ({
@@ -13,11 +14,28 @@ export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> =
 	values,
 	selectedValue,
 	onSelect,
+	loading = false,
 }) => {
 	const isColor = name.toUpperCase() === "COLOR";
 	if (isColor && values.length > 0) {
 		const newColor = [...values];
 		values = sortColorsByLuminance(newColor);
+	}
+
+	if (loading) {
+		return (
+			<div className="my-6 animate-pulse">
+				<div className="mb-2 h-5 w-20 bg-gray-200 rounded"></div>
+				<div className="flex flex-wrap gap-2">
+					{[...Array(4)].map((_, index) => (
+						<div
+							key={index}
+							className="h-9 w-9 bg-gray-200 rounded-md"
+						></div>
+					))}
+				</div>
+			</div>
+		);
 	}
 
 	return (
