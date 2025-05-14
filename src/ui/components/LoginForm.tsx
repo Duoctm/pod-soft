@@ -29,7 +29,7 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 			password: "",
 		},
 		validationSchema,
-		onSubmit: async (values, { setSubmitting, setErrors, resetForm }) => {
+		onSubmit: async (values, { setSubmitting, setErrors }) => {
 			setErrors({})
 			try {
 				const result = await signInAction(values);
