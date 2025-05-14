@@ -35,6 +35,7 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 
 				if (result.success) {
 					toast.success("Login successful!");
+					toast.dismiss();
 
 					if (params?.channel) {
 						await getCheckoutDetail(params?.channel);
@@ -43,6 +44,7 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 					router.push("/");
 				} else if (result.errors && result.errors.length > 0) {
 					toast.error("Email or password is incorrect");
+					toast.dismiss();
 					return
 				}
 			} catch (error) {
