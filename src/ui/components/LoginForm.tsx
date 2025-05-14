@@ -29,23 +29,23 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 			password: "",
 		},
 		validationSchema,
-		onSubmit: async (values, { setSubmitting }) => {
+		onSubmit: async (values, { setSubmitting, setErrors, resetForm }) => {
+			setErrors({})
 			try {
 				const result = await signInAction(values);
 
 				if (result.success) {
 					toast.success("Login successful!");
-					toast.dismiss();
 
 					if (params?.channel) {
 						await getCheckoutDetail(params?.channel);
 					}
 
 					router.push("/");
-				} else if (result.errors && result.errors.length > 0) {
+				} else {
 					toast.error("Email or password is incorrect");
-					toast.dismiss();
-					return
+					// resetForm();
+					formik.setFieldValue("password", "");
 				}
 			} catch (error) {
 				console.error("Login error:", error);
