@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { FilterSidebar } from "./_components/filter-sidebar";
+// import { FilterSidebar } from "./_components/filter-sidebar";
 import { ProductCard } from "./_components/ProductCard";
 import { useCategoryData } from "./hooks/useCategoryData";
 const CategoryPage = ({ params }: { params: { slug: string; channel: string } }) => {
-	const { attributes, category, setCategory } = useCategoryData(params.slug, params.channel);
+	const { attributes, category } = useCategoryData(params.slug, params.channel);
 
 	if (!attributes || !category) {
 		return (
@@ -24,13 +24,13 @@ const CategoryPage = ({ params }: { params: { slug: string; channel: string } })
 				{category?.name || "Collection Products"}
 			</h1>
 			<div className="relative flex items-start">
-				<FilterSidebar
+				{/* <FilterSidebar
 					channel={params.channel}
 					slug={params.slug}
 					category={category}
 					attributes={attributes}
 					setCategory={setCategory}
-				/>
+				/> */}
 				{category.products?.edges && category.products.edges.length > 0 ? (
 					<div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 						{category.products.edges.map((product) => (

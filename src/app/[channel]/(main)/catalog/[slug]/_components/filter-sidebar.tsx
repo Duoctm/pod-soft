@@ -1,74 +1,37 @@
 "use client";
 
 import React, { useState } from "react";
-import { Disclosure } from "@headlessui/react";
-import type { FilterSidebarProps } from "../types";
 import { FilterOption } from "./filter-options";
 
 const MAX_VISIBLE_OPTIONS = 6;
 
-export function FilterSidebar({ slug: slugCategory, attributes, setCategory, channel }: FilterSidebarProps) {
-	return (
-		<div className="sticky top-0 h-screen w-full max-w-[300px] flex-col overflow-auto">
-			<h2 className="mb-4 text-xl font-semibold capitalize text-gray-800 lg:text-5xl">{slugCategory}</h2>
-			<div>
-				{attributes.edges.map((attribute) => {
-					const { slug, name, choices } = attribute.node;
-					const options = choices?.edges || [];
-					return (
-						<Disclosure key={slug} defaultOpen>
-							<div className="mb-4">
-								<Disclosure.Button className="flex w-full items-center justify-between py-2 text-xl font-semibold capitalize text-gray-800">
-									<span>{name}</span>
-								</Disclosure.Button>
-								<Disclosure.Panel>
-									<div className="flex flex-wrap gap-2">
-										{options.slice(0, MAX_VISIBLE_OPTIONS)
-										.filter((choice) => !!choice.node.name)
-										.map((choice) => (
-											<FilterOption
-												channel={channel}
-												slug={slugCategory}
-												setCategory={setCategory}
-												key={choice.node.name}
-												attributeName={choice.node.name as unknown as string}
-												isColor={name === "COLOR"}
-												
-											/>
-										))}
-										{options.length > MAX_VISIBLE_OPTIONS && (
-											<ShowMoreOptions 
-												options={options}
-												isColor={name === "COLOR"} 
-												channel={channel}
-												slug={slugCategory}
-												setCategory={setCategory as any}
-											/>
-										)}
-									</div>
-								</Disclosure.Panel>
-							</div>
-						</Disclosure>
-					);
-				})}
-			</div>
-		</div>
-	);
-}
 
 interface ShowMoreOptionsProps {
 	options: Array<{
 		node: {
 			name?: string | null;
+			slug?: string | null;
 		};
 	}>;
 	isColor: boolean;
+	paramName: string;
 	channel: string;
 	slug: string;
+	after: string;
+ 
 	setCategory: (value: string) => void;
 }
 
-function ShowMoreOptions({ options, isColor, channel, slug, setCategory }: ShowMoreOptionsProps) {
+export function ShowMoreOptions({
+	options,
+	isColor,
+	channel,
+	slug,
+	setCategory,
+ 
+	paramName,
+	after,
+}: ShowMoreOptionsProps) {
 	const [showAll, setShowAll] = useState(false);
 
 	return (
@@ -78,12 +41,16 @@ function ShowMoreOptions({ options, isColor, channel, slug, setCategory }: ShowM
 					.slice(MAX_VISIBLE_OPTIONS)
 					.map((choice) => (
 						<FilterOption
+							setIsFilterOpen={()=>{}}
+							paramValue={choice.node.slug as string}
+							after={after}
+							paramName={paramName as string}
 							key={choice.node.name}
 							attributeName={choice.node.name as unknown as string}
 							isColor={isColor}
 							channel={channel}
 							slug={slug}
-							setCategory={setCategory}
+							setCategory={setCategory as any}
 						/>
 					))}
 			<button

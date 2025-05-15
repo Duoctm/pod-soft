@@ -2,6 +2,15 @@ import ProductElement from "./ProductElement";
 import { type ProductListItemFragment } from "@/gql/graphql";
 
 export const ProductList = ({ products }: { products: readonly ProductListItemFragment[] }) => {
+	if (!products || products.length === 0) {
+		return (
+			<div className="w-full text-center py-8">
+				<h2 className="text-xl font-medium text-gray-900">No products found</h2>
+				<p className="mt-2 text-sm text-gray-500">Try adjusting your search or filters.</p>
+			</div>
+		);
+	}
+
 	return (
 		<ul
 			role="list"

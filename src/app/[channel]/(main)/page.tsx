@@ -4,7 +4,6 @@ import OurProcess from "@/ui/components/home/OurProcess";
 import OurService from "@/ui/components/home/OurService";
 import Popular from "@/ui/components/home/Popular";
 import SpecialOffer from "@/ui/components/home/SpecialOffer";
-import Subscribe from "@/ui/components/home/Subscribe";
 
 export const metadata = {
 	title: "ZoomPrints",
@@ -16,13 +15,13 @@ export default async function Page({ params }: { params: { channel: string } }) 
 	return (
 		<section className="min-h-screen w-screen overflow-y-auto overflow-x-hidden  after:relative ">
 			<HeroPage />
+			<SpecialOffer />
 			<AboutUs />
 			<OurProcess />
 			<OurService />
-			<SpecialOffer />
 			{/* <Statistics/> */}
 			<Popular />
-			<Subscribe />
+			{/* <Subscribe /> */}
 		</section>
 	);
 }

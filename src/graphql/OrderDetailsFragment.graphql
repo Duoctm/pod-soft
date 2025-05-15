@@ -9,6 +9,10 @@ fragment OrderDetails on Order {
 		}
 	}
 	lines {
+		metadata {
+			key
+			value
+		}
 		variant {
 			id
 			name

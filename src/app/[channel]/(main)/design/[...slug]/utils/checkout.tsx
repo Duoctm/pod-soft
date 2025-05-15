@@ -6,6 +6,12 @@ import { updateCheckoutLineMetadata } from "./test"
 import { executeGraphQL } from "@/lib/graphql";
 import { CheckoutAddLineDocument, CurrentUserDocument } from "@/gql/graphql";
 import * as Checkout from "@/lib/checkout";
+import { getUserServer } from "@/checkout/hooks/useUserServer";
+
+export async function checkUser() {
+  const check = await getUserServer();
+  return check.status;
+}
 
 export async function addItem(
   params: { slug: string; channel: string },

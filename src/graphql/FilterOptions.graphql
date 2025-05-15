@@ -1,19 +1,15 @@
-query FilterOptions($channel: String!, $filter: ProductFilterInput) {
-	products(first: 10, channel: $channel, filter: $filter) {
+query FilterOptions($first: Int!, $after: String, $channel: String!, $filter: ProductFilterInput) {
+	products(first: $first, after: $after, channel: $channel, filter: $filter) {
+		totalCount
 		edges {
 			node {
 				...ProductListItem
-				attributes {
-					attribute {
-						slug
-						name
-					}
-					values {
-						name
-						slug
-					}
-				}
 			}
+			cursor
+		}
+		pageInfo {
+			endCursor
+			hasNextPage
 		}
 	}
 }

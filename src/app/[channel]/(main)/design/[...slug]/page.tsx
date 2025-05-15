@@ -20,21 +20,21 @@ function Page({ params }: PageProps) {
   const productId = decodeURIComponent(slug[1]);
   const colorId = decodeURIComponent(slug[2]);
 
-  const [colorDataMap, setColorDataMap] = useState<DesignInfo | null>(null);   
+  const [colorDataMap, setColorDataMap] = useState<DesignInfo | null>(null);
 
 
 
   useEffect(() => {
     if (type === 2) {
-      const json =  localStorage.getItem("designInfor");
+      const json = localStorage.getItem("designInfor");
       // setJsonDesign(json)
       // // console.log('component mount', json);
       // //const data = JSON.parse(json) as DesignInfo
       //     console.log(json)
-      
+
       if (json) {
         try {
-          const jsonObject = JSON.parse(json) as DesignInfo | null; 
+          const jsonObject = JSON.parse(json) as DesignInfo | null;
           // const map = new Map<string, object>(Object.entries(jsonObject));
           setColorDataMap(jsonObject)
 
@@ -47,17 +47,17 @@ function Page({ params }: PageProps) {
 
   return (
     <>
-    <DesignPage
-      productId={productId}
-      colorId={colorId}
-      designInfor={colorDataMap}
-      channel={params.channel}
-      typeDesign={type}
+      <DesignPage
+        productId={productId}
+        colorId={colorId}
+        designInfor={colorDataMap}
+        channel={params.channel}
+        typeDesign={type}
       />
 
-     
 
-      </>
+
+    </>
   );
 }
 

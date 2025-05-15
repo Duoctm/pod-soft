@@ -15,5 +15,5 @@ export const LinkWithChannel = ({
 
 	const encodedChannel = encodeURIComponent(channel ?? "");
 	const hrefWithChannel = `/${encodedChannel}${href}`;
-	return <Link {...props} href={hrefWithChannel}/>;
+	return <Link {...props} href={hrefWithChannel} />;
 };

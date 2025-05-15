@@ -16,6 +16,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { formatMoney } from "@/lib/utils";
 import { Product, ProductVariant, TaxedMoney } from "@/gql/graphql";
 import Swipper from "./_components/Swipper";
+import { Ruler } from "lucide-react";
+import SizeGuideModal from "./guide"
 
 // Initialize the parser once
 const parser = edjsHTML();
@@ -63,7 +65,7 @@ interface BlocksProps {
 
 const getSearchKey = (attributes: Attribute[]): string => {
 	return [...attributes]
-		.sort((a, b) => a.attribute.name.localeCompare(b.attribute.id))
+		.sort((a, b) => a.attribute.name.localeCompare(b.attribute.name))
 		.map((attr) => attr.values.map((v) => v.name).join(""))
 		.join("_");
 };
@@ -93,21 +95,23 @@ export default function Page({ params }: PageProps) {
 	const attributeValueIds = useRef<Map<string, string>>(new Map());
 	const attributeValueIdMetadata = useRef<Set<string>>(new Set());
 	const [sizeQuantities, setSizeQuantities] = useState<{ [size: string]: number }>({});
+	const [sizeQuantitie, setSizeQuantitie] = useState<number>(1);
 	const [variantIds, setVariantIds] = useState<{ [size: string]: string }>({});
 	const [isCustomDesign, setIsCustomDesign] = useState<boolean>(true);
 
 	const imageAttributeValueId = useRef<Map<string, string>>(new Map());
 	const [imageSlider, setImageSlider] = useState<string[]>([""]);
 	const [defaultPricing, setDefaultPricing] = useState<TaxedMoney | null>(null);
-	const sizeValues = Array.from(
-		new Set(
-			productData?.product?.variants?.flatMap((variant) =>
-				variant.attributes
-					.filter((attr) => attr.attribute?.name?.toLocaleUpperCase() === "SIZE")
-					.flatMap((attr) => attr.values.map((v) => v.name)),
-			),
-		),
-	);
+	const [showSizeGuide, setShowSizeGuide] = useState(false);
+	// const sizeValues = Array.from(
+	// 	new Set(
+	// 		productData?.product?.variants?.flatMap((variant) =>
+	// 			variant.attributes
+	// 				.filter((attr) => attr.attribute?.name?.toLocaleUpperCase() === "SIZE")
+	// 				.flatMap((attr) => attr.values.map((v) => v.name)),
+	// 		),
+	// 	),
+	// );
 
 	const updateSizeQuantity = (sizeOfSelect: string, quantity: number) => {
 		// for (const [size, variantId] of Object.entries(variantIds)) {
@@ -159,7 +163,8 @@ export default function Page({ params }: PageProps) {
 							attribute_standarn.push(attr);
 						}
 					}
-					const value = getSearchKey(attribute_standarn as Attribute[]);
+					const value = getSearchKey(attribute_standarn.reverse() as Attribute[]);
+					console.log(value);
 					searchKey[value] = variantId;
 				});
 
@@ -300,7 +305,8 @@ export default function Page({ params }: PageProps) {
 	};
 
 	const optionList = useMemo(() => {
-		return extractAttributes(productData?.product?.variants || []);
+		const attributes = extractAttributes(productData?.product?.variants || []);
+		return [...attributes];
 	}, [productData?.product?.variants]);
 
 	useEffect(() => {
@@ -328,8 +334,12 @@ export default function Page({ params }: PageProps) {
 		});
 	}, [opstions, optionList, productData?.seachKey]);
 
+
 	return (
+
 		<div className="flex min-h-screen flex-col items-center py-8 font-sans">
+			{/* <SizeGuideModal catalog={productData?.product?.category?.name  === "tee" || productData?.product?.category?.name === "fleece" ? productData?.product?.category?.name : "tee"} /> */}
+
 			<ToastContainer position="top-center" />
 			<div className="relative flex w-[95%] max-w-7xl flex-col gap-8 rounded-lg p-4 md:flex-row md:p-8">
 				{/* Image Section */}
@@ -344,14 +354,13 @@ export default function Page({ params }: PageProps) {
 				<div className="relative flex w-full flex-col rounded-lg px-4 md:w-1/2 md:px-6 lg:w-3/5">
 					<div className="mb-24 flex-grow space-y-6">
 						<ProductTitle name={productData?.product?.name} isLoading={loading} />
-						<ProductDescription descriptionHtml={features} isLoading={loading} />
+						{/* <ProductDescription descriptionHtml={features} isLoading={loading} /> */}
 
-						<div className="mt-4">
+						<div className="mt-4 w-full">
 							<div className="flex flex-row items-center justify-between">
-								<span className="text-sm font-semibold">PRICE:</span>
-								<div className="ml-2 text-3xl font-bold text-slate-700">
+								<div className="ml-2 text-2xl font-extrabold text-black sm:text-3xl md:text-4xl lg:text-5xl">
 									{loading || !defaultPricing ? (
-										<div className="h-8 w-32 animate-pulse rounded bg-gray-200"></div>
+										<div className="h-6 w-24 animate-pulse rounded bg-gray-200 sm:h-7 sm:w-28 md:h-8 md:w-32"></div>
 									) : (
 										formatMoney(
 											defaultPricing.gross.amount as number,
@@ -360,6 +369,23 @@ export default function Page({ params }: PageProps) {
 									)}
 								</div>
 							</div>
+						</div>
+						<div className="flex flex-1 items-center justify-end">
+							<button
+								className="flex items-center gap-x-2"
+								onClick={() => setShowSizeGuide(true)}
+							>
+								<Ruler />
+								<span className="underline">Size Guide</span>
+							</button>
+
+							{showSizeGuide && (
+								<SizeGuideModal
+									setShowSizeGuide={setShowSizeGuide}
+									catalog={productData?.product?.category?.slug === "tee" || productData?.product?.category?.slug === "fleece" ? productData?.product?.category?.slug : "tee"}
+
+								/>
+							)}
 						</div>
 						{/* Interactive Product Options */}
 						<div className="space-y-4">
@@ -380,8 +406,6 @@ export default function Page({ params }: PageProps) {
 										selectedValue={opstions[option.name]}
 										onSelect={(value) => {
 											// COLOR logic
-
-											console.log(value);
 
 											if (option.name === "COLOR") {
 												const selectedId = attributeValueIds.current.get(value) || null;
@@ -415,6 +439,8 @@ export default function Page({ params }: PageProps) {
 
 											const items = getVariantsToAdd(variantIds, sizeQuantities);
 
+											console.log(items);
+
 											const pricing = productData?.product?.variants?.find((val) => {
 												return val.id === items[0].variantId;
 											});
@@ -429,7 +455,7 @@ export default function Page({ params }: PageProps) {
 
 						{/* Size Selector with Quantity */}
 						<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-							{sizeValues.map((size, index) => {
+							{/* {sizeValues.map((size, index) => {
 								const isSelected = opstions["SIZE"] === size;
 								const baseClasses =
 									"relative flex  w-full flex-col items-center justify-evenly rounded-lg border p-1 transition-all duration-200 hover:shadow-sm";
@@ -489,84 +515,115 @@ export default function Page({ params }: PageProps) {
 										</div>
 									</div>
 								);
-							})}
+							})} */}
 						</div>
-					</div>
+						<div className="mt-8 flex flex-col items-center gap-6 md:flex-row">
+							<div className="flex items-center gap-4 rounded-lg bg-gray-50 p-3">
+								<label className="text-sm font-medium text-gray-700">Quantity:</label>
+								<input
+									type="number"
+									value={sizeQuantitie}
+									onChange={(e) => {
+										setSizeQuantitie(parseInt(e.target.value));
+									}}
+									max={quantityLimitPerCustomer}
+									min="1"
+									className="w-20 rounded-md border border-gray-300 bg-white px-3 py-2 text-center text-gray-900 shadow-sm 
+        transition duration-200 ease-in-out hover:border-[#8B3958]
+        focus:border-[#8B3958] focus:outline-none focus:ring-2
+        focus:ring-[#8B3958]"
+								/>
+							</div>
 
-					{/* Action Buttons */}
-					<div className="absolute bottom-4 right-4 flex items-center gap-4">
-						<button
-							id="add-to-cart-button"
-							className="transform rounded-lg bg-white px-6 py-3 text-base font-semibold text-black shadow-lg transition-all duration-300 hover:scale-105 hover:bg-slate-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#FD8C6E] focus:ring-offset-2 disabled:opacity-50"
-							// disabled={
-							// 	!Object.entries(sizeQuantities).some(([size, quantity]) => quantity > 0 && variantIds[size])
-							// }
-							onClick={async () => {
-								//document.getElementById("add-to-cart-button")?.setAttribute("disabled", "true");
-								let totalQuanlity = 0;
-
-								for (const size in sizeQuantities) {
-									const quantity = sizeQuantities[size];
-									totalQuanlity += quantity;
-								}
-								if (totalQuanlity == 0) {
-									toast.error("Total quantity of items must be greater than 0.");
-
-									return;
-								}
-								document.getElementById("add-to-cart-button")?.setAttribute("disabled", "true");
-								const items = getVariantsToAdd(variantIds, sizeQuantities);
-
-								console.log(items);
-
-								const result = await addCart(params, items);
-								if (result?.error == 2) {
-									result.messages.forEach((item) => {
-										toast.error(item.message);
-									});
-								} else if (result?.error == 1) {
-									window.location.replace(`/${params.channel}/login`);
-								} else if (result?.error == 3) {
-									toast.error("Something went wrong. Please try again later");
-								} else {
-									toast.success("Product added to cart");
-									const inputs = document.querySelectorAll<HTMLInputElement>(".input-number");
-
-									// for (const [size, variantId] of Object.entries(variantIds)) {
-									for (const [size] of Object.entries(variantIds)) {
-										updateSizeQuantity(size, 0);
-									}
-
-									inputs.forEach((input) => {
-										input.value = "0";
-									});
-								}
-								setTimeout(() => {
-									document.getElementById("add-to-cart-button")?.removeAttribute("disabled");
-								}, 300);
-							}}
-						>
-							Add to Cart
-						</button>
-						{isCustomDesign == true && (
-							<Link href={`/${channel}/design/1/${productData?.product?.id}/${selectColorAttributeValueId}`}>
+							<div className="flex flex-wrap gap-4">
 								<button
-									className="transform rounded-lg bg-slate-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-slate-800/90 focus:outline-none focus:ring-2 focus:ring-[#8C3859] focus:ring-offset-2 disabled:opacity-50"
-									onClick={() => {
-										localStorage.setItem(
-											"cart",
-											JSON.stringify({
-												params: params,
-												selectedVariantId: selectedVariantId,
-												quantity: quantity,
-											}),
-										);
+									id="add-to-cart-button"
+									className="flex min-w-[140px] transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
+        py-3 text-base font-semibold text-white shadow-lg 
+        transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
+        focus:outline-none focus:ring-2
+        focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+									onClick={async () => {
+										let totalQuanlity = 0;
+
+										for (const size in sizeQuantities) {
+											const quantity = sizeQuantities[size];
+											totalQuanlity += quantity;
+										}
+										if (totalQuanlity == 0) {
+											toast.error("Total quantity of items must be greater than 0.");
+											return;
+										}
+										document.getElementById("add-to-cart-button")?.setAttribute("disabled", "true");
+
+										const items = getVariantsToAdd(variantIds, sizeQuantities);
+										items.map((item) => (item.quantity = sizeQuantitie));
+										console.log(items);
+										const result = await addCart(params, items);
+										if (result?.error?.error == 2) {
+											result.error.messages.forEach((item) => {
+												toast.error(item.message);
+											});
+										} else if (result?.error?.error == 1) {
+											window.location.replace(`/${params.channel}/login`);
+										} else if (result?.error?.error == 3) {
+											toast.error("Something went wrong. Please try again later");
+										} else {
+											toast.success("Product added to cart");
+										}
+										setTimeout(() => {
+											document.getElementById("add-to-cart-button")?.removeAttribute("disabled");
+										}, 300);
 									}}
 								>
-									Customize Design
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										className="h-5 w-5"
+										viewBox="0 0 20 20"
+										fill="currentColor"
+									>
+										<path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3z" />
+									</svg>
+									Add to Cart
 								</button>
-							</Link>
-						)}
+
+								{isCustomDesign == true && (
+									<Link
+										href={`/${channel}/design/1/${productData?.product?.id}/${selectColorAttributeValueId}`}
+									>
+										<button
+											className="flex min-w-[140px] transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
+            py-3 text-base font-semibold text-white shadow-lg 
+            transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
+            focus:outline-none
+            focus:ring-2 focus:ring-[#8B3958] focus:ring-offset-2 disabled:opacity-50"
+											onClick={() => {
+												localStorage.setItem(
+													"cart",
+													JSON.stringify({
+														params: params,
+														selectedVariantId: selectedVariantId,
+														quantity: quantity,
+													}),
+												);
+											}}
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												className="h-5 w-5"
+												viewBox="0 0 20 20"
+												fill="currentColor"
+											>
+												<path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+											</svg>
+											Customize Design
+										</button>
+									</Link>
+								)}
+							</div>
+						</div>
+						{/* Action Buttons */}
+						<ProductDescription descriptionHtml={features} isLoading={loading} />
 					</div>
 				</div>
 			</div>

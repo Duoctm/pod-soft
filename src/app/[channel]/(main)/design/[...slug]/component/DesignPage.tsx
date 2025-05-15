@@ -8,9 +8,11 @@ import { toast, ToastContainer } from 'react-toastify';
 import TShirtDesigner from '../utils/design';
 import { type DesignInfo, type PrintFaceData } from '..//utils/type';
 import { getMetaDtataFromColorVariant, getVariantIdFromColorVariant } from '../utils/data'
-import { addItem, UpdateDesign } from '../utils/checkout'
+import { addItem, UpdateDesign, checkUser } from '../utils/checkout'
 import { fetchProductDetail } from '../utils/test'
 import 'react-toastify/dist/ReactToastify.css';
+import { Rnd } from "react-rnd";
+import Konva from 'konva';
 
 const StyledButton = styled(IconButton)(() => ({
   backgroundColor: 'transparent',
@@ -50,14 +52,36 @@ function DesignPage(param: DesignPageProps) {
   const [colorId, setColorId] = useState<string>(param.colorId);
   const [variantId, setVariantId] = useState<string | null>(null);
   const [showObjectMenu, setShowObjectMenu] = useState(false);
-  const [menuIndex, setMenuIndex] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6>(0);
+  const [menuIndex, setMenuIndex] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>(0);
   const [resizeWidth, setResizeWidth] = useState<number | undefined>(undefined);
   const [resizeHeight, setResizeHeight] = useState<number | undefined>(undefined);
   const [rotationAngle, setRotationAngle] = useState<number | undefined>(undefined);
   const [resizeFontSize, setFontSize] = useState<number | undefined>(undefined);
   const [variantIdOfUpdate, setVariantIdOfUpdate] = useState<string | null>(null);
   const [isSpinner, setSpinner] = useState<boolean>(false);
+  const [cropImageUrl, setCropImageUrl] = useState<string>('');
+  const cropContainerRef = useRef<HTMLDivElement>(null);
+  const [frameState, setFrameState] = useState({
+    width: 200,
+    height: 200,
+    top: 0,
+    left: 0,
+  });
+
   console.log(showObjectMenu);
+
+  // useEffect(() => {
+  //   const container = cropContainerRef.current;
+  //   if (container) {
+  //     const { clientWidth, clientHeight } = container;
+  //     setFrameState({
+  //       width: clientWidth,
+  //       height: clientHeight,
+  //       left: 0,
+  //       top: 0,
+  //     });
+  //   }
+  // }, [cropImageUrl]);
 
   const loadProductData = async (productId: string) => {
     let result: Map<string, object>;
@@ -78,6 +102,8 @@ function DesignPage(param: DesignPageProps) {
     const variant = getVariantIdFromColorVariant(colorId, colorData);
     setVariantId(variant);
   }
+
+
 
   useEffect(() => {
     const fetchColorData = async () => {
@@ -284,7 +310,6 @@ function DesignPage(param: DesignPageProps) {
     const target = e.currentTarget as HTMLDivElement;
     const view = target.getAttribute('data-view');
 
-    // Cập nhật active state
     document.querySelectorAll('.thumbnail').forEach(thumb => {
       thumb.classList.remove('active');
     });
@@ -309,6 +334,83 @@ function DesignPage(param: DesignPageProps) {
       }
     }
   }
+
+  const cropImage = () => {
+    if (!cropContainerRef.current) return;
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.src = cropImageUrl;
+    const leftScale = frameState.left / cropContainerRef.current?.clientWidth;
+    const topScale = frameState.top / cropContainerRef.current?.clientHeight;
+    const widthScale = frameState.width / cropContainerRef.current?.clientWidth;
+    const heightScale = frameState.height / cropContainerRef.current?.clientHeight;
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width * widthScale;
+      canvas.height = image.height * heightScale;
+      const ctx = canvas.getContext("2d");
+
+      // Vẽ vùng được chọn từ ảnh gốc vào canvas
+      if (ctx != null) {
+        ctx.drawImage(
+          image,
+          image.width * leftScale,
+          image.height * topScale,
+          image.width * widthScale,
+          image.height * heightScale,
+          0,
+          0,
+          image.width * widthScale,
+          image.height * heightScale,
+        );
+
+        const croppedDataUrl = canvas.toDataURL();
+        const imageNode = designerRef.current?.currentStage?.selectedNode;
+
+
+
+        if (!imageNode || !(imageNode instanceof Konva.Image)) {
+          console.warn('No image node selected or invalid node');
+          return;
+        }
+
+        const newImage = new Image();
+        newImage.src = croppedDataUrl;
+
+        newImage.onload = () => {
+          if (
+            designerRef.current &&
+            designerRef.current.currentStage &&
+            designerRef.current.currentStage.stage
+          ) {
+            const scale = (designerRef.current?.currentStage.stage?.width() / newImage.width);
+            imageNode.width(newImage.width * scale * 0.8);
+            imageNode.height(newImage.height * scale * 0.8);
+            imageNode.offsetX(imageNode.width() / 2);
+            imageNode.offsetY(imageNode.height() / 2);
+            imageNode.x(designerRef.current?.currentStage.stage?.width() / 2);
+            imageNode.y(designerRef.current?.currentStage.stage?.height() / 2);
+            designerRef.current?.showBorderNode(imageNode, designerRef.current?.currentStage);
+
+            // imageNode.x(((designerRef.current?.currentStage.stage?.width() - imageNode.width()) / 2) * scale);
+            // imageNode.y(((designerRef.current?.currentStage.stage?.height() - imageNode.height()) / 2) * scale);
+            imageNode.image(newImage);
+            imageNode.getLayer()?.draw();
+          }
+        };
+      }
+    };
+  };
+
+  useEffect(() => {
+    if (menuIndex === 3 && designerRef.current) {
+      designerRef.current.changeFontWeight('normal');
+      designerRef.current.changeFontStyle('normal');
+      designerRef.current.changeFontFamily('Montserrat');
+    }
+  }, [menuIndex]);
+
+
 
   return (
     <>
@@ -368,13 +470,14 @@ function DesignPage(param: DesignPageProps) {
 
           {/* Function Area */}
           <Paper
+            className='flex items-center justify-center'
             elevation={3}
             sx={{
               position: 'absolute',
               left: '100px',
               top: 0,
               bottom: 0,
-              width: '550px',
+              width: '450px',
               backgroundColor: '#ffffff',
               py: 2,
               px: 2,
@@ -383,7 +486,7 @@ function DesignPage(param: DesignPageProps) {
               gap: 2,
               borderRadius: '0',
               maxHeight: '100vh',
-              overflow: 'hidden'
+              overflow: 'hidden',
             }}
           >
             <Box sx={{
@@ -686,6 +789,45 @@ function DesignPage(param: DesignPageProps) {
                             Delete
                           </Typography>
                         </Box>
+
+                        {/* Crop */}
+                        <Box
+                          sx={{
+                            flex: 1,
+                            p: 1.5,
+                            bgcolor: 'white',
+                            borderRadius: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 1,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              bgcolor: '#e8e8e8',
+                              transform: 'translateY(-2px)'
+                            }
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (designerRef?.current?.currentStage.selectedNode == undefined) {
+                              return;
+                            }
+                            const newUrl = designerRef.current?.originImageOfStage[designerRef.current.currentStage.selectedNode?.id()];
+                            if (newUrl && newUrl !== cropImageUrl) {
+                              setCropImageUrl(newUrl);
+                            }
+
+
+                            setMenuIndex(7);
+                          }}
+                        >
+                          <i className="fas fa-crop text-xl" style={{ color: '#282c34' }}></i>
+                          <Typography variant="caption" sx={{ color: '#282c34' }}>
+                            Crop
+                          </Typography>
+                        </Box>
+
                       </Box>
 
                       {/* Advanced Controls */}
@@ -718,6 +860,9 @@ function DesignPage(param: DesignPageProps) {
                               <input
                                 type="number"
                                 value={resizeWidth || ''}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                }}
                                 onChange={(e) => handleResizeWidthChange(e.target.value ? Number(e.target.value) : undefined)}
                                 className="w-20 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Width"
@@ -752,6 +897,9 @@ function DesignPage(param: DesignPageProps) {
                               <input
                                 type="number"
                                 value={resizeHeight || ''}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                }}
                                 onChange={(e) => handleResizeHeightChange(e.target.value ? Number(e.target.value) : undefined)}
                                 className="w-20 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Height"
@@ -795,11 +943,13 @@ function DesignPage(param: DesignPageProps) {
                             </Typography>
                             <input
                               type="number"
-                              value={rotationAngle || ''}
+                              value={Math.round(rotationAngle || 0)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
                               onChange={(e) => handleRotationChange(e.target.value ? Number(e.target.value) : undefined)}
                               className="w-20 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="Angle"
-                              min="0"
                               max="360"
                             />
                             <Typography variant="caption" sx={{ color: '#666666' }}>
@@ -988,7 +1138,7 @@ function DesignPage(param: DesignPageProps) {
                                   const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
                                   if (textInput) {
                                     textInput.style.fontWeight = e.target.checked ? 'bold' : 'normal';
-                                    designerRef.current.changeFontStyle(e.target.checked ? 'bold' : 'normal');
+                                    designerRef.current.changeFontWeight(e.target.checked ? 'bold' : 'normal');
                                   }
                                 }
                               }}
@@ -1174,7 +1324,10 @@ function DesignPage(param: DesignPageProps) {
                               </Typography>
                               <input
                                 type="number"
-                                value={resizeWidth || ''}
+                                value={resizeFontSize || ''}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                }}
                                 onChange={(e) => handleFontSizeChange(e.target.value ? Number(e.target.value) : undefined)}
                                 className="w-20 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Width"
@@ -1218,11 +1371,13 @@ function DesignPage(param: DesignPageProps) {
                             </Typography>
                             <input
                               type="number"
-                              value={rotationAngle || ''}
+                              value={Math.round(rotationAngle || 0)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
                               onChange={(e) => handleRotationChange(e.target.value ? Number(e.target.value) : undefined)}
                               className="w-20 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="Angle"
-                              min="0"
                               max="360"
                             />
                             <Typography variant="caption" sx={{ color: '#666666' }}>
@@ -1353,9 +1508,170 @@ function DesignPage(param: DesignPageProps) {
                         </Box>
                       </Box>
                     </Box>
+
+
                   )}
+
+                </Box>
+
+
+
+              )}
+
+              {(menuIndex === 7) && (
+                <Box>
+                  <Typography variant="h6" sx={{ color: '#282c34', mb: 2 }}>
+                    Preview Image
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      display: 'inline-block',
+                      mb: 3,
+                      bgcolor: '#f5f5f5',
+                      border: '2px dashed #ccc',
+                      maxWidth: 500,       // Giới hạn chiều rộng tối đa
+                      maxHeight: 300,      // Giới hạn chiều cao tối đa
+                      width: 'fit-content',
+                      height: 'fit-content',
+                      overflow: 'hidden',
+                      mx: 'auto', // căn giữa ngang
+                    }}
+                    ref={cropContainerRef}
+                  >
+                    {cropImageUrl ? (
+                      <Box sx={{
+                        position: 'relative',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        maxWidth: 500,
+                        maxHeight: 300
+                      }}>
+                        <img
+                          src={cropImageUrl}
+                          style={{
+                            maxWidth: 500,
+                            maxHeight: 300,
+                            height: 'auto',
+                            width: 'auto',
+                            objectFit: 'contain',
+                            display: 'block',
+                          }}
+                        />
+
+                        <Rnd
+                          size={{ width: frameState.width, height: frameState.height }}
+                          position={{ x: frameState.left, y: frameState.top }}
+                          bounds="parent"
+                          onDrag={(e, d) => {
+
+                            console.log(e, d);
+                            if (designerRef.current == null) {
+                              return;
+                            }
+                            designerRef.current.currentlyUsingTool = true;
+                            const newState = {
+                              ...frameState,
+                              left: d.x,
+                              top: d.y,
+                            };
+                            setFrameState(newState);
+                            setTimeout(() => {
+                              if (designerRef.current == null) {
+                                return;
+                              }
+                              designerRef.current.currentlyUsingTool = false;
+                            }, 100);
+                          }}
+
+
+                          onDragStop={(e, d) => {
+                            if (designerRef.current == null) {
+                              return;
+                            }
+                            designerRef.current.currentlyUsingTool = true;
+                            //e.stopPropagation();
+
+                            console.log(e, d);
+                            setTimeout(() => {
+                              if (designerRef.current == null) {
+                                return;
+                              }
+                              designerRef.current.currentlyUsingTool = false;
+                            }, 100);
+                          }}
+
+
+                          onResizeStop={(e, __, ref, ___, position) => {
+                            if (designerRef.current == null) {
+                              return;
+                            }
+                            designerRef.current.currentlyUsingTool = true;
+                            console.log(e);
+
+                            const newState = {
+                              width: parseInt(ref.style.width),
+                              height: parseInt(ref.style.height),
+                              top: position.y,
+                              left: position.x,
+                            };
+                            setFrameState(newState);
+                            setTimeout(() => {
+                              if (designerRef.current == null) {
+                                return;
+                              }
+                              designerRef.current.currentlyUsingTool = false;
+                            }, 1000);
+                          }}
+
+                          style={{
+                            border: "2px dashed black",
+                            backgroundColor: "rgba(0, 0, 0, 0.1)",
+                            zIndex: 10,
+                          }}
+                        />
+                      </Box>
+                    ) : (
+                      <Box
+                        sx={{
+                          width: 300,
+                          height: 300,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Typography color="text.secondary">No image selected</Typography>
+                      </Box>
+                    )}
+                  </Box>
+
+
+                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <Button
+                      variant="contained"
+                      sx={{
+                        backgroundColor: '#302c34',
+                        color: '#fff',
+                        '&:hover': {
+                          backgroundColor: '#1f1c20',
+                        },
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+
+
+                        cropImage();
+                      }}
+                    >
+                      Submit
+                    </Button>
+                  </Box>
                 </Box>
               )}
+
+
             </Box>
           </Paper>
 
@@ -1480,6 +1796,11 @@ function DesignPage(param: DesignPageProps) {
                   textTransform: 'none',
                 }}
                 onClick={async () => {
+                  const isLogin = await checkUser();
+                  console.log('aaaaaaaaaaaaaaaaaaaaaa', isLogin);
+                  if (isLogin == false) {
+                    window.location.replace(`/${param.channel}/login`);
+                  }
                   setSpinner(true);
                   const json = localStorage.getItem("cart");
 
@@ -1503,7 +1824,6 @@ function DesignPage(param: DesignPageProps) {
                       }
                       if (hasObjectInStage == true) {
                         metaData = await designerRef.current.exportDesignToJson();
-                        console.log('final', metaData);
                       }
                       var result = false;
                       if (param.typeDesign == 1) {

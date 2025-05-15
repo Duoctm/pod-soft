@@ -17,9 +17,14 @@ export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> =
 	loading = false,
 }) => {
 	const isColor = name.toUpperCase() === "COLOR";
+	const sortedValues = [...values];
+
+	// Sort non-color values first, then color values
 	if (isColor && values.length > 0) {
-		const newColor = [...values];
-		values = sortColorsByLuminance(newColor);
+		const nonColorValues = sortedValues.filter(value => !value.match(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/));
+		const colorValues = sortedValues.filter(value => value.match(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/));
+		const sortedColorValues = sortColorsByLuminance(colorValues);
+		sortedValues.splice(0, sortedValues.length, ...nonColorValues, ...sortedColorValues);
 	}
 
 	if (loading) {
@@ -42,7 +47,7 @@ export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> =
 		<div className="my-6">
 			<h2 className="mb-2 text-sm font-semibold">{name}</h2>
 			<div className="flex flex-wrap gap-2">
-				{values.map((value) => {
+				{sortedValues.map((value) => {
 					const isSelected = selectedValue === value;
 
 					const colorMatch = value.match(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Eye, EyeOff } from "lucide-react";
@@ -14,6 +14,9 @@ import {
 } from "./actions/update-profile";
 import { type CustomUserQuery } from "@/gql/graphql";
 import "react-toastify/dist/ReactToastify.css";
+import AddDocumentModal from './AddDocumentModal';
+import { uploadPdf } from "./UploadPdf";
+//import { updateUserMetadata } from "./UpdateMetadata";
 type UserType = CustomUserQuery["me"];
 type Address = NonNullable<CustomUserQuery["me"]>["addresses"][number];
 
@@ -22,6 +25,7 @@ const ProfilePage = () => {
 	const [address, setAddress] = React.useState<Address | null>(null);
 	const [showNewPassword, setShowNewPassword] = React.useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+
 	useEffect(() => {
 		const fetchUser = async () => {
 			const user = await currentUser();
@@ -118,6 +122,36 @@ const ProfilePage = () => {
 		},
 	});
 
+
+	const [documents, setDocuments] = useState<{ name: string; date: string; file: string }[]>([]);
+
+	const [showModal, setShowModal] = useState(false);
+
+	const handleAddDocument = async (newDoc: any, formData: FormData) => {
+		const result = await uploadPdf(formData);
+		console.log('ke qua upload', result);
+
+		//const userId = "VXNlcjozMDE=";
+		const url = result?.file.cloudinary_url;
+		newDoc.file = url;
+		// const doc: any = {
+		// 	name: newDoc.name,
+		// 	date: newDoc.date,
+		// 	url: url
+		// }
+		// const metadata = [{
+		// 	key: "documents",
+		// 	value: {
+		// 		data: {
+		// 			documents: [doc]
+		// 		}
+		// 	}
+		// }]
+		//var res = await updateUserMetadata(userId, metadata);
+
+		setDocuments((prev) => [...prev, newDoc]);
+	};
+
 	return (
 		<div className="mx-auto flex min-h-screen flex-1 flex-col items-center px-4  py-8">
 			<ToastContainer />
@@ -133,9 +167,8 @@ const ProfilePage = () => {
 							value={companyFormik.values.companyName}
 							onChange={companyFormik.handleChange}
 							onBlur={companyFormik.handleBlur}
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
-								companyFormik.touched.companyName && companyFormik.errors.companyName ? "border-red-500" : ""
-							}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${companyFormik.touched.companyName && companyFormik.errors.companyName ? "border-red-500" : ""
+								}`}
 						/>
 						{companyFormik.touched.companyName && companyFormik.errors.companyName && (
 							<p className="mt-1 text-sm text-red-600">{companyFormik.errors.companyName}</p>
@@ -150,11 +183,10 @@ const ProfilePage = () => {
 							value={companyFormik.values.country.country}
 							onChange={companyFormik.handleChange}
 							onBlur={companyFormik.handleBlur}
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
-								companyFormik.touched.country?.country && companyFormik.errors.country?.country
-									? "border-red-500"
-									: ""
-							}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${companyFormik.touched.country?.country && companyFormik.errors.country?.country
+								? "border-red-500"
+								: ""
+								}`}
 						/>
 						{companyFormik.touched.country?.country && companyFormik.errors.country?.country && (
 							<p className="mt-1 text-sm text-red-600">{companyFormik.errors.country.country}</p>
@@ -169,9 +201,8 @@ const ProfilePage = () => {
 							value={companyFormik.values.city}
 							onChange={companyFormik.handleChange}
 							onBlur={companyFormik.handleBlur}
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
-								companyFormik.touched.city && companyFormik.errors.city ? "border-red-500" : ""
-							}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${companyFormik.touched.city && companyFormik.errors.city ? "border-red-500" : ""
+								}`}
 						/>
 						{companyFormik.touched.city && companyFormik.errors.city && (
 							<p className="mt-1 text-sm text-red-600">{companyFormik.errors.city}</p>
@@ -186,11 +217,10 @@ const ProfilePage = () => {
 							value={companyFormik.values.streetAddress1}
 							onChange={companyFormik.handleChange}
 							onBlur={companyFormik.handleBlur}
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
-								companyFormik.touched.streetAddress1 && companyFormik.errors.streetAddress1
-									? "border-red-500"
-									: ""
-							}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${companyFormik.touched.streetAddress1 && companyFormik.errors.streetAddress1
+								? "border-red-500"
+								: ""
+								}`}
 						/>
 						{companyFormik.touched.streetAddress1 && companyFormik.errors.streetAddress1 && (
 							<p className="mt-1 text-sm text-red-600">{companyFormik.errors.streetAddress1}</p>
@@ -200,9 +230,8 @@ const ProfilePage = () => {
 						<button
 							type="submit"
 							disabled={!companyFormik.dirty || companyFormik.isSubmitting}
-							className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${
-								!companyFormik.dirty || companyFormik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
-							}`}
+							className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${!companyFormik.dirty || companyFormik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
+								}`}
 						>
 							{companyFormik.isSubmitting ? (
 								<span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
@@ -242,9 +271,8 @@ const ProfilePage = () => {
 							value={userFormik.values.firstName}
 							onChange={userFormik.handleChange}
 							onBlur={userFormik.handleBlur}
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
-								userFormik.touched.firstName && userFormik.errors.firstName ? "border-red-500" : ""
-							}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${userFormik.touched.firstName && userFormik.errors.firstName ? "border-red-500" : ""
+								}`}
 						/>
 						{userFormik.touched.firstName && userFormik.errors.firstName && (
 							<p className="mt-1 text-sm text-red-600">{userFormik.errors.firstName}</p>
@@ -258,9 +286,8 @@ const ProfilePage = () => {
 							value={userFormik.values.lastName}
 							onChange={userFormik.handleChange}
 							onBlur={userFormik.handleBlur}
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
-								userFormik.touched.lastName && userFormik.errors.lastName ? "border-red-500" : ""
-							}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${userFormik.touched.lastName && userFormik.errors.lastName ? "border-red-500" : ""
+								}`}
 						/>
 						{userFormik.touched.lastName && userFormik.errors.lastName && (
 							<p className="mt-1 text-sm text-red-600">{userFormik.errors.lastName}</p>
@@ -270,9 +297,8 @@ const ProfilePage = () => {
 						<button
 							type="submit"
 							disabled={!userFormik.dirty || userFormik.isSubmitting}
-							className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${
-								!userFormik.dirty || userFormik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
-							}`}
+							className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${!userFormik.dirty || userFormik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
+								}`}
 						>
 							{userFormik.isSubmitting ? (
 								<span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
@@ -303,9 +329,8 @@ const ProfilePage = () => {
 							onChange={formik.handleChange}
 							onBlur={formik.handleBlur}
 							required
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
-								formik.touched.oldPassword && formik.errors.oldPassword ? "border-red-500" : ""
-							}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${formik.touched.oldPassword && formik.errors.oldPassword ? "border-red-500" : ""
+								}`}
 						/>
 						{formik.touched.oldPassword && formik.errors.oldPassword && (
 							<p className="mt-1 text-sm text-red-600">{formik.errors.oldPassword}</p>
@@ -320,9 +345,8 @@ const ProfilePage = () => {
 							onChange={formik.handleChange}
 							onBlur={formik.handleBlur}
 							required
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 pr-10 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
-								formik.touched.newPassword && formik.errors.newPassword ? "border-red-500" : ""
-							}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 pr-10 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${formik.touched.newPassword && formik.errors.newPassword ? "border-red-500" : ""
+								}`}
 						/>
 						<button
 							type="button"
@@ -345,9 +369,8 @@ const ProfilePage = () => {
 							onChange={formik.handleChange}
 							onBlur={formik.handleBlur}
 							required
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 pr-10 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
-								formik.touched.confirmPassword && formik.errors.confirmPassword ? "border-red-500" : ""
-							}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 pr-10 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${formik.touched.confirmPassword && formik.errors.confirmPassword ? "border-red-500" : ""
+								}`}
 						/>
 						<button
 							type="button"
@@ -361,13 +384,12 @@ const ProfilePage = () => {
 							<p className="mt-1 text-sm text-red-600">{formik.errors.confirmPassword}</p>
 						)}
 					</div>
-                    <div className="flex gap-2 pt-2">
+					<div className="flex gap-2 pt-2">
 						<button
 							type="submit"
 							disabled={!formik.dirty || formik.isSubmitting}
-							className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${
-								!formik.dirty || formik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
-							}`}
+							className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${!formik.dirty || formik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
+								}`}
 						>
 							{formik.isSubmitting ? (
 								<>
@@ -388,6 +410,54 @@ const ProfilePage = () => {
 						</button>
 					</div>
 				</form>
+			</div>
+			<div className="w-full rounded-lg bg-white p-6 shadow-md mt-10">
+				<h2 className="mb-4 text-2xl font-semibold text-gray-800">Documents</h2>
+				<div className="mb-6 h-px bg-gray-200"></div>
+				<div className="space-y-4">
+					<div className="flex justify-between items-center">
+						<h3 className="text-lg font-medium text-gray-700">Uploaded Documents</h3>
+						<button
+							className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+							onClick={() => setShowModal(true)}
+						>
+							Add Document
+						</button>
+					</div>
+
+					{documents.length === 0 ? (
+						<p className="text-gray-500 italic">No documents saved yet.</p>
+					) : (
+						<div className="space-y-2">
+							{documents.map((doc, index) => (
+								<div
+									key={index}
+									className="flex justify-between items-center p-3 border border-gray-200 rounded"
+								>
+									<div>
+										<p className="font-medium text-gray-800">{doc.name}</p>
+										<p className="text-sm text-gray-500">Created: {doc.date}</p>
+									</div>
+									<a
+										href={doc.file}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="text-blue-600 hover:underline text-sm"
+									>
+										View
+									</a>
+								</div>
+							))}
+						</div>
+					)}
+				</div>
+
+				{showModal && (
+					<AddDocumentModal
+						onClose={() => setShowModal(false)}
+						onSubmit={handleAddDocument}
+					/>
+				)}
 			</div>
 		</div>
 	);

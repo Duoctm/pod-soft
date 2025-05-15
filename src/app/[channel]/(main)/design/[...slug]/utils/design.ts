@@ -30,13 +30,14 @@ class TShirtDesigner {
   private backgroundColor: string = '#ffffff';
   private clipboard: Konva.Node | null = null;
   public onSelectObject: ((hasSelection: boolean) => void) | null = null;
-  private menuIndexSetter: React.Dispatch<React.SetStateAction<0 | 1 | 2 | 3 | 4 | 5 | 6>>;
+  private menuIndexSetter: React.Dispatch<React.SetStateAction<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>>;
   private resizeWidthSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
   private resizeHeightSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
   private rotationAngleSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
   private fontSizeSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
 
   public faceImage: Record<string, string> = {};
+  public originImageOfStage: Record<string, string> = {};
 
   public currentlyUsingTool: boolean = false;
 
@@ -51,7 +52,7 @@ class TShirtDesigner {
     }
   }
 
-  private setMenuWithNodeAndStage(node: Konva.Node, stage: StageConfig, menuIndex: 0 | 1 | 2 | 3 | 4 | 5 | 6) {
+  private setMenuWithNodeAndStage(node: Konva.Node, stage: StageConfig, menuIndex: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7) {
     this.showBorderNode(node, stage);
     this.menuIndexSetter(menuIndex);
   }
@@ -147,24 +148,15 @@ class TShirtDesigner {
 
 
         // Nếu là text node, điều chỉnh kích thước font
-        if (node instanceof Konva.Text) {
-          // const nodeWidth = node.width();
-          // const nodeHeight = node.height();
+        /*if (node instanceof Konva.Text) {
           node.width(node.width() * scaleX);
           node.height(node.height() * scaleY);
           node.fontSize(node.fontSize() * scaleX)
           node.offsetX(node.width() / 2);
           node.offsetY(node.height() / 2);
-
-          //   if (typeof nodeWidth === 'number') {
-          //     node.scaleX(nodeWidth * scaleX);
-          //     node.scaleY(nodeHeight * scaleY);
-          //     node.offsetX(node.width()/2);
-          //     node.offsetY(node.height()/2);
-          //  }
         }
         // Nếu là image node, điều chỉnh kích thước
-        else if (node instanceof Konva.Image) {
+        else*/ if (node instanceof Konva.Image) {
           node.width(node.width() * scaleX);
           node.height(node.height() * scaleY);
           node.offsetX(node.width() / 2);
@@ -209,7 +201,7 @@ class TShirtDesigner {
   };
 
   constructor(data: PrintFaceData[], productId: string, variantId: string | null, colorValue: string, colorData: Map<string, object>,
-    menuIndexSetter: React.Dispatch<React.SetStateAction<0 | 1 | 2 | 3 | 4 | 5 | 6>>,
+    menuIndexSetter: React.Dispatch<React.SetStateAction<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>>,
     resizeWidthSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
     resizeHeightSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
     rotationAngleSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
@@ -462,7 +454,11 @@ class TShirtDesigner {
   public copySelectedNode(usingTool: boolean = false) {
     const node = this.currentStage.selectedNode as Konva.Node;
     const stageConfig = this.currentStage;
+    if (node == null) {
+      return;
+    }
     const clone = node.clone();
+
     if ((node.x() + node.offsetX() + 10) < stageConfig.stage!.width()) {
       clone.x(node.x() + 10);
     }
@@ -575,6 +571,7 @@ class TShirtDesigner {
       stageConfig.borderDiv!.style.display = 'block';
 
       const onMouseMove = (moveEvent: MouseEvent) => {
+
         const deltaX = moveEvent.clientX - startX;
         const deltaY = moveEvent.clientY - startY;
 
@@ -582,14 +579,7 @@ class TShirtDesigner {
         clone.width(initialWidth + deltaX);
         clone.height(initialHeight + deltaY);
         const cloneBounds = clone.getClientRect();
-        if (node instanceof Konva.Image) {
-          if (cloneBounds.x >= stage.x() && cloneBounds.x + cloneBounds.width <= stage.width() && cloneBounds.y >= stage.y() && cloneBounds.y + cloneBounds.height <= stage.height()) {
-            node.width(initialWidth + deltaX);
-            node.height(initialHeight + deltaY);
-            this.getWHROfNode();
-          }
-        }
-        else if (node instanceof Konva.Text) {
+        if (node instanceof Konva.Text) {
           if (cloneBounds.x >= stage.x() && cloneBounds.x + cloneBounds.width <= stage.width() && cloneBounds.y >= stage.y() && cloneBounds.y + cloneBounds.height <= stage.height()) {
             if (startX < moveEvent.clientX) {
               node.fontSize(node.fontSize() + 1);
@@ -598,8 +588,17 @@ class TShirtDesigner {
               node.fontSize(node.fontSize() - 1);
             }
             this.getRSOfNode();
+            updateBorderDiv();
           }
         }
+        if (node instanceof Konva.Image) {
+          if (cloneBounds.x >= stage.x() && cloneBounds.x + cloneBounds.width <= stage.width() && cloneBounds.y >= stage.y() && cloneBounds.y + cloneBounds.height <= stage.height()) {
+            node.width(initialWidth + deltaX);
+            node.height(initialHeight + deltaY);
+            this.getWHROfNode();
+          }
+        }
+
 
         node.offsetX(node.width() / 2);
         node.offsetY(node.height() / 2);
@@ -637,6 +636,40 @@ class TShirtDesigner {
       // stageConfig.layer!.draw();
     });
 
+    const updateBorderDiv = () => {
+      const bounds = node.getClientRect();
+      const rotation = node.rotation();
+      const stageRect = stageContainer.getBoundingClientRect();
+
+      rectDiv.className = 'border-node';
+      rectDiv.style.position = 'fixed';
+      rectDiv.style.border = '2px dashed black';
+      rectDiv.style.pointerEvents = 'none';
+      rectDiv.style.zIndex = '10';
+      rectDiv.style.left = `${bounds.x + stageRect.x}px`;
+      rectDiv.style.top = `${bounds.y + stageRect.y}px`;
+      rectDiv.style.width = `${bounds.width}px`;
+      rectDiv.style.height = `${bounds.height}px`;
+
+      // Tính vị trí icon xoay
+      const centerX = node.x();
+      const centerY = node.y();
+      const iconOffsetX = node.x() - rotateIcon.offsetWidth / 2;
+      const iconOffsetY = node.y() - 100;
+      const { x: iconX, y: iconY } = rotatePoint(
+        iconOffsetX,
+        iconOffsetY,
+        centerX,
+        centerY,
+        rotation
+      );
+
+      rotateIcon.style.position = 'fixed';
+      rotateIcon.style.left = `${iconX + stageRect.x}px`;
+      rotateIcon.style.top = `${iconY + stageRect.y}px`;
+      rotateIcon.style.transform = `rotate(${rotation}deg)`;
+    };
+
 
     rotateIcon.addEventListener('mousedown', (e: MouseEvent) => {
       e.stopPropagation();
@@ -660,10 +693,15 @@ class TShirtDesigner {
         const newRotation = initialRotation + deltaAngle;
         node.rotation(newRotation);
 
-
+        rotateIcon.style.transform = `rotate(${newRotation}deg)`;
 
         // const scale = parseFloat(node.getAttr('rotationOfLastHeight')) / parseFloat(node.getAttr('rotationOfLastWidth'));
+        if (node instanceof Konva.Text) {
+          updateBorderDiv();
+          this.getRSOfNode();
+          return;
 
+        }
         const bounds = node.getClientRect();
         const defaultWidth = parseFloat(node.getAttr('rotationOfLastWidth'));
         const defaultHeight = parseFloat(node.getAttr('rotationOfLastHeight'));
@@ -723,11 +761,8 @@ class TShirtDesigner {
         updateBorderDiv();
         stageConfig.layer!.draw();
 
-        rotateIcon.style.transform = `rotate(${newRotation}deg)`;
-        if (node instanceof Konva.Text) {
-          this.getRSOfNode();
-        }
-        else if (node instanceof Konva.Image) {
+
+        if (node instanceof Konva.Image) {
           this.getWHROfNode();
         }
 
@@ -759,46 +794,40 @@ class TShirtDesigner {
 
 
 
-    const updateBorderDiv = () => {
-      const bounds = node.getClientRect();
-      const rotation = node.rotation();
-      const stageRect = stageContainer.getBoundingClientRect();
+    // const updateBorderDiv = () => {
+    //   const bounds = node.getClientRect();
+    //   const rotation = node.rotation();
+    //   const stageRect = stageContainer.getBoundingClientRect();
 
-      rectDiv.className = 'border-node';
-      rectDiv.style.position = 'fixed';
-      rectDiv.style.border = '2px dashed black';
-      rectDiv.style.pointerEvents = 'none';
-      rectDiv.style.zIndex = '10';
-      rectDiv.style.left = `${bounds.x + stageRect.x}px`;
-      rectDiv.style.top = `${bounds.y + stageRect.y}px`;
-      rectDiv.style.width = `${bounds.width}px`;
-      rectDiv.style.height = `${bounds.height}px`;
+    //   rectDiv.className = 'border-node';
+    //   rectDiv.style.position = 'fixed';
+    //   rectDiv.style.border = '2px dashed black';
+    //   rectDiv.style.pointerEvents = 'none';
+    //   rectDiv.style.zIndex = '10';
+    //   rectDiv.style.left = `${bounds.x + stageRect.x}px`;
+    //   rectDiv.style.top = `${bounds.y + stageRect.y}px`;
+    //   rectDiv.style.width = `${bounds.width}px`;
+    //   rectDiv.style.height = `${bounds.height}px`;
 
-      // Tính vị trí icon xoay
-      const centerX = node.x();
-      const centerY = node.y();
-      const iconOffsetX = node.x() - rotateIcon.offsetWidth / 2;
-      const iconOffsetY = node.y() - 100;
-      const { x: iconX, y: iconY } = rotatePoint(
-        iconOffsetX,
-        iconOffsetY,
-        centerX,
-        centerY,
-        rotation
-      );
+    //   // Tính vị trí icon xoay
+    //   const centerX = node.x();
+    //   const centerY = node.y();
+    //   const iconOffsetX = node.x() - rotateIcon.offsetWidth / 2;
+    //   const iconOffsetY = node.y() - 100;
+    //   const { x: iconX, y: iconY } = rotatePoint(
+    //     iconOffsetX,
+    //     iconOffsetY,
+    //     centerX,
+    //     centerY,
+    //     rotation
+    //   );
 
-      rotateIcon.style.position = 'fixed';
-      rotateIcon.style.left = `${iconX + stageRect.x}px`;
-      rotateIcon.style.top = `${iconY + stageRect.y}px`;
-      rotateIcon.style.transform = `rotate(${rotation}deg)`;
-    };
+    //   rotateIcon.style.position = 'fixed';
+    //   rotateIcon.style.left = `${iconX + stageRect.x}px`;
+    //   rotateIcon.style.top = `${iconY + stageRect.y}px`;
+    //   rotateIcon.style.transform = `rotate(${rotation}deg)`;
+    // };
 
-    // // Lắng nghe xoay để update border và icon
-    // node.on('transform', () => {
-    //   updateBorderDiv();
-    // });
-
-    // Append icons
     rectDiv.appendChild(deleteIcon);
     rectDiv.appendChild(copyIcon);
     rectDiv.appendChild(resizeIcon);
@@ -807,7 +836,7 @@ class TShirtDesigner {
     updateBorderDiv();
   }
 
-  private showBorderNode(node: Konva.Node, stageConfig: StageConfig) {
+  public showBorderNode(node: Konva.Node, stageConfig: StageConfig) {
     //stageConfig.lastPositionNode = { x: node.x(), y: node.y() };
     this.setNodeBoder(node, stageConfig);
 
@@ -973,6 +1002,7 @@ class TShirtDesigner {
 
     const reader = new FileReader();
     reader.onload = (e) => {
+      const originImage = e.target?.result as string;
       const img = new Image();
       img.onload = () => {
         // Đảm bảo stage có kích thước hợp lệ
@@ -1047,6 +1077,7 @@ class TShirtDesigner {
 
         this.currentStage.layer!.add(imgNode);
         this.currentStage.layer!.draw();
+        this.originImageOfStage[imgNode.id()] = originImage;
         //this.showBorderNode(imgNode, this.currentStage);
         //this.menuIndexSetter(5);
         this.setMenuWithNodeAndStage(imgNode, this.currentStage, 5);
@@ -1065,6 +1096,19 @@ class TShirtDesigner {
     this.clearBorderNode(this.currentStage);
     //const stageWidth = this.currentStage.stage!.width();
     //const stageHeight = this.currentStage.stage!.height();
+    var fontStyle = "";
+    console.log(this.fontStyle, this.fontWeight);
+    if (this.fontWeight === 'bold') {
+      fontStyle += "700";
+      if (this.fontStyle != 'normal') {
+        fontStyle += " " + this.fontStyle;
+      }
+    }
+    else {
+      fontStyle = this.fontStyle;
+    }
+
+    console.log(fontStyle);
     const textNode = new Konva.Text({
       text: text,
       x: this.currentStage.stage.width() / 2,
@@ -1074,7 +1118,7 @@ class TShirtDesigner {
       fill: this.textColor,
       fontFamily: this.fontFamily,
       fontWeight: this.fontWeight,
-      fontStyle: this.fontStyle,
+      fontStyle: fontStyle, //+ this.fontWeight === 'bold' ? " 700" : "",//this.fontStyle,,//'700 italic',
       align: 'center',
       padding: 5,
     });
@@ -1131,20 +1175,10 @@ class TShirtDesigner {
 
   public changeFontStyle(style: string) {
     switch (style) {
-      case 'bold':
-        this.fontWeight = 'bold';
-        this.fontStyle = 'normal';
-        break;
       case 'italic':
-        this.fontWeight = 'normal';
         this.fontStyle = 'italic';
         break;
-      case 'bold-italic':
-        this.fontWeight = 'bold';
-        this.fontStyle = 'italic';
-        break;
-      default:
-        this.fontWeight = 'normal';
+      case 'normal':
         this.fontStyle = 'normal';
         break;
     }
@@ -1158,6 +1192,11 @@ class TShirtDesigner {
 
   public changeFontFamily(fontFamily: string) {
     this.fontFamily = fontFamily;
+  }
+
+  public changeFontWeight(fontWeight: string) {
+    this.fontWeight = fontWeight;
+    console.log(this.fontWeight)
   }
 
   public imageElementToFile(image: HTMLImageElement, fileName = 'image.png'): Promise<File> {
@@ -1654,10 +1693,12 @@ class TShirtDesigner {
         for (const obj of sortedDesign) {
           if ((obj as any).type == 'image') {
             const img = new Image();
+            var originImage = "";
             img.crossOrigin = "anonymous";
             await new Promise((resolve, reject) => {
               img.onload = resolve;
               img.onerror = reject;
+              originImage = (obj as any).src;
               img.src = (obj as any).src;
             });
 
@@ -1712,6 +1753,7 @@ class TShirtDesigner {
 
 
             stageConfig.layer.add(imgNode);
+            this.originImageOfStage[imgNode.id()] = originImage;
           } else if ((obj as any).type == 'text') {
             const textNode = new Konva.Text({
               text: (obj as any).text,
@@ -1826,6 +1868,7 @@ class TShirtDesigner {
         node.x(this.currentStage.stage.width() / 2);
       }
       this.currentlyUsingTool = true;
+      this.showBorderNode(this.currentStage.selectedNode, this.currentStage);
     }
   }
   public setHeightCenterPosition() {
@@ -1835,6 +1878,7 @@ class TShirtDesigner {
         node.y(this.currentStage.stage.height() / 2);
       }
       this.currentlyUsingTool = true;
+      this.showBorderNode(this.currentStage.selectedNode, this.currentStage);
     }
   }
 
@@ -1939,15 +1983,19 @@ class TShirtDesigner {
           node.fontSize(instance);
         }
       }
-      node.offsetX(node.width() / 2);
-      node.offsetY(node.height() / 2);
-      node.setAttr('rotationOfLastWidth', node.width());
-      node.setAttr('rotationOfLastHeight', node.height());
-      // this.setNodeBoder(node, this.currentStage);
+
+      // node.offsetX(node.width() / 2);
+      // node.offsetY(node.height() / 2);
+      // node.setAttr('rotationOfLastWidth', node.width());
+      // node.setAttr('rotationOfLastHeight', node.height());
+
+
       this.setMenuWithNodeAndStage(node, this.currentStage, 6);
 
       this.currentStage.layer!.draw();
       this.currentlyUsingTool = true;
+      //this.resetRSOfNode();
+      this.getRSOfNode();
     }
   }
 
@@ -1956,8 +2004,10 @@ class TShirtDesigner {
       const node = this.currentStage.selectedNode;
       const stage = this.currentStage.stage as Konva.Stage;
       node.rotation(newRotation);
-
-      // const scale = parseFloat(node.getAttr('rotationOfLastHeight')) / parseFloat(node.getAttr('rotationOfLastWidth'));
+      if (node instanceof Konva.Text) {
+        this.setMenuWithNodeAndStage(node, this.currentStage, 6);
+        return;
+      }
 
       const bounds = node.getClientRect();
       const defaultWidth = parseFloat(node.getAttr('rotationOfLastWidth'));
@@ -2017,10 +2067,6 @@ class TShirtDesigner {
       node.offsetY(node.height() / 2);
       if (node instanceof Konva.Image) {
         this.setMenuWithNodeAndStage(node, this.currentStage, 5);
-      }
-      else if (node instanceof Konva.Text) {
-        this.setMenuWithNodeAndStage(node, this.currentStage, 6);
-
       }
       //this.setNodeBoder(node, this.currentStage);
       this.currentStage.layer!.draw();

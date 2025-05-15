@@ -5,7 +5,7 @@ type Props = {
 	status: PaymentChargeStatusEnum;
 };
 
-export const PaymentStatus = async ({ status }: Props) => {
+export const PaymentStatus =  ({ status }: Props) => {
 	switch (status) {
 		case PaymentChargeStatusEnum.NotCharged:
 			return (

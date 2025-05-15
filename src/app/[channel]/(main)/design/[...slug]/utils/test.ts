@@ -1,5 +1,4 @@
 import { gql, GraphQLClient } from "graphql-request";
-//import { UploadDataType } from "./type"
 import { fetchRawProductDetail } from './getProductDetailForDesign'
 
 
@@ -79,57 +78,6 @@ const fetchProductDetail = async (productId: string) => {
 
   return listColorVariant;
 }
-
-
-
-// async function uploadImage(data: FormData) {
-//   const file = data.get("file");
-//   console.log('File:', file);
-
-//   if (!file) {
-//     console.error("No file selected");
-//     return;
-//   }
-
-//   const formData = new FormData();
-
-//   // Append GraphQL operations
-//   formData.append("operations", JSON.stringify({
-//     query: UPLOAD_IMAGE,  // Đây là query GraphQL của bạn
-//     variables: {
-//       file: null,  // Placeholder cho file
-//     },
-//   }));
-
-//   // Mapping phần file tới variables
-//   formData.append("map", JSON.stringify({
-//     "0": ["variables.file"],
-//   }));
-
-//   // Đính kèm file
-//   formData.append("0", file);
-
-//   // Thực hiện request với multipart/form-data
-//   try {
-//     const response = await fetch(SALEOR_API_URL, {
-//       method: "POST",
-//       body: formData,
-//     });
-
-//     const json = await response.json();
-//     if (json.errors) {
-//       console.error("Upload failed", json.errors);
-//       throw new Error("Upload failed");
-//     }
-
-//     console.log("Upload success:", json.data.uploadFile);
-//     return json.data.uploadFile;
-//   } catch (error) {
-//     console.error("Error uploading image:", error);
-//   }
-// }
-
-
 
 
 async function updateCheckoutLineMetadata(id: string, metadata: { key: string; value: string }[]) {

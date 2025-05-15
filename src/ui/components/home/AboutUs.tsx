@@ -60,11 +60,11 @@ const AboutUs = () => {
                         Your Trusted Partner for Superior Printing Services
                     </h3>
                 </div>
-                <Link 
+                {/* <Link 
                 href={"/default-channel/service"}
                 className="w-full max-w-[133px] md:max-w-[200px] text-center text-xs lg:w-auto rounded-md bg-[#8B3958] px-8 md:px-14 py-3 lg:py-4 md:text-sm lg:text-base font-semibold text-white shadow-[0_9.67px_29.01px_rgba(253,140,111,0.25)]">
                     Learn More
-                </Link>
+                </Link> */}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-10 md:mt-[76px] gap-8 md:gap-x-16">
                 {

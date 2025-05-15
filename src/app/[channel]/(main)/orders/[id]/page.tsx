@@ -1,17 +1,42 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
-import { CurrentUserOrderListDocument, type PaymentChargeStatusEnum } from "@/gql/graphql";
-import { executeGraphQL } from "@/lib/graphql";
-import { LoginForm } from "@/ui/components/LoginForm";
-import { formatDate, formatMoney } from "@/lib/utils";
-import { PaymentStatus } from "@/ui/components/PaymentStatus";
-import { BreadcrumbClient } from "./BreadcrumbClient"
+import React, { useEffect, useState } from "react";
+import { Dialog } from "@headlessui/react";
+import { CurrentUserOrderListQuery, type PaymentChargeStatusEnum } from "@/gql/graphql";
 
-const OrderDetailPage = async ({ params }: { params: { id: string; channel: string } }) => {
-	const { me: user } = await executeGraphQL(CurrentUserOrderListDocument, {
-		cache: "no-cache",
-	});
+import { LoginForm } from "@/ui/components/LoginForm";
+import { cn, formatDate, formatMoney } from "@/lib/utils";
+import { PaymentStatus } from "@/ui/components/PaymentStatus";
+import { BreadcrumbClient } from "./BreadcrumbClient";
+import { getOrderUser } from "./actions";
+import { addCart } from "../../products/[slug]/actions/addCart";
+import { useRouter } from "next/navigation";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import updateCheckoutLineMetadata from "@/hooks/useAddMetadata";
+
+const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }) => {
+	const [isLoading, setIsLoading] = useState(false);
+	const [user, setUser] = useState<CurrentUserOrderListQuery["me"] | null>(null);
+	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const router = useRouter();
+
+	useEffect(() => {
+		const fetchUser = async () => {
+			setIsLoading(true);
+			try {
+				const data = await getOrderUser();
+				setUser(data as CurrentUserOrderListQuery["me"]);
+			} catch (e) {
+				console.error("Failed to fetch user", e);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+		fetchUser();
+	}, []);
 
 	if (!user) {
 		return <LoginForm params={{ channel: params.channel }} />;
@@ -21,14 +46,51 @@ const OrderDetailPage = async ({ params }: { params: { id: string; channel: stri
 	const orderDetail = orders.find((order) => order.node.id === params.id);
 	const products = orderDetail?.node?.lines || [];
 
-	//BreadcrumbClient({ channel: channel, id: orderDetail?.node.number });
-	//useBreadcrumbClient(channel, orderDetail?.node.number);
 
+const handleReorder = async () => {
+    setIsLoading(true);
+    try {
+        // Build items array more efficiently using map
+        const items = products.reduce((acc, product) => {
+            if (product.variant?.id) {
+                acc.push({
+                    variantId: product.variant.id,
+                    quantity: product.quantity,
+                });
+
+                // Handle metadata updates
+                if (product.metadata?.length) {
+                    const designMetadata = product.metadata.find(item => item.key === "design");
+                    if (designMetadata) {
+                        updateCheckoutLineMetadata(product.variant.id, product.metadata).catch(console.error);
+                    }
+                }
+            }
+            return acc;
+        }, [] as { variantId: string; quantity: number }[]);
+
+        const reorder = await addCart({ channel: params.channel, slug: "" }, items);
+
+        // Handle response
+        if (reorder?.error?.error === 1) {
+            router.push(`/${params.channel}/login`);
+        } else if (reorder?.error?.error === 2) {
+            reorder.error.messages.forEach(({ message }) => toast.error(message));
+        } else {
+            toast.success("Product added to cart");
+            router.push(`/${params.channel}/cart`);
+        }
+    } catch (error) {
+        toast.error('Failed to process reorder');
+    } finally {
+        setIsLoading(false);
+        setIsDialogOpen(false);
+    }
+};
 
 	return (
-
 		<div className="container mx-auto px-4 py-8">
-			{/* <BreadcrumbClient channel={channel} id={orderDetail?.node.number} /> */}
+			<ToastContainer />
 			<BreadcrumbClient channel={params.channel} id={orderDetail?.node.number} />
 			<div className="mb-6">
 				<Link
@@ -47,14 +109,14 @@ const OrderDetailPage = async ({ params }: { params: { id: string; channel: stri
 							{products.map((item) => {
 								if (!item.variant) return null;
 								const product = item.variant.product;
-								const media = item.variant.media
-								
+								const media = item.variant.media;
+
 								return (
 									<div
 										key={product.id}
 										className="flex items-start space-x-6 rounded-lg border border-neutral-200 p-6 transition-all hover:border-neutral-300 hover:shadow-md"
 									>
-										{media  && (
+										{media && (
 											<div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg border border-neutral-200 bg-white">
 												<Image
 													src={media[0].url}
@@ -128,9 +190,84 @@ const OrderDetailPage = async ({ params }: { params: { id: string; channel: stri
 									</span>
 								</div>
 							</div>
-							<button className="mt-3 w-full rounded-md bg-slate-800 py-2 text-white">Confirm</button>
 						</div>
 					</div>
+					<button
+						className="float-right mt-3 block w-auto rounded-md bg-slate-800 px-4 py-2 text-white"
+						onClick={() => setIsDialogOpen(true)}
+					>
+						Re-Order
+					</button>
+					{/* Confirmation Dialog */}
+					<Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)} className="relative z-50">
+						<div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+						<div className="fixed inset-0 flex items-center justify-center p-4">
+							<Dialog.Panel className="mx-auto w-full max-w-4xl rounded bg-white p-6 shadow-lg">
+								<Dialog.Title className="text-lg font-semibold">Confirm Re-Order</Dialog.Title>
+								<Dialog.Description className="mt-2 text-neutral-700">
+									Are you sure you want to re-order these products?
+								</Dialog.Description>
+								<div className="mt-4 max-h-60 overflow-auto">
+									{products.map((item) => {
+										if (!item.variant) return null;
+										const product = item.variant.product;
+										const media = item.variant.media;
+										return (
+											<div
+												key={product.id}
+												className="mb-3 rounded-lg border-b p-3 pb-2 transition-all hover:bg-neutral-50"
+											>
+												<div className="flex items-center gap-4">
+													{media && media[0] && (
+														<div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-neutral-200">
+															<Image
+																src={media[0].url}
+																alt={media[0].alt ?? product.name}
+																width={64}
+																height={64}
+																className="h-full w-full object-contain transition-transform hover:scale-105"
+															/>
+														</div>
+													)}
+													<div className="flex-grow">
+														<div className="flex items-center justify-between">
+															<p className="line-clamp-1 font-medium text-neutral-900">{product.name}</p>
+															<p className="text-sm font-medium text-neutral-600">x{item.quantity}</p>
+														</div>
+														<p className="mt-1 text-sm text-neutral-600">
+															{item.variant.pricing?.price &&
+																formatMoney(
+																	item.variant.pricing.price.gross.amount,
+																	item.variant.pricing.price.gross.currency,
+																)}
+														</p>
+													</div>
+												</div>
+											</div>
+										);
+									})}
+								</div>
+								<div className="mt-6 flex justify-end gap-2">
+									<button
+										className="rounded bg-neutral-200 px-4 py-2 text-neutral-700 hover:bg-neutral-300"
+										onClick={() => setIsDialogOpen(false)}
+									>
+										Cancel
+									</button>
+									<button
+										className={cn(
+											"rounded bg-slate-800 px-4 py-2 text-white",
+											isLoading && "cursor-not-allowed opacity-50",
+										)}
+										onClick={handleReorder}
+										disabled={isLoading}
+									>
+										{isLoading ? "Processing..." : "Confirm"}
+									</button>
+								</div>
+							</Dialog.Panel>
+						</div>
+					</Dialog>
 				</div>
 			</div>
 		</div>

@@ -38,10 +38,10 @@ interface FooterProps {
   channel: string;
 }
 
-const renderNavigationColumn = ({links }: typeof footerNavigation[0], channel: string) => (
-  <div className="flex flex-col md:flex-row gap-[16px] md:gap-[24px]">
-    {/* <div className={textStyles.heading}>{title}</div> */}
-    <div className="flex flex-col md:flex-row gap-[8px] md:gap-[10px]">
+const renderNavigationColumn = ({links }: typeof footerNavigation[0], channel: string, title: string) => (
+  <div className="flex flex-col gap-[16px] md:gap-[24px]">
+    <div className={textStyles.heading}>{title}</div>
+    <div className="flex flex-col gap-[8px] md:gap-[10px]">
       {links.map((link, index) => (
         <Link key={index} className={textStyles.base} href={`/${channel}${link.path}`}>
           {link.label}
@@ -53,8 +53,6 @@ const renderNavigationColumn = ({links }: typeof footerNavigation[0], channel: s
 
 
 export async function Footer({ channel }: FooterProps) {
-  console.log(channel)
- 
 
   return (
     <div className="bg-[#1C1C1C] py-8 md:py-16 flex flex-col">
@@ -73,7 +71,7 @@ export async function Footer({ channel }: FooterProps) {
         </div>
         <div className="flex flex-row items-center gap-8 md:gap-16 w-full md:w-auto">
           {footerNavigation.map((section, index) => (
-            <div key={index}  className="flex">{renderNavigationColumn(section, channel)}</div>
+            <div key={index}  className="flex">{renderNavigationColumn(section, channel, section.title)}</div>
           ))}
         </div>
       </Wrapper>

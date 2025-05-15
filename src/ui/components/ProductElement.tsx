@@ -35,9 +35,9 @@ export default function ProductElement({
 	const parseDescription=  JSON.parse(product.description as string) as unknown as ProductDescription
 
 	return (
-		<li data-testid="ProductElement" className="group bg-[#FAFAFF]">
+		<li data-testid="ProductElement" className="group">
 			<LinkWithChannel href={`/products/${product.slug}`} key={product.id}>
-				<div className="overflow-hidden rounded-lg shadow-sm h-full transition-transform duration-300 ease-in-out group-hover:scale-[1.02] ">
+				<div className="overflow-hidden rounded-lg shadow-sm  bg-[#FAFAFF] transition-transform duration-300 ease-in-out group-hover:scale-[1.02] ">
 					{product?.thumbnail?.url && (
 						<div className="relative">
 							<ProductImageWrapper

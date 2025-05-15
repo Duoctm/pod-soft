@@ -2,25 +2,21 @@ import React from "react";
 import Image from "next/image";
 import Wrapper from "../wrapper";
 import HeroFeature from "../HeroFeature";
-import Link from "next/link";
 
 const LeftSideHero = () => {
 	return (
 		<div className="flex flex-1 flex-col text-[#424255] md:px-4 lg:px-0">
-			<span className="space-x-[16%] text-xs font-semibold uppercase text-[#FD8C6F] md:text-lg">
-				Printing Service Company
-			</span>
 			<h1 className="mt-4 max-w-[582px] text-4xl font-bold leading-[110%] md:mt-6 md:text-6xl lg:text-7xl">
 				Welcome to ZoomPrints
 			</h1>
-			<span className="mt-4 text-lg font-bold leading-[140%] md:mt-6 md:text-[22px]">
-				Bring Your Ideas to Life with High-Quality Prints
-			</span>
-			<p className="mt-4 w-full max-w-[546px] text-base font-normal leading-[1.6] md:mt-7 md:text-[20px]">
+			<span className="mt-4 text-lg w-full font-bold leading-[140%] md:mt-6 md:text-[32px]">
 				Digital printing for the promotional product industry.
-			</p>
+			</span>
+			{/* <p className="mt-4 w-full max-w-[546px] text-base font-normal leading-[1.6] md:mt-7 md:text-[20px]">
+				Bring Your Ideas to Life with High-Quality Prints
+			</p> */}
 
-			<div className="mt-6 flex flex-row items-center gap-4">
+			{/* <div className="mt-6 flex flex-row items-center gap-4">
 				<Link
 					href={"/default-channel/products"}
 					className="rounded-md bg-[#8B3958] px-8 py-3 text-base font-semibold text-white shadow-[0_9.67px_29.01px_rgba(253,140,111,0.25)] transition-colors hover:bg-white hover:text-[#8B3958] hover:border hover:border-[#8B3958] hover:shadow-none "
@@ -34,7 +30,7 @@ const LeftSideHero = () => {
 				>
 					Read More
 				</Link>
-			</div>
+			</div> */}
 		</div>
 	);
 };
@@ -58,13 +54,13 @@ const LeftSideHero = () => {
 // 	);
 // };
 
-const Label = () => {
-	return (
-		<div className="absolute -left-16 top-8 rounded-full bg-[#8B3958] px-2 py-1 text-center text-sm font-semibold uppercase text-white md:-left-24 md:top-12 md:px-3 md:py-2 md:text-base">
-			HQ PRODUCT
-		</div>
-	);
-};
+// const Label = () => {
+// 	return (
+// 		<div className="absolute -left-16 top-8 rounded-full bg-[#8B3958] px-2 py-1 text-center text-sm font-semibold uppercase text-white md:-left-24 md:top-12 md:px-3 md:py-2 md:text-base">
+// 			HQ PRODUCT
+// 		</div>
+// 	);
+// };
 
 const RightSideHero = () => {
 	return (
@@ -110,7 +106,7 @@ const RightSideHero = () => {
 				</div>
 			</div>
 			<div className="relative flex-1 flex-col">
-				<Label />
+				{/* <Label /> */}
 				<Image
 					src={"/images/hero-right-side-2.jpg"}
 					height={274}

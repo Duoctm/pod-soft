@@ -2,23 +2,33 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { filterOptions } from "../actions/filter-option";
 import { type CategoryType } from "../types";
-import { getCategory } from "../actions/category";
+import { getProductList } from "../../../products/[slug]/actions/getProductList";
 
 interface FilterOptionProps {
 	attributeName: string | null;
 	isColor: boolean;
-	setCategory: React.Dispatch<React.SetStateAction<CategoryType | any>>;
+	setCategory: React.Dispatch<React.SetStateAction<CategoryType>>;
+	setIsFilterOpen: React.Dispatch<React.SetStateAction<boolean>>
 	slug: string;
 	channel: string;
+	paramName: string
+	after: string;
+	paramValue: string;
 }
 
 export const FilterOption = React.memo(function FilterOption({
+	setIsFilterOpen,
 	attributeName,
 	isColor,
+	after,
 	setCategory,
 	slug,
+	paramValue : slugValue,
+	paramName,
 	channel,
 }: FilterOptionProps) {
+	console.log(after)
+
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const pathname = usePathname();
@@ -26,11 +36,14 @@ export const FilterOption = React.memo(function FilterOption({
 	// Derived values
 	const color = searchParams.get("color");
 	const size = searchParams.get("size");
+	const gender = searchParams.get("gender");
 	const splitAttributeName = isColor && attributeName ? attributeName.split("-")[1] : attributeName;
-	const paramName = isColor ? "color" : "size";
+	
 	const paramValue = isColor
-		? attributeName?.toLowerCase().split("-")[0]
-		: attributeName?.toLowerCase();
+		? slugValue?.toLowerCase().split("-")[0]
+		: slugValue?.toLowerCase().includes("gender") 
+			? slugValue?.toLowerCase()
+			: slugValue?.toLowerCase();
 
 	// Check if this option is selected
 	const selected = useMemo(() => {
@@ -44,6 +57,7 @@ export const FilterOption = React.memo(function FilterOption({
 			const params = new URLSearchParams();
 			if (color) params.set("color", color);
 			if (size) params.set("size", size);
+			if (gender) params.set("gender", gender);
 
 			const currentValue = params.get(name);
 			if (currentValue) {
@@ -64,7 +78,7 @@ export const FilterOption = React.memo(function FilterOption({
 			}
 			return params.toString();
 		},
-		[color, size]
+		[color, size, gender]
 	);
 
 	// Handle filter logic and update category
@@ -72,34 +86,53 @@ export const FilterOption = React.memo(function FilterOption({
 		const filterVal = [
 			{ slug: "color", values: color?.split(",") },
 			{ slug: "size", values: size?.split(",") },
+			{ slug: "gender", values: gender?.split(",") },
 		];
 		const hasFilter = filterVal.some((filter) => filter.values && filter.values.length > 0 && filter.values[0] !== "");
 
 		if (!hasFilter) {
-			const categoryData = await getCategory({ slug, channel });
-			setCategory(categoryData as CategoryType);
+			const newData = await getProductList({
+				first: 10,
+				after: "",
+				channel: channel,
+			});
+
+			console.log("vo day")
+
+			setCategory((prev) => {
+				return {
+					...prev,
+					edges: newData?.edges,
+				}
+			})
 		} else {
 			const filter = await filterOptions({
 				filterAttributes: filterVal,
-				channel: "default-channel",
+				channel: channel,
+				first: 10,
+				after: "",
+				
 			});
-			setCategory((prev: any) => ({
-				...prev,
-				products: filter,
-			}));
+			setCategory((prev) => {
+				return {
+					...prev,
+					edges: filter.edges || [],
+				}
+			})
 		}
-	}, [color, size, slug, channel, setCategory]);
+	}, [color, size, gender, slug, channel, setCategory]);
 
-	// Trigger filter logic when color/size changes
+	// Trigger filter logic when color/size/gender changes
 	useEffect(() => {
 		void handleFilterOptions();
-	}, [color, size, handleFilterOptions]);
+	}, [color, size, gender, handleFilterOptions]);
 
 	// Handle click on filter option
 	const handleClickSelect = useCallback(() => {
 		if (paramValue) {
 			router.push(`${pathname}?${createQueryString(paramName, paramValue)}`);
 		}
+		setIsFilterOpen(false);
 	}, [router, pathname, createQueryString, paramName, paramValue]);
 
 	return (
@@ -112,7 +145,7 @@ export const FilterOption = React.memo(function FilterOption({
 				hover:scale-105
 				${isColor 
 					? "h-10 w-10 rounded-full shadow-md hover:shadow-lg" 
-					: "h-10 w-20 rounded-2xl shadow-sm hover:shadow-md"
+					: "h-10 w-24 rounded-2xl shadow-sm hover:shadow-md"
 				}
 				${selected 
 					? "border-2 border-black ring-2 ring-gray-200" 
