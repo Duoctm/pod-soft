@@ -1,5 +1,5 @@
 import React from "react";
-import { Printer, User, Image, Layout, FileText, Package } from "lucide-react";
+import { Printer, User, FileText, } from "lucide-react";
 import Link from "next/link";
 import Wrapper from "../wrapper";
 
