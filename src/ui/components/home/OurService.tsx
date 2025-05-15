@@ -18,10 +18,16 @@ const SERVICES = [
 			"Facility for any sized order. High-end M&R 8 and 12 head machines. Specialized in 500+ piece orders.",
 		link: "/default-channel/service",
 	},
+	// {
+	// 	icon: <Layout />,
+	// 	title: "Hard Goods",
+	// 	description: "Premium drinkware options. Mimaki and Grando machines. Professional finishing.",
+	// 	link: "/default-channel/service",
+	// },
 	{
-		icon: <Layout />,
-		title: "Hard Goods",
-		description: "Premium drinkware options. Mimaki and Grando machines. Professional finishing.",
+		icon: <FileText />,
+		title: "Custom Boxes",
+		description: "Eye-catching designs. Perfect for executive kits. Premium packaging solutions.",
 		link: "/default-channel/service",
 	},
 	// {
