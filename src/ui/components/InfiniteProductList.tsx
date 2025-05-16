@@ -11,6 +11,7 @@ import { Disclosure } from "@headlessui/react";
 import { FilterOption } from "@/app/[channel]/(main)/catalog/[slug]/_components/filter-options";
 import { ShowMoreOptions } from "@/app/[channel]/(main)/catalog/[slug]/_components/filter-sidebar";
 import { ChevronDownIcon, FilterIcon, XIcon } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
 type InfiniteProductListProps = {
 	channel: string;
@@ -25,7 +26,8 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 	const [products, setProducts] = useState<ProductCountableConnection | null>(null);
 	const [cursor, setCursor] = useState<string | null | undefined>(null);
 	const [attributes, setAttributes] = useState<FilterSidebarProps["attributes"]>();
-
+	const router = useRouter();
+	const pathname = usePathname();
 	const [setRef, isIntersecting] = useIntersectionObserver({
 		threshold: 1,
 		freezeOnceVisible: false,
@@ -92,6 +94,16 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 							<XIcon className="h-6 w-6" />
 						</button>
 					</div>
+					<button
+					onClick={() => {
+						router.replace(pathname);
+						router.refresh();
+						setIsFilterOpen(false);
+					}}
+					className="mb-4 w-full rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+				>
+					Reset Filters
+				</button>
 					{attributes &&
 						attributes.edges
 							.filter((attribute) => ["SIZE", "COLOR", "GENDER"].includes(attribute.node.name?.toUpperCase()))
@@ -143,12 +155,39 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 			</div>
 
 			{/* Sidebar Filter - Desktop */}
-			<div className="sticky top-0 hidden h-screen max-w-[330px] overflow-auto bg-white md:block">
+			<div className="sticky top-20 hidden h-screen max-w-[330px] overflow-auto bg-white md:block">
 				<h2 className="mb-6 text-xl font-semibold capitalize text-gray-800 md:text-2xl lg:text-3xl">
 					Orders
 				</h2>
-				{/* Same filter content as mobile */}
-				{attributes &&
+				<button
+					onClick={() => {
+						router.replace(pathname);
+						router.refresh();
+					}}
+					className="mb-4 w-full rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+				>
+					Reset Filters
+				</button>
+				{!attributes ? (
+					// Skeleton loading for sidebar filters
+					<div className="animate-pulse">
+						{[1, 2, 3].map((index) => (
+							<div key={index} className="mb-6">
+								{/* Filter header skeleton */}
+								<div className="mb-3 flex items-center justify-between">
+									<div className="h-6 w-24 rounded bg-gray-200"></div>
+									<div className="h-5 w-5 rounded bg-gray-200"></div>
+								</div>
+								{/* Filter options skeleton */}
+								<div className="flex flex-wrap gap-3">
+									{[1, 2, 3, 4].map((optionIndex) => (
+										<div key={optionIndex} className="h-8 w-20 rounded-full bg-gray-200"></div>
+									))}
+								</div>
+							</div>
+						))}
+					</div>
+				) : (
 					attributes.edges
 						.filter((attribute) => ["SIZE", "COLOR", "GENDER"].includes(attribute.node.name?.toUpperCase()))
 						.map((attribute) => {
@@ -181,7 +220,6 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 													))}
 												{options.length > MAX_VISIBLE_OPTIONS && (
 													<ShowMoreOptions
-														
 														paramName={name?.toLocaleLowerCase() as string}
 														options={options}
 														isColor={name === "COLOR"}
@@ -195,7 +233,8 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 									</div>
 								</Disclosure>
 							);
-						})}
+						})
+				)}
 			</div>
 
 			{/* Product Grid */}

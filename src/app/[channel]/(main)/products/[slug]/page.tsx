@@ -368,10 +368,17 @@ export default function Page({ params }: PageProps) {
 							</div>
 						</div>
 						<div className="flex flex-1 items-center justify-end">
-							<button className="flex items-center gap-x-2" onClick={() => setShowSizeGuide(true)}>
-								<Ruler />
-								<span className="underline">Size Guide</span>
-							</button>
+							{loading ? (
+								<div className="flex items-center gap-x-2">
+									<div className="h-5 w-5 animate-pulse rounded bg-gray-200" />
+									<div className="h-4 w-20 animate-pulse rounded bg-gray-200" />
+								</div>
+							) : (
+								<button className="flex items-center gap-x-2" onClick={() => setShowSizeGuide(true)}>
+									<Ruler />
+									<span className="underline">Size Guide</span>
+								</button>
+							)}
 
 							{showSizeGuide && (
 								<SizeGuideModal
@@ -516,95 +523,72 @@ export default function Page({ params }: PageProps) {
 							})} */}
 						</div>
 						<div className="mt-8 flex w-full flex-col items-center gap-6 md:flex-row">
-							<div className="flex w-full items-center justify-center gap-4 rounded-lg bg-gray-50 p-3 md:w-auto">
-								<label className="text-sm font-medium text-gray-700">Quantity:</label>
-								<input
-									type="number"
-									value={sizeQuantitie}
-									onChange={(e) => {
-										setSizeQuantitie(parseInt(e.target.value));
-									}}
-									max={quantityLimitPerCustomer}
-									min="1"
-									className="w-20 rounded-md border border-gray-300 bg-white px-3 py-2 text-center text-gray-900 shadow-sm 
-        transition duration-200 ease-in-out hover:border-[#8B3958]
-        focus:border-[#8B3958] focus:outline-none focus:ring-2
-        focus:ring-[#8B3958]"
-								/>
-							</div>
+							{loading ? (
+								<>
+									<div className="h-14 w-full animate-pulse rounded-lg bg-gray-200 md:w-48"></div>
+									<div className="flex w-full flex-col gap-4 sm:flex-row">
+										<div className="h-14 w-full animate-pulse rounded-lg bg-gray-200 sm:w-48"></div>
+										<div className="h-14 w-full animate-pulse rounded-lg bg-gray-200 sm:w-48"></div>
+									</div>
+								</>
+							) : (
+								<>
+									<div className="flex w-full items-center justify-center gap-4 rounded-lg bg-gray-50 p-3 md:w-auto">
+										<label className="text-sm font-medium text-gray-700">Quantity:</label>
+										<input
+											type="number"
+											value={sizeQuantitie}
+											onChange={(e) => {
+												setSizeQuantitie(parseInt(e.target.value));
+											}}
+											max={quantityLimitPerCustomer}
+											min="1"
+											className="w-20 rounded-md border border-gray-300 bg-white px-3 py-2 text-center text-gray-900 shadow-sm 
+												transition duration-200 ease-in-out hover:border-[#8B3958]
+												focus:border-[#8B3958] focus:outline-none focus:ring-2
+												focus:ring-[#8B3958]"
+										/>
+									</div>
 
-							<div className="flex w-full flex-col gap-4 sm:flex-row">
-								<button
-									id="add-to-cart-button"
-									className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
-        py-3 text-base font-semibold text-white shadow-lg 
-        transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
-        focus:outline-none focus:ring-2
-        focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-									onClick={async () => {
-										let totalQuanlity = 0;
-
-										for (const size in sizeQuantities) {
-											const quantity = sizeQuantities[size];
-											totalQuanlity += quantity;
-										}
-										if (totalQuanlity == 0) {
-											toast.error("Total quantity of items must be greater than 0.");
-											return;
-										}
-										document.getElementById("add-to-cart-button")?.setAttribute("disabled", "true");
-
-										const items = getVariantsToAdd(variantIds, sizeQuantities);
-										items.map((item) => (item.quantity = sizeQuantitie));
-										console.log(items);
-										const result = await addCart(params, items);
-										if (result?.error?.error == 2) {
-											result.error.messages.forEach((item) => {
-												toast.error(item.message);
-											});
-										} else if (result?.error?.error == 1) {
-											window.location.replace(`/${params.channel}/login`);
-										} else if (result?.error?.error == 3) {
-											toast.error("Something went wrong. Please try again later");
-										} else {
-											toast.success("Product added to cart");
-										}
-										setTimeout(() => {
-											document.getElementById("add-to-cart-button")?.removeAttribute("disabled");
-										}, 300);
-									}}
-								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										className="h-5 w-5"
-										viewBox="0 0 20 20"
-										fill="currentColor"
-									>
-										<path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3z" />
-									</svg>
-									Add to Cart
-								</button>
-
-								{isCustomDesign == true && (
-									<Link
-										href={`/${channel}/design/1/${productData?.product?.id}/${selectColorAttributeValueId}`}
-										className="w-full sm:w-auto"
-									>
+									<div className="flex w-full flex-col gap-4 sm:flex-row">
 										<button
+											id="add-to-cart-button"
 											className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
-            py-3 text-base font-semibold text-white shadow-lg 
-            transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
-            focus:outline-none
-            focus:ring-2 focus:ring-[#8B3958] focus:ring-offset-2 disabled:opacity-50 sm:w-auto"
-											onClick={() => {
-												localStorage.setItem(
-													"cart",
-													JSON.stringify({
-														params: params,
-														selectedVariantId: selectedVariantId,
-														quantity: quantity,
-													}),
-												);
+												py-3 text-base font-semibold text-white shadow-lg 
+												transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
+												focus:outline-none focus:ring-2
+												focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+											onClick={async () => {
+												let totalQuanlity = 0;
+
+												for (const size in sizeQuantities) {
+													const quantity = sizeQuantities[size];
+													totalQuanlity += quantity;
+												}
+												if (totalQuanlity == 0) {
+													toast.error("Total quantity of items must be greater than 0.");
+													return;
+												}
+												document.getElementById("add-to-cart-button")?.setAttribute("disabled", "true");
+
+												const items = getVariantsToAdd(variantIds, sizeQuantities);
+												items.map((item) => (item.quantity = sizeQuantitie));
+												console.log(items);
+												const result = await addCart(params, items);
+												if (result?.error?.error == 2) {
+													result.error.messages.forEach((item) => {
+														toast.error(item.message);
+													});
+												} else if (result?.error?.error == 1) {
+													window.location.replace(`/${params.channel}/login`);
+												} else if (result?.error?.error == 3) {
+													toast.error("Something went wrong. Please try again later");
+												} else {
+													toast.success("Product added to cart");
+												}
+												setTimeout(() => {
+													document.getElementById("add-to-cart-button")?.removeAttribute("disabled");
+												}, 300);
 											}}
 										>
 											<svg
@@ -613,13 +597,48 @@ export default function Page({ params }: PageProps) {
 												viewBox="0 0 20 20"
 												fill="currentColor"
 											>
-												<path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+												<path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3z" />
 											</svg>
-											Customize Design
+											Add to Cart
 										</button>
-									</Link>
-								)}
-							</div>
+
+										{isCustomDesign == true && (
+											<Link
+												href={`/${channel}/design/1/${productData?.product?.id}/${selectColorAttributeValueId}`}
+												className="w-full sm:w-auto"
+											>
+												<button
+													className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
+														py-3 text-base font-semibold text-white shadow-lg 
+														transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
+														focus:outline-none
+														focus:ring-2 focus:ring-[#8B3958] focus:ring-offset-2 disabled:opacity-50 sm:w-auto"
+													onClick={() => {
+														localStorage.setItem(
+															"cart",
+															JSON.stringify({
+																params: params,
+																selectedVariantId: selectedVariantId,
+																quantity: quantity,
+															}),
+														);
+													}}
+												>
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														className="h-5 w-5"
+														viewBox="0 0 20 20"
+														fill="currentColor"
+													>
+														<path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+													</svg>
+													Customize Design
+												</button>
+											</Link>
+										)}
+									</div>
+								</>
+							)}
 						</div>
 						{/* Action Buttons */}
 						<ProductDescription descriptionHtml={features} isLoading={loading} />

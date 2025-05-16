@@ -79,20 +79,19 @@ export default function CartPage({ params }: CartPageProps) {
 
 	const renderCartItem = (item: CheckoutLine) => (
 		<li key={item.id} className="flex py-4">
-			<div className="aspect-square h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border bg-neutral-50 sm:h-32 sm:w-32">
+			<div className="aspect-square h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border bg-neutral-50 sm:h-32 sm:w-32 relative">
 				{item.variant?.media && (
 					<Image
 						src={item.variant.media[0].url}
 						alt={item.variant.media[0].alt ?? ""}
-						width={200}
-						height={200}
+					 	fill
 						loading="lazy"
 						className="h-full w-full object-contain object-center"
 					/>
 				)}
 			</div>
 			<div className="relative flex flex-1 flex-col justify-between p-4 py-2">
-				<div className="flex justify-between justify-items-start gap-4">
+				<div className="flex justify-between justify-items-start gap-4 flex-col md:flex-row">
 					<div>
 						<LinkWithChannel
 							href={getHrefForVariant({
@@ -107,13 +106,13 @@ export default function CartPage({ params }: CartPageProps) {
 							<p className="mt-1 text-sm text-neutral-500">Variant: {item.variant.name}</p>
 						)}
 					</div>
-					<p className="text-right font-semibold text-neutral-900">
+					<p className="text-left  md:text-right font-semibold text-neutral-900">
 						{formatMoney(item.totalPrice.gross.amount, item.totalPrice.gross.currency)}
 					</p>
 				</div>
 
-				<div className="flex items-center justify-between">
-					<div className="text-sm font-bold">
+				<div className="flex md:items-center justify-between flex-col md:flex-row items-start gap-y-2">
+					<div className="flex flex-1 items-center font-bold ">
 						Qty:
 						<input
 							type="number"
@@ -124,7 +123,7 @@ export default function CartPage({ params }: CartPageProps) {
 						/>
 					</div>
 
-					<div className="flex space-x-2">
+					<div className="flex space-x-2 flex-1">
 						{Array.isArray(item.metadata) && item.metadata.length > 0 && (
 							<ViewDesignButton lineId={item.id} checkout={checkoutId} params={params} />
 						)}
@@ -138,12 +137,12 @@ export default function CartPage({ params }: CartPageProps) {
 							/>
 						)}
 					</div>
-
 					<DeleteLineButton
 						checkoutId={checkoutId}
 						lineId={item.id}
 						onRemove={() => setItems((prev) => prev.filter((line) => line.id !== item.id))}
 					/>
+
 				</div>
 			</div>
 		</li>
