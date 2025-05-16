@@ -17,7 +17,7 @@ interface ShowMoreOptionsProps {
 	paramName: string;
 	channel: string;
 	slug: string;
-	after: string;
+ 
  
 	setCategory: (value: string) => void;
 }
@@ -30,7 +30,7 @@ export function ShowMoreOptions({
 	setCategory,
  
 	paramName,
-	after,
+	 
 }: ShowMoreOptionsProps) {
 	const [showAll, setShowAll] = useState(false);
 
@@ -43,7 +43,6 @@ export function ShowMoreOptions({
 						<FilterOption
 							setIsFilterOpen={()=>{}}
 							paramValue={choice.node.slug as string}
-							after={after}
 							paramName={paramName as string}
 							key={choice.node.name}
 							attributeName={choice.node.name as unknown as string}

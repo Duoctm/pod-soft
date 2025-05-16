@@ -125,7 +125,6 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 														))}
 													{options.length > MAX_VISIBLE_OPTIONS && (
 														<ShowMoreOptions
-															after={cursor as string | ""}
 															paramName={name?.toLocaleLowerCase() as string}
 															options={options}
 															isColor={name === "COLOR"}
@@ -182,7 +181,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 													))}
 												{options.length > MAX_VISIBLE_OPTIONS && (
 													<ShowMoreOptions
-														after={cursor as string | ""}
+														
 														paramName={name?.toLocaleLowerCase() as string}
 														options={options}
 														isColor={name === "COLOR"}
