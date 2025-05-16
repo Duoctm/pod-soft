@@ -1,4 +1,3 @@
-// app/components/ScrollToTop.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -8,7 +7,12 @@ export default function ScrollToTop() {
   const pathname = usePathname();
   console.log(pathname)
   useEffect(() => {
-    window.scrollTo(0, 0);
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+
   }, [pathname]);
 
   return null;
