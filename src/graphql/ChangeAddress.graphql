@@ -1,13 +1,22 @@
-mutation AccountAddressUpdate($id: ID!, $input: AddressInput!) {
-	accountAddressUpdate(id: $id, input: $input) {
-		address {
-			id
-			city
-			companyName
-		}
-		accountErrors {
-			field
-			message
-		}
-	}
+mutation AccountAddressCreate($input: AddressInput!) {
+  accountAddressCreate(input: $input) {
+    address {
+      id
+      firstName
+      lastName
+      streetAddress1
+      city
+      postalCode
+      country {
+        code
+        country
+      }
+    }
+    errors {
+      field
+      message
+    }
+  }
 }
+
+ 

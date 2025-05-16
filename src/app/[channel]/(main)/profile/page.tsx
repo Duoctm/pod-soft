@@ -5,35 +5,59 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Eye, EyeOff } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
+
 import {
 	currentUser,
 	updateAddress,
+	updateCurentAddress,
 	updatePassword,
 	type UpdatePassWordType,
 	updateUser,
 } from "./actions/update-profile";
 import { type CustomUserQuery } from "@/gql/graphql";
 import "react-toastify/dist/ReactToastify.css";
+import { getCountryList } from "@/checkout/hooks/useCountryList";
+import { MenuItem, Select, SelectChangeEvent } from "@mui/material";
 /*import AddDocumentModal from './AddDocumentModal';
 import { uploadPdf } from "./UploadPdf";
 import { updateUserMetadata } from "./UpdateMetadata";*/
 type UserType = CustomUserQuery["me"];
 type Address = NonNullable<CustomUserQuery["me"]>["addresses"][number];
 
-const ProfilePage = () => {
+const ProfilePage = ({ params }: { params: { channel: string } }) => {
+	const { channel } = params;
+
 	const [user, setUser] = React.useState<UserType | null>(null);
 	const [address, setAddress] = React.useState<Address | null>(null);
 	const [showNewPassword, setShowNewPassword] = React.useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+	const [countries, setCountries] = React.useState<{ code: string; country: string }[]>([]);
+	const [country, setCountry] = React.useState<{ country: string; code: string }>({ country: "", code: "" });
 
 	useEffect(() => {
 		const fetchUser = async () => {
 			const user = await currentUser();
-			setUser(user as unknown as UserType);
-			setAddress(user?.addresses[0] as unknown as Address);
+			const data = await getCountryList({ slug: channel });
+			if (data) {
+				setCountries(data.map(({ country, code }) => ({ code, country })));
+			}
+
+			if (user) {
+				console.log(user);
+				setUser(user as unknown as UserType);
+				setAddress(user?.addresses[0] as unknown as Address);
+				if (user.addresses.length > 0)
+					setCountry((user?.addresses[0]?.country as { country: string; code: string }) || country);
+			}
 		};
-		fetchUser();
+		void fetchUser();
 	}, []);
+
+	const handleChange = (event: SelectChangeEvent) => {
+		const selectedCode = event.target.value;
+		const selectedCountry = countries.find((c) => c.code === selectedCode) || { country: "", code: "" };
+		setCountry(selectedCountry);
+	};
 
 	const formik = useFormik({
 		initialValues: {
@@ -49,7 +73,6 @@ const ProfilePage = () => {
 				.required("Confirm your new password"),
 		}),
 		onSubmit: async (values) => {
-			console.log("Password change values:", values);
 			const res = await updatePassword(values as unknown as UpdatePassWordType);
 			if (res) {
 				toast.success("Password updated successfully");
@@ -71,23 +94,30 @@ const ProfilePage = () => {
 			streetAddress1: Yup.string().required("Address is required"),
 		}),
 		onSubmit: async (values, { setSubmitting, resetForm }) => {
+			const addressID = address?.id;
 			// TODO: Implement update company logic
-			const addressId = address?.id || "";
 			const payload = {
+				firstName: user?.firstName || "",
+				lastName: user?.lastName || "",
 				companyName: values.companyName,
 				city: values.city,
 				streetAddress1: values.streetAddress1,
-				country: values.country,
+				country: country,
 			};
-			if (!addressId || !payload) {
-				toast.error("Something went wrong");
-				return;
-			}
-			const res = await updateAddress(addressId, payload);
-			if (res) {
-				toast.success("Company info updated successfully");
-				setAddress((prev) => (prev ? { ...prev, ...payload } : prev));
-				resetForm();
+			if (addressID) {
+				const res = await updateCurentAddress(addressID, payload);
+				if (res) {
+					toast.success("Company info updated successfully");
+					setAddress((prev) => (prev ? { ...prev, ...payload } : prev));
+					resetForm();
+				}
+			} else {
+				const res = await updateAddress(payload);
+				if (res) {
+					toast.success("Company info updated successfully");
+					setAddress((prev) => (prev ? { ...prev, ...payload } : prev));
+					resetForm();
+				}
 			}
 
 			setSubmitting(false);
@@ -121,7 +151,6 @@ const ProfilePage = () => {
 			setSubmitting(false);
 		},
 	});
-
 
 	/*const [documents, setDocuments] = useState<{ name: string; date: string; file: string }[]>([]);
 
@@ -167,8 +196,9 @@ const ProfilePage = () => {
 							value={companyFormik.values.companyName}
 							onChange={companyFormik.handleChange}
 							onBlur={companyFormik.handleBlur}
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${companyFormik.touched.companyName && companyFormik.errors.companyName ? "border-red-500" : ""
-								}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+								companyFormik.touched.companyName && companyFormik.errors.companyName ? "border-red-500" : ""
+							}`}
 						/>
 						{companyFormik.touched.companyName && companyFormik.errors.companyName && (
 							<p className="mt-1 text-sm text-red-600">{companyFormik.errors.companyName}</p>
@@ -177,7 +207,21 @@ const ProfilePage = () => {
 
 					<div className="relative">
 						<label className="mb-1 block text-sm font-medium text-gray-700">Country Name</label>
-						<input
+
+						<Select
+							value={country.code}
+							onChange={handleChange}
+							className="h-10 w-full rounded-md border border-gray-300 px-4 py-2"
+							renderValue={(selected) => countries.find((c) => c.code === selected)?.country || ""}
+						>
+							{countries.map((option) => (
+								<MenuItem key={option.code} value={option.code}>
+									{option.country}
+								</MenuItem>
+							))}
+						</Select>
+
+						{/* <input
 							type="text"
 							name="country.country"
 							value={companyFormik.values.country.country}
@@ -190,7 +234,7 @@ const ProfilePage = () => {
 						/>
 						{companyFormik.touched.country?.country && companyFormik.errors.country?.country && (
 							<p className="mt-1 text-sm text-red-600">{companyFormik.errors.country.country}</p>
-						)}
+						)} */}
 					</div>
 
 					<div className="relative">
@@ -201,8 +245,9 @@ const ProfilePage = () => {
 							value={companyFormik.values.city}
 							onChange={companyFormik.handleChange}
 							onBlur={companyFormik.handleBlur}
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${companyFormik.touched.city && companyFormik.errors.city ? "border-red-500" : ""
-								}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+								companyFormik.touched.city && companyFormik.errors.city ? "border-red-500" : ""
+							}`}
 						/>
 						{companyFormik.touched.city && companyFormik.errors.city && (
 							<p className="mt-1 text-sm text-red-600">{companyFormik.errors.city}</p>
@@ -217,10 +262,11 @@ const ProfilePage = () => {
 							value={companyFormik.values.streetAddress1}
 							onChange={companyFormik.handleChange}
 							onBlur={companyFormik.handleBlur}
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${companyFormik.touched.streetAddress1 && companyFormik.errors.streetAddress1
-								? "border-red-500"
-								: ""
-								}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+								companyFormik.touched.streetAddress1 && companyFormik.errors.streetAddress1
+									? "border-red-500"
+									: ""
+							}`}
 						/>
 						{companyFormik.touched.streetAddress1 && companyFormik.errors.streetAddress1 && (
 							<p className="mt-1 text-sm text-red-600">{companyFormik.errors.streetAddress1}</p>
@@ -230,8 +276,9 @@ const ProfilePage = () => {
 						<button
 							type="submit"
 							disabled={!companyFormik.dirty || companyFormik.isSubmitting}
-							className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${!companyFormik.dirty || companyFormik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
-								}`}
+							className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${
+								!companyFormik.dirty || companyFormik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
+							}`}
 						>
 							{companyFormik.isSubmitting ? (
 								<span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
@@ -271,8 +318,9 @@ const ProfilePage = () => {
 							value={userFormik.values.firstName}
 							onChange={userFormik.handleChange}
 							onBlur={userFormik.handleBlur}
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${userFormik.touched.firstName && userFormik.errors.firstName ? "border-red-500" : ""
-								}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+								userFormik.touched.firstName && userFormik.errors.firstName ? "border-red-500" : ""
+							}`}
 						/>
 						{userFormik.touched.firstName && userFormik.errors.firstName && (
 							<p className="mt-1 text-sm text-red-600">{userFormik.errors.firstName}</p>
@@ -286,8 +334,9 @@ const ProfilePage = () => {
 							value={userFormik.values.lastName}
 							onChange={userFormik.handleChange}
 							onBlur={userFormik.handleBlur}
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${userFormik.touched.lastName && userFormik.errors.lastName ? "border-red-500" : ""
-								}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+								userFormik.touched.lastName && userFormik.errors.lastName ? "border-red-500" : ""
+							}`}
 						/>
 						{userFormik.touched.lastName && userFormik.errors.lastName && (
 							<p className="mt-1 text-sm text-red-600">{userFormik.errors.lastName}</p>
@@ -297,8 +346,9 @@ const ProfilePage = () => {
 						<button
 							type="submit"
 							disabled={!userFormik.dirty || userFormik.isSubmitting}
-							className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${!userFormik.dirty || userFormik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
-								}`}
+							className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${
+								!userFormik.dirty || userFormik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
+							}`}
 						>
 							{userFormik.isSubmitting ? (
 								<span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
@@ -329,8 +379,9 @@ const ProfilePage = () => {
 							onChange={formik.handleChange}
 							onBlur={formik.handleBlur}
 							required
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${formik.touched.oldPassword && formik.errors.oldPassword ? "border-red-500" : ""
-								}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+								formik.touched.oldPassword && formik.errors.oldPassword ? "border-red-500" : ""
+							}`}
 						/>
 						{formik.touched.oldPassword && formik.errors.oldPassword && (
 							<p className="mt-1 text-sm text-red-600">{formik.errors.oldPassword}</p>
@@ -345,8 +396,9 @@ const ProfilePage = () => {
 							onChange={formik.handleChange}
 							onBlur={formik.handleBlur}
 							required
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 pr-10 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${formik.touched.newPassword && formik.errors.newPassword ? "border-red-500" : ""
-								}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 pr-10 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+								formik.touched.newPassword && formik.errors.newPassword ? "border-red-500" : ""
+							}`}
 						/>
 						<button
 							type="button"
@@ -369,8 +421,9 @@ const ProfilePage = () => {
 							onChange={formik.handleChange}
 							onBlur={formik.handleBlur}
 							required
-							className={`w-full rounded-md border border-gray-300 px-4 py-2 pr-10 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${formik.touched.confirmPassword && formik.errors.confirmPassword ? "border-red-500" : ""
-								}`}
+							className={`w-full rounded-md border border-gray-300 px-4 py-2 pr-10 focus:border-transparent focus:ring-2 focus:ring-blue-500 ${
+								formik.touched.confirmPassword && formik.errors.confirmPassword ? "border-red-500" : ""
+							}`}
 						/>
 						<button
 							type="button"
@@ -388,8 +441,9 @@ const ProfilePage = () => {
 						<button
 							type="submit"
 							disabled={!formik.dirty || formik.isSubmitting}
-							className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${!formik.dirty || formik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
-								}`}
+							className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${
+								!formik.dirty || formik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
+							}`}
 						>
 							{formik.isSubmitting ? (
 								<>

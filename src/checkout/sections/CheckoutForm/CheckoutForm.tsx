@@ -79,6 +79,7 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 	useEffect(() => {
 		let isMounted = true;
 		if (slug) {
+			console.log(slug)
 			// Fetch countries
 			const fetchCountries = async () => {
 				try {

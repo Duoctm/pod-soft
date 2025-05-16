@@ -4,8 +4,9 @@ import {
 	PasswordChangeDocument,
 	CustomUserDocument,
 	type CustomUserQuery,
-	AccountAddressUpdateDocument,
 	AccountUpdateDocument,
+	AccountAddressCreateDocument,
+	AccountAddressUpdateDocument,
 } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
 
@@ -44,20 +45,24 @@ export const updatePassword = async (payload: UpdatePassWordType) => {
 	}
 };
 
-export const updateAddress = async (
+export const updateCurentAddress = async (
 	address_id: string,
 	payload: {
 		city: string;
 		companyName: string;
+		firstName: string;
+		lastName: string;
 		streetAddress1: string;
 		country: { country: string; code: string };
 	},
 ) => {
-	try {
+	try { 
 		const { accountAddressUpdate } = await executeGraphQL(AccountAddressUpdateDocument, {
 			variables: {
 				id: address_id,
 				input: {
+					firstName: payload.firstName,
+					lastName: payload.lastName,
 					city: payload.city,
 					companyName: payload.companyName,
 					streetAddress1: payload.streetAddress1,
@@ -69,8 +74,46 @@ export const updateAddress = async (
 			return null;
 		}
 
-		console.log("accountAddressUpdate", accountAddressUpdate);
 		return accountAddressUpdate;
+	} catch (error) {
+		console.error("Error fetching user data:", error);
+		return null;
+	}
+};
+
+
+
+
+
+export const updateAddress = async (
+	payload: {
+		city: string;
+		companyName: string;
+		firstName: string;
+		lastName: string;
+		streetAddress1: string;
+		country: { country: string; code: string };
+	},
+) => {
+	try { 
+		const { accountAddressCreate } = await executeGraphQL(AccountAddressCreateDocument, {
+			variables: {
+				input: {
+					firstName: payload.firstName,
+					lastName: payload.lastName,
+					city: payload.city,
+					companyName: payload.companyName,
+					streetAddress1: payload.streetAddress1,
+					country: payload.country.code as unknown as any,
+				},
+			},
+		});
+		console.log(accountAddressCreate)
+
+		if (!accountAddressCreate) {
+			return null;
+		}
+		return accountAddressCreate;
 	} catch (error) {
 		console.error("Error fetching user data:", error);
 		return null;
