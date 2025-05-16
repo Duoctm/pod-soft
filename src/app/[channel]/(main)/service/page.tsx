@@ -7,7 +7,7 @@ const ServicesPage = () => {
 				{/* Hero Section with Banner */}
 				<div className="group relative mb-8 h-[50vh] w-full overflow-hidden shadow-lg sm:h-[60vh] md:mb-12 md:h-[70vh] md:shadow-xl lg:mb-16 lg:h-[90vh] lg:shadow-2xl">
 					<Image
-						src="/images/branding-slide-1.webp"
+						src="/images/silk_screening.jpg"
 						alt="Printing services banner"
 						layout="fill"
 						objectFit="cover"
@@ -37,7 +37,8 @@ const ServicesPage = () => {
 						{services.map((service, _index) => (
 							<div
 								key={service.title}
-								className="group overflow-hidden rounded-xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl"
+								className={`group overflow-hidden rounded-xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl ${!service.isActive ? "pointer-events-none opacity-30" : ""
+									}`}
 							>
 								<div className="relative mb-6 h-48 w-full overflow-hidden rounded-lg">
 									<Image
@@ -47,6 +48,11 @@ const ServicesPage = () => {
 										objectFit="cover"
 										className="transform transition duration-500 group-hover:scale-110"
 									/>
+									{!service.isActive && (
+										<div className="absolute right-2 top-2 rounded-full bg-yellow-500 px-3 py-1 text-sm font-semibold text-white">
+											Coming Soon
+										</div>
+									)}
 								</div>
 								<h2 className="mb-4 text-2xl font-bold text-gray-900">{service.title}</h2>
 								<ul className="space-y-3">
@@ -80,15 +86,6 @@ const ServicesPage = () => {
 
 const services = [
 	{
-		title: "Direct-To-Garment",
-		image: "/images/dtg.webp",
-		features: [
-			"Top of the line Brother DL DTG machines",
-			"No pretreatment stains",
-			"Leading digital printing innovation",
-		],
-	},
-	{
 		title: "Silk Screening",
 		image: "/images/silk_screening.jpg",
 		features: [
@@ -96,6 +93,17 @@ const services = [
 			"High-end M&R 8 and 12 head machines",
 			"Specialized in 500+ piece orders",
 		],
+		isActive: true,
+	},
+	{
+		title: "Direct-To-Garment",
+		image: "/images/dtg.webp",
+		features: [
+			"Top of the line Brother DL DTG machines",
+			"No pretreatment stains",
+			"Leading digital printing innovation",
+		],
+		isActive: false,
 	},
 	{
 		title: "Embroidery",
@@ -105,21 +113,25 @@ const services = [
 			"Dedicated quality embroidery staff",
 			"Tajima machines with 15 thread colors",
 		],
+		isActive: false,
 	},
 	{
 		title: "Hard Goods",
 		image: "/images/hard_goods.jpg",
 		features: ["Premium drinkware options", "Mimaki and Grando machines", "Professional finishing"],
+		isActive: false,
 	},
 	{
 		title: "Custom Boxes",
 		image: "/images/branding-slide-1.webp",
 		features: ["Eye-catching designs", "Perfect for executive kits", "Premium packaging solutions"],
+		isActive: false,
 	},
 	{
 		title: "Canvas Print",
 		image: "/images/canvas.png",
 		features: ["Latex HP printers", "Vibrant colors", "Durable materials"],
+		isActive: false,
 	},
 ];
 
