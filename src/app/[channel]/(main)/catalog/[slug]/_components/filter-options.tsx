@@ -12,7 +12,6 @@ interface FilterOptionProps {
 	slug: string;
 	channel: string;
 	paramName: string
-	after: string;
 	paramValue: string;
 }
 
@@ -20,15 +19,12 @@ export const FilterOption = React.memo(function FilterOption({
 	setIsFilterOpen,
 	attributeName,
 	isColor,
-	after,
 	setCategory,
 	slug,
 	paramValue : slugValue,
 	paramName,
 	channel,
 }: FilterOptionProps) {
-	console.log(after)
-
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const pathname = usePathname();
@@ -93,12 +89,9 @@ export const FilterOption = React.memo(function FilterOption({
 		if (!hasFilter) {
 			const newData = await getProductList({
 				first: 10,
-				after: "",
+				after:  null,
 				channel: channel,
 			});
-
-			console.log("vo day")
-
 			setCategory((prev) => {
 				return {
 					...prev,
@@ -110,7 +103,7 @@ export const FilterOption = React.memo(function FilterOption({
 				filterAttributes: filterVal,
 				channel: channel,
 				first: 10,
-				after: "",
+				after: null,
 				
 			});
 			setCategory((prev) => {

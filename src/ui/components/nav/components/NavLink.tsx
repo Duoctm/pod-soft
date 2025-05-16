@@ -12,6 +12,7 @@ export function NavLink({ href, children }: { href: string; children: JSX.Elemen
 		<li className="flex items-center justify-center">
 			<LinkWithChannel
 				href={href}
+				scroll={false}
 				className={clsx(
 					"space-x-[2%] text-sm leading-[100%] text-[#424255]",
 					isActive

@@ -63,12 +63,11 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 
 	useEffect(() => {
 		void fetchAttributes();
-		if (isIntersecting && !loading && (products?.pageInfo.hasNextPage ?? true)) {
+		if (isIntersecting && !loading && ((products?.pageInfo && products?.pageInfo.hasNextPage) ?? true)) {
+			console.log("fetching more data");
 			fetchData();
 		}
-	}, [isIntersecting, loading, fetchData, products?.pageInfo.hasNextPage]);
-
-	console.log(products);
+	}, [isIntersecting, loading, fetchData, products?.pageInfo, setProducts]);
 
 	return (
 		<div className="flex min-h-screen w-full flex-col md:flex-row">
@@ -113,8 +112,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 														.filter((choice) => !!choice.node.name)
 														.map((choice) => (
 															<FilterOption
-															setIsFilterOpen={setIsFilterOpen}
-																after={cursor as string | ""}
+																setIsFilterOpen={setIsFilterOpen}
 																paramName={name?.toLocaleLowerCase() as string}
 																channel={channel}
 																slug={choice.node.slug as string}
@@ -171,9 +169,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 													.filter((choice) => !!choice.node.name)
 													.map((choice) => (
 														<FilterOption
-														setIsFilterOpen={setIsFilterOpen}
-															 
-															after={cursor as string | ""}
+															setIsFilterOpen={setIsFilterOpen}
 															paramName={name?.toLocaleLowerCase() as string}
 															channel={channel}
 															slug={choice.node.slug as string}

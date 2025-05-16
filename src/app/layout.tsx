@@ -6,7 +6,7 @@ import { DraftModeNotification } from "@/ui/components/DraftModeNotification";
 import { UrqlProvider } from "@/components/UrqlProvider";
 import ScrollToTop from "@/ui/components/ScrollToTop";
 
-const workSands = Work_Sans({ subsets: ["latin",], weight: ["400", "500", "600", "700", "800", "900"] });
+const workSands = Work_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"] });
 
 export const metadata: Metadata = {
 	title: "ZoomPrints",
@@ -22,8 +22,8 @@ export default function RootLayout(props: { children: ReactNode }) {
 	return (
 		<html lang="en" className="min-h-dvh">
 			<body className={`${workSands.className} min-h-dvh`}>
+				<ScrollToTop/>
 				<UrqlProvider>
-					<ScrollToTop />
 					{children}
 					<DraftModeNotification />
 				</UrqlProvider>

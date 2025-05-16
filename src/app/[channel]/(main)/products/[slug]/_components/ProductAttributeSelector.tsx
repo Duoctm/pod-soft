@@ -1,5 +1,5 @@
 import React from "react";
-import { sortColorsByLuminance } from "../utils/soft-color";
+import { groupAndSortColors } from "../utils/soft-color";
 
 type ProductAttributeSelectorProps = {
 	name: string;
@@ -23,7 +23,7 @@ export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> =
 	if (isColor && values.length > 0) {
 		const nonColorValues = sortedValues.filter(value => !value.match(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/));
 		const colorValues = sortedValues.filter(value => value.match(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/));
-		const sortedColorValues = sortColorsByLuminance(colorValues);
+		const sortedColorValues = groupAndSortColors(colorValues);
 		sortedValues.splice(0, sortedValues.length, ...nonColorValues, ...sortedColorValues);
 	}
 
@@ -47,12 +47,11 @@ export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> =
 		<div className="my-6">
 			<h2 className="mb-2 text-sm font-semibold">{name}</h2>
 			<div className="flex flex-wrap gap-2">
-				{sortedValues.map((value) => {
+				{sortedValues.filter(value => value !== null).map((value) => {
 					const isSelected = selectedValue === value;
 
 					const colorMatch = value.match(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/);
 					const colorCode = isColor && colorMatch ? colorMatch[0] : null;
-
 					const baseClasses =
 						"flex h-9 max-w-[2.5rem] items-center justify-center rounded-md border px-3 text-sm transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 text-black";
 					const colorStyle = isColor ? { backgroundColor: colorCode || "#f9fafb", borderRadius: "100%" } : {};
@@ -61,7 +60,7 @@ export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> =
 						: "border-gray-300 hover:border-gray-500";
 					const extraClasses = isColor ? `w-9 p-0 ${isSelected ? "ring-offset-2" : ""}` : "";
 
-					return (
+					return value && (
 						<button
 							key={value}
 							className={`${baseClasses} ${stateClasses} ${extraClasses}`}

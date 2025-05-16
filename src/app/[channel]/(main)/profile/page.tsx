@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Eye, EyeOff } from "lucide-react";
@@ -14,9 +14,9 @@ import {
 } from "./actions/update-profile";
 import { type CustomUserQuery } from "@/gql/graphql";
 import "react-toastify/dist/ReactToastify.css";
-import AddDocumentModal from './AddDocumentModal';
+/*import AddDocumentModal from './AddDocumentModal';
 import { uploadPdf } from "./UploadPdf";
-//import { updateUserMetadata } from "./UpdateMetadata";
+import { updateUserMetadata } from "./UpdateMetadata";*/
 type UserType = CustomUserQuery["me"];
 type Address = NonNullable<CustomUserQuery["me"]>["addresses"][number];
 
@@ -123,7 +123,7 @@ const ProfilePage = () => {
 	});
 
 
-	const [documents, setDocuments] = useState<{ name: string; date: string; file: string }[]>([]);
+	/*const [documents, setDocuments] = useState<{ name: string; date: string; file: string }[]>([]);
 
 	const [showModal, setShowModal] = useState(false);
 
@@ -150,7 +150,7 @@ const ProfilePage = () => {
 		//var res = await updateUserMetadata(userId, metadata);
 
 		setDocuments((prev) => [...prev, newDoc]);
-	};
+	};*/
 
 	return (
 		<div className="mx-auto flex min-h-screen flex-1 flex-col items-center px-4  py-8">
@@ -411,7 +411,7 @@ const ProfilePage = () => {
 					</div>
 				</form>
 			</div>
-			<div className="w-full rounded-lg bg-white p-6 shadow-md mt-10">
+			{/* <div className="w-full rounded-lg bg-white p-6 shadow-md mt-10">
 				<h2 className="mb-4 text-2xl font-semibold text-gray-800">Documents</h2>
 				<div className="mb-6 h-px bg-gray-200"></div>
 				<div className="space-y-4">
@@ -458,7 +458,7 @@ const ProfilePage = () => {
 						onSubmit={handleAddDocument}
 					/>
 				)}
-			</div>
+			</div> */}
 		</div>
 	);
 };

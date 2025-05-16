@@ -17,7 +17,7 @@ import { formatMoney } from "@/lib/utils";
 import { Product, ProductVariant, TaxedMoney } from "@/gql/graphql";
 import Swipper from "./_components/Swipper";
 import { Ruler } from "lucide-react";
-import SizeGuideModal from "./guide"
+import SizeGuideModal from "./guide";
 
 // Initialize the parser once
 const parser = edjsHTML();
@@ -164,7 +164,6 @@ export default function Page({ params }: PageProps) {
 						}
 					}
 					const value = getSearchKey(attribute_standarn.reverse() as Attribute[]);
-					console.log(value);
 					searchKey[value] = variantId;
 				});
 
@@ -334,9 +333,7 @@ export default function Page({ params }: PageProps) {
 		});
 	}, [opstions, optionList, productData?.seachKey]);
 
-
 	return (
-
 		<div className="flex min-h-screen flex-col items-center py-8 font-sans">
 			{/* <SizeGuideModal catalog={productData?.product?.category?.name  === "tee" || productData?.product?.category?.name === "fleece" ? productData?.product?.category?.name : "tee"} /> */}
 
@@ -371,10 +368,7 @@ export default function Page({ params }: PageProps) {
 							</div>
 						</div>
 						<div className="flex flex-1 items-center justify-end">
-							<button
-								className="flex items-center gap-x-2"
-								onClick={() => setShowSizeGuide(true)}
-							>
+							<button className="flex items-center gap-x-2" onClick={() => setShowSizeGuide(true)}>
 								<Ruler />
 								<span className="underline">Size Guide</span>
 							</button>
@@ -382,8 +376,12 @@ export default function Page({ params }: PageProps) {
 							{showSizeGuide && (
 								<SizeGuideModal
 									setShowSizeGuide={setShowSizeGuide}
-									catalog={productData?.product?.category?.slug === "tee" || productData?.product?.category?.slug === "fleece" ? productData?.product?.category?.slug : "tee"}
-
+									catalog={
+										productData?.product?.category?.slug === "tee" ||
+										productData?.product?.category?.slug === "fleece"
+											? productData?.product?.category?.slug
+											: "tee"
+									}
 								/>
 							)}
 						</div>
@@ -517,8 +515,8 @@ export default function Page({ params }: PageProps) {
 								);
 							})} */}
 						</div>
-						<div className="mt-8 flex flex-col items-center gap-6 md:flex-row">
-							<div className="flex items-center gap-4 rounded-lg bg-gray-50 p-3">
+						<div className="mt-8 flex w-full flex-col items-center gap-6 md:flex-row">
+							<div className="flex w-full items-center justify-center gap-4 rounded-lg bg-gray-50 p-3 md:w-auto">
 								<label className="text-sm font-medium text-gray-700">Quantity:</label>
 								<input
 									type="number"
@@ -535,14 +533,14 @@ export default function Page({ params }: PageProps) {
 								/>
 							</div>
 
-							<div className="flex flex-wrap gap-4">
+							<div className="flex w-full flex-col gap-4 sm:flex-row">
 								<button
 									id="add-to-cart-button"
-									className="flex min-w-[140px] transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
+									className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
         py-3 text-base font-semibold text-white shadow-lg 
         transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
         focus:outline-none focus:ring-2
-        focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
 									onClick={async () => {
 										let totalQuanlity = 0;
 
@@ -590,13 +588,14 @@ export default function Page({ params }: PageProps) {
 								{isCustomDesign == true && (
 									<Link
 										href={`/${channel}/design/1/${productData?.product?.id}/${selectColorAttributeValueId}`}
+										className="w-full sm:w-auto"
 									>
 										<button
-											className="flex min-w-[140px] transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
+											className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
             py-3 text-base font-semibold text-white shadow-lg 
             transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
             focus:outline-none
-            focus:ring-2 focus:ring-[#8B3958] focus:ring-offset-2 disabled:opacity-50"
+            focus:ring-2 focus:ring-[#8B3958] focus:ring-offset-2 disabled:opacity-50 sm:w-auto"
 											onClick={() => {
 												localStorage.setItem(
 													"cart",
