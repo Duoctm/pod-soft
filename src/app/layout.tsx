@@ -1,9 +1,10 @@
-import {  Work_Sans } from "next/font/google";
+import { Work_Sans } from "next/font/google";
 import "./globals.css";
 import { type ReactNode } from "react";
 import { type Metadata } from "next";
 import { DraftModeNotification } from "@/ui/components/DraftModeNotification";
 import { UrqlProvider } from "@/components/UrqlProvider";
+import ScrollToTop from "@/ui/components/ScrollToTop";
 
 const workSands = Work_Sans({ subsets: ["latin",], weight: ["400", "500", "600", "700", "800", "900"] });
 
@@ -22,8 +23,9 @@ export default function RootLayout(props: { children: ReactNode }) {
 		<html lang="en" className="min-h-dvh">
 			<body className={`${workSands.className} min-h-dvh`}>
 				<UrqlProvider>
-				{children}
-				<DraftModeNotification />
+					<ScrollToTop />
+					{children}
+					<DraftModeNotification />
 				</UrqlProvider>
 			</body>
 		</html>
