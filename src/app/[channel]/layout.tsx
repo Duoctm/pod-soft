@@ -1,10 +1,10 @@
 import { type ReactNode } from "react";
 import { executeGraphQL } from "@/lib/graphql";
 import { ChannelsListDocument } from "@/gql/graphql";
+import { Metadata } from "next";
 
-// app/default-channel/page.tsx
 
-export const metadata = {
+export const metadata: Metadata = {
 	title: "ZoomPrint",
 	description: "ZoomPrints is your gateway to rapid fast fulfillment minus the steep investment.",
 	openGraph: {
@@ -21,15 +21,6 @@ export const metadata = {
 		],
 	},
 };
-
-export default function DefaultChannelPage() {
-	return (
-		<main>
-			<h1>Default Channel</h1>
-		</main>
-	);
-}
-
 
 
 export const generateStaticParams = async () => {
