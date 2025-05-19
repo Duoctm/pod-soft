@@ -65,10 +65,11 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 
 	useEffect(() => {
 		void fetchAttributes();
-		if (isIntersecting && !loading && ((products?.pageInfo && products?.pageInfo.hasNextPage) ?? true)) {
-			console.log("fetching more data");
+		if (isIntersecting && !loading && ((products?.pageInfo && products?.pageInfo.hasNextPage))) {
 			fetchData();
 		}
+		console.log(products?.pageInfo)
+
 	}, [isIntersecting, loading, fetchData, products?.pageInfo, setProducts]);
 
 	return (

@@ -65,8 +65,8 @@ const LeftSideHero = () => {
 const RightSideHero = () => {
 	return (
 		<div className="mt-8 flex flex-1 flex-row gap-4 md:mt-0 md:gap-5">
-			<div className="flex flex-1 flex-col">
-				{/* <RatePanel /> */}
+			{/* <div className="flex flex-1 flex-col">
+				<RatePanel />
 				<div className="relative mb-[30px] ml-4 mt-8 flex h-[80px] w-[100px] flex-col items-center justify-center overflow-hidden rounded-md text-[#0E0E0E] md:mb-[50px] md:ml-12 md:mt-16 md:h-[100px] md:w-[117px]"></div>
 				<div className="relative flex w-full flex-col overflow-hidden rounded-xl bg-[#271E32] text-white">
 					<Image src={"/images/line-bg.png"} alt="" className="absolute inset-0" fill />
@@ -104,16 +104,16 @@ const RightSideHero = () => {
 						className="z-10 mt-2 w-full bg-cover bg-center bg-no-repeat"
 					/>
 				</div>
-			</div>
+			</div> */}
 			<div className="relative flex-1 flex-col">
 				{/* <Label /> */}
 				<Image
-					src={"/images/hero-right-side-2.jpg"}
+					src={"/images/dtg.webp"}
 					height={274}
 					width={274}
 					priority
 					alt=""
-					className="z-10 mt-2 w-full bg-cover bg-center bg-no-repeat"
+					className="z-10 mt-2 w-full bg-cover bg-center bg-no-repeat rounded-xl"
 				/>
 				{/* <FuncFact /> */}
 			</div>

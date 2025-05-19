@@ -20,7 +20,7 @@ export const Logo = () => {
 	return (
 		<div className="flex items-center font-bold">
 			<LinkWithChannel aria-label="homepage" href="/" className="flex items-center gap-2 relative w-[88px] h-[40px] md:w-full">
-				<Image src="/images/main-logo.png"  alt="SwiftPod Logo" width={170} height={75}  />
+				<Image src="/images/main-logo.png" alt="SwiftPod Logo" width={170} height={75} />
 			</LinkWithChannel>
 		</div>
 	);

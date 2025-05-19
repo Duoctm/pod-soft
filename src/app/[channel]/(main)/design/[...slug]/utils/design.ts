@@ -4,7 +4,8 @@ import Konva from 'konva';
 import $ from 'jquery';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { type PrintFaceData, type DesignInfo/*, UploadDataType*/ } from '../utils/type';
-import { uploadImageRaw } from './UpdateImage'
+import { uploadImageRaw } from './UpdateImage';
+import { v4 as uuidv4 } from 'uuid';
 interface StageConfig {
   stage: Konva.Stage | null;
   layer: Konva.Layer | null;
@@ -35,11 +36,12 @@ class TShirtDesigner {
   private resizeHeightSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
   private rotationAngleSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
   private fontSizeSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
+  private maxResizeWidthSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
+  private maxResizeHeightSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
+  private maxFontSizeSetter: React.Dispatch<React.SetStateAction<number | undefined>>;
 
   public faceImage: Record<string, string> = {};
   public originImageOfStage: Record<string, string> = {};
-
-  public currentlyUsingTool: boolean = false;
 
   public setMenu() {
     if (this.currentStage.selectedNode != null) {
@@ -59,9 +61,9 @@ class TShirtDesigner {
 
   public getWHROfNode() {
     if (this.currentStage.selectedNode != null) {
-      this.resizeWidthSetter(parseInt(this.currentStage.selectedNode.width().toString()));
-      this.resizeHeightSetter(parseInt(this.currentStage.selectedNode.height().toString()));
-      this.rotationAngleSetter(parseInt(this.currentStage.selectedNode.rotation().toString()));
+      this.resizeWidthSetter(parseInt(Math.abs(this.currentStage.selectedNode.width()).toString()));
+      this.resizeHeightSetter(parseInt(Math.abs(this.currentStage.selectedNode.height()).toString()));
+      this.rotationAngleSetter(parseInt(Math.abs(this.currentStage.selectedNode.rotation()).toString()));
     }
   }
 
@@ -76,8 +78,8 @@ class TShirtDesigner {
   public getRSOfNode() {
     if (this.currentStage.selectedNode != null) {
       const node = this.currentStage.selectedNode as Konva.Text;
-      this.fontSizeSetter(node.fontSize());
-      this.rotationAngleSetter(this.currentStage.selectedNode.rotation());
+      this.fontSizeSetter(parseInt(Math.abs(node.fontSize()).toString()));
+      this.rotationAngleSetter(parseInt((Math.abs(node.rotation())).toString()));
     }
   }
 
@@ -205,7 +207,10 @@ class TShirtDesigner {
     resizeWidthSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
     resizeHeightSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
     rotationAngleSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
-    fontSizeSetter: React.Dispatch<React.SetStateAction<number | undefined>>
+    fontSizeSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
+    maxResizeWidthSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
+    maxResizeHeightSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
+    maxFontSizeSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
   ) {
     this.data = data;
     this.productId = productId;
@@ -217,6 +222,9 @@ class TShirtDesigner {
     this.resizeHeightSetter = resizeHeightSetter;
     this.rotationAngleSetter = rotationAngleSetter;
     this.fontSizeSetter = fontSizeSetter;
+    this.maxResizeWidthSetter = maxResizeWidthSetter;
+    this.maxResizeHeightSetter = maxResizeHeightSetter;
+    this.maxFontSizeSetter = maxFontSizeSetter;
     for (const item in this.data) {
       this.stages[item] = {
         stage: null,
@@ -249,7 +257,7 @@ class TShirtDesigner {
     window.addEventListener('scroll', () => {
       this.updateStagePositions();
       this.setMenu();
-    }, true);
+    });
   }
 
   private initializeStages() {
@@ -272,6 +280,10 @@ class TShirtDesigner {
           if (index === 0) {
             this.stages[index].stage!.container().style.display = 'block';
             this.currentStage = this.stages[index];
+            //console.log('currentStage', this.currentStage.borderDiv?.style.x, this.currentStage.borderDiv?.style.y);
+            this.maxResizeWidthSetter(parseInt(this.stages[index].stage!.width().toString()));
+            this.maxResizeHeightSetter(parseInt(this.stages[index].stage!.height().toString()));
+            this.maxFontSizeSetter(parseInt(this.stages[index].stage!.width().toString()));
           }
           else {
             this.stages[index].stage!.container().style.display = 'none';
@@ -328,15 +340,10 @@ class TShirtDesigner {
     // Handle deletion
     $('#delete').on('click', () => {
       this.deleteSelectedNode(/*this.currentStage*/);
-      //this.clearBorderNode(this.currentStage);
+      // this.clearBorderNode(this.currentStage);
+      // this.menuIndexSetter(0);
     });
 
-    // Handle keyboard shortcuts for deletion only
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        this.deleteSelectedNode(/*this.currentStage*/);
-      }
-    });
   }
 
   private setupStage(stageConfig: StageConfig, faceData: PrintFaceData, image: HTMLImageElement, containerId: string) {
@@ -394,11 +401,15 @@ class TShirtDesigner {
 
   public switchToStage(side: string) {
     this.clearBorderNode(this.currentStage);
+    this.menuIndexSetter(0);
 
     if (this.currentStage.stage) {
       const currentContainer = this.currentStage.stage.container();
       currentContainer.style.display = 'none';
       currentContainer.style.zIndex = '0';
+      this.maxResizeWidthSetter(parseInt(this.currentStage.stage!.width().toString()));
+      this.maxResizeHeightSetter(parseInt(this.currentStage.stage!.height().toString()));
+      this.maxFontSizeSetter(parseInt(this.currentStage.stage!.width().toString()));
     }
     if (this.currentStage.borderDiv) {
       this.currentStage.borderDiv.style.display = 'none';
@@ -439,9 +450,9 @@ class TShirtDesigner {
 
   }
 
-  private clearBorderNode(stageConfig: StageConfig) {
+  public clearBorderNode(stageConfig: StageConfig) {
     if (stageConfig.selectedNode != null) {
-      this.menuIndexSetter(0);
+      //this.menuIndexSetter(0);
       stageConfig.selectedNode = null;
     }
     // stageConfig.lastPositionNode = {
@@ -451,7 +462,7 @@ class TShirtDesigner {
     document.querySelectorAll('.border-node').forEach(el => el.remove());
   }
 
-  public copySelectedNode(usingTool: boolean = false) {
+  public copySelectedNode() {
     const node = this.currentStage.selectedNode as Konva.Node;
     const stageConfig = this.currentStage;
     if (node == null) {
@@ -475,9 +486,38 @@ class TShirtDesigner {
 
 
 
+
+
     clone.draggable(true);
     stageConfig.layer!.add(clone);
     stageConfig.layer!.draw();
+    clone.dragBoundFunc(function (pos: any) {
+      const stage = clone.getStage();
+      const stageWidth = stage!.width();
+      const stageHeight = stage!.height();
+
+      const tempNode = clone.clone();
+      tempNode.position(pos);
+      const bounds = tempNode.getClientRect();
+
+      let newX = pos.x;
+      let newY = pos.y;
+
+      if (bounds.x < 0) {
+        newX = pos.x - bounds.x;
+      }
+      if (bounds.x + bounds.width > stageWidth) {
+        newX = pos.x - (bounds.x + bounds.width - stageWidth);
+      }
+      if (bounds.y < 0) {
+        newY = pos.y - bounds.y;
+      }
+      if (bounds.y + bounds.height > stageHeight) {
+        newY = pos.y - (bounds.y + bounds.height - stageHeight);
+      }
+
+      return { x: newX, y: newY };
+    });
 
 
     //this.showBorderNode(clone, stageConfig);
@@ -488,10 +528,6 @@ class TShirtDesigner {
       this.setMenuWithNodeAndStage(clone, this.currentStage, 6);
     }
     if (this.onSelectObject) this.onSelectObject(true);
-
-    if (usingTool == true) {
-      this.currentlyUsingTool = true;
-    }
 
   }
 
@@ -560,13 +596,25 @@ class TShirtDesigner {
     resizeIcon.firstElementChild!.setAttribute('style', 'transform: rotate(45deg); font-size: 12px; color: #444;');
 
     resizeIcon.addEventListener('mousedown', (e: MouseEvent) => {
+
+
       e.stopPropagation();
+      rotateIcon.style.display = 'none';
       const stage = stageConfig.stage!;
       const layer = stageConfig.layer!;
       const startX = e.clientX;
       const startY = e.clientY;
       const initialWidth = node.width();
       const initialHeight = node.height();
+
+      const noRotated = Math.abs(node.rotation()) <= 1 || Math.abs(node.rotation()) >= 359;
+
+      if (noRotated) {
+        node.offsetX(0);
+        node.offsetY(0);
+        node.x(node.x() - initialWidth / 2);
+        node.y(node.y() - initialHeight / 2);
+      }
 
       stageConfig.borderDiv!.style.display = 'block';
 
@@ -575,33 +623,81 @@ class TShirtDesigner {
         const deltaX = moveEvent.clientX - startX;
         const deltaY = moveEvent.clientY - startY;
 
-        const clone = node.clone();
-        clone.width(initialWidth + deltaX);
-        clone.height(initialHeight + deltaY);
-        const cloneBounds = clone.getClientRect();
+        // if (instance != null) {
+        //   clone.fontSize(instance);
+        // }
+        // const cloneBounds = clone.getClientRect();
+        // if (node instanceof Konva.Text) {
+        //   if (cloneBounds.x >= this.currentStage.stage!.x() && cloneBounds.x + cloneBounds.width <= this.currentStage.stage!.width() && cloneBounds.y >= this.currentStage.stage!.y() && cloneBounds.y + cloneBounds.height <= this.currentStage.stage!.height()) {
+        //     node.fontSize(instance);
+        //   }
+        // }
+
         if (node instanceof Konva.Text) {
-          if (cloneBounds.x >= stage.x() && cloneBounds.x + cloneBounds.width <= stage.width() && cloneBounds.y >= stage.y() && cloneBounds.y + cloneBounds.height <= stage.height()) {
-            if (startX < moveEvent.clientX) {
-              node.fontSize(node.fontSize() + 1);
+          // const xMin = Math.abs(deltaY) > Math.abs(deltaX) ? true : false;
+          // var scale = 1;
+          // if (xMin) {
+          //   scale = node.width() + deltaX / node.width();
+          // }
+          // else {
+          //   scale = node.height() + deltaY / node.height();
+          // }
+          const scale = (node.width() + (deltaX / 16)) / node.width();
+          console.log('scale', scale);
+          //const desiredHeight = node.height() + (deltaY / 4);
+          //const desiredWidth = initialWidth + deltaX;
+          //const desiredHeight = initialHeight + deltaY;
+          //const newFontSize = (desiredWidth * 0.6) + (desiredHeight * (-0.6));
+          //const newFontSize = desiredHeight + 10;
+
+          const clone = node.clone();
+          /*if (startX < moveEvent.clientX) {
+            // clone.fontSize(node.fontSize() + 1);
+            clone.fontSize(node.fontSize() * scale);
+            //clone.fontSize(newFontSize);
+          }
+          else {
+            // clone.fontSize(node.fontSize() - 1);
+            clone.fontSize(node.fontSize() * scale);
+            //clone.fontSize(newFontSize);
+          }*/
+          clone.fontSize(node.fontSize() * scale);
+          const cloneBounds = clone.getClientRect();
+          if (cloneBounds.x >= 0 && cloneBounds.x + cloneBounds.width <= this.currentStage.stage!.width() && cloneBounds.y >= 0 && cloneBounds.y + cloneBounds.height <= this.currentStage.stage!.height() && clone.fontSize() >= 20) {
+            /*if (startX < moveEvent.clientX) {
+              // node.fontSize(node.fontSize() + 1);
+              node.fontSize(clone.fontSize());
             }
             else {
-              node.fontSize(node.fontSize() - 1);
-            }
+              // node.fontSize(node.fontSize() - 1);
+              node.fontSize(clone.fontSize());
+            }*/
+            node.fontSize(clone.fontSize());
             this.getRSOfNode();
             updateBorderDiv();
           }
         }
         if (node instanceof Konva.Image) {
-          if (cloneBounds.x >= stage.x() && cloneBounds.x + cloneBounds.width <= stage.width() && cloneBounds.y >= stage.y() && cloneBounds.y + cloneBounds.height <= stage.height()) {
+          const clone = node.clone();
+          clone.width(initialWidth + deltaX);
+          clone.height(initialHeight + deltaY);
+          const cloneBounds = clone.getClientRect();
+          if (cloneBounds.x >= 0 && cloneBounds.x + cloneBounds.width <= stage.width() && cloneBounds.y >= 0 && cloneBounds.y + cloneBounds.height <= stage.height()) {
             node.width(initialWidth + deltaX);
             node.height(initialHeight + deltaY);
-            this.getWHROfNode();
           }
+          // if (cloneBounds.y >= 0 && cloneBounds.y + cloneBounds.height <= stage.height()) {
+          //   node.height(initialHeight + deltaY);
+
+          // }
+          this.getWHROfNode();
         }
 
 
-        node.offsetX(node.width() / 2);
-        node.offsetY(node.height() / 2);
+        if (!noRotated) {
+          node.offsetX(node.width() / 2);
+          node.offsetY(node.height() / 2);
+        }
         node.setAttr('rotationOfLastWidth', node.width());
         node.setAttr('rotationOfLastHeight', node.height());
         updateBorderDiv();
@@ -609,6 +705,16 @@ class TShirtDesigner {
       };
 
       const onMouseUp = () => {
+
+        if (noRotated) {
+          node.x(node.x() + node.width() / 2);
+          node.y(node.y() + node.height() / 2);
+          node.offsetX(node.width() / 2);
+          node.offsetY(node.height() / 2);
+        }
+        rotateIcon.style.display = 'block';
+
+
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
 
@@ -621,11 +727,19 @@ class TShirtDesigner {
         }
         else if (node instanceof Konva.Text) {
           this.setMenuWithNodeAndStage(node, this.currentStage, 6);
+          console.log('resizeIcon', node.fontSize(), node.width(), node.height());
         }
+
+
+
       };
+
+
 
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp);
+
+
     });
 
     const rotateIcon = createIconWrapper('fas fa-redo', {}, (/*e*/) => {
@@ -885,15 +999,15 @@ class TShirtDesigner {
 
     stage.on('click tap', (e) => {
       if (e.target === stage) {
-        if (this.onSelectObject) {
-          this.onSelectObject(false);
-        }
-        if (this.currentStage.borderDiv) {
-          this.currentStage.borderDiv.style.display = 'none';
-        }
-        this.clearBorderNode(this.currentStage);
-        this.resetWHROfNode();
-        this.resetRSOfNode();
+        // if (this.onSelectObject) {
+        //   this.onSelectObject(false);
+        // }
+        // if (this.currentStage.borderDiv) {
+        //   this.currentStage.borderDiv.style.display = 'none';
+        // }
+        // this.clearBorderNode(this.currentStage);
+        // this.resetWHROfNode();
+        // this.resetRSOfNode();
       } else {
         const clickedNode = e.target;
         this.showBorderNode(clickedNode, stageConfig);
@@ -910,53 +1024,26 @@ class TShirtDesigner {
       }
     });
 
-    window.addEventListener('click', (e) => {
-      if (this.currentlyUsingTool == false) {
-        const target = e.target as HTMLElement;
-        if (!(target instanceof HTMLCanvasElement) || !target.closest('.konvajs-content')) {
+    // window.addEventListener('click', (e) => {
+    //   if (this.currentlyUsingTool == false) {
+    //     const target = e.target as HTMLElement;
+    //     if (!(target instanceof HTMLCanvasElement) || !target.closest('.konvajs-content')) {
 
-          if (this.onSelectObject) {
-            this.onSelectObject(false);
-          }
-          if (this.currentStage.borderDiv) {
-            this.currentStage.borderDiv.style.display = 'none';
-          }
-          this.clearBorderNode(this.currentStage);
-          this.resetWHROfNode();
-          this.resetRSOfNode();
-        }
-      }
-
-      setTimeout(() => {
-        this.currentlyUsingTool = false;
-      }, 1000);
-
-
-
-      // else {
-      //   this.currentlyUsingTool = false;
-      // }
-    });
-
-    // window.addEventListener('mouseup', (e) => {
-    //   //if (this.currentlyUsingTool == false) {
-    //   const target = e.target as HTMLElement;
-    //   if (!(target instanceof HTMLCanvasElement) || !target.closest('.konvajs-content')) {
-
-    //     if (this.onSelectObject) {
-    //       this.onSelectObject(false);
+    //       if (this.onSelectObject) {
+    //         this.onSelectObject(false);
+    //       }
+    //       if (this.currentStage.borderDiv) {
+    //         this.currentStage.borderDiv.style.display = 'none';
+    //       }
+    //       this.clearBorderNode(this.currentStage);
+    //       this.resetWHROfNode();
+    //       this.resetRSOfNode();
     //     }
-    //     if (this.currentStage.borderDiv) {
-    //       this.currentStage.borderDiv.style.display = 'none';
-    //     }
-    //     this.clearBorderNode(this.currentStage);
-    //     this.resetWHROfNode();
-    //     this.resetRSOfNode();
     //   }
-    //   //}
-    //   // setTimeout(() => {
-    //   //   this.currentlyUsingTool = false;
-    //   // }, 100);
+
+    //   setTimeout(() => {
+    //     this.currentlyUsingTool = false;
+    //   }, 1000);
     // });
   }
 
@@ -970,6 +1057,9 @@ class TShirtDesigner {
       }
 
       stageConfig.layer!.batchDraw();
+
+      this.clearBorderNode(this.currentStage);
+      this.menuIndexSetter(0);
 
     }
   }
@@ -1026,12 +1116,14 @@ class TShirtDesigner {
         const y = stageHeight / 2;
 
         const imgNode = new Konva.Image({
+          id: uuidv4(),
           image: img,
           x: x,
           y: y,
           width: img.width * scale,
           height: img.height * scale,
           draggable: true,
+
         });
 
         imgNode.offsetX(imgNode.width() / 2);
@@ -1045,6 +1137,7 @@ class TShirtDesigner {
 
         imgNode.dragBoundFunc(function (pos) {
           const stage = imgNode.getStage();
+          console.log('stage', stage);
           const stageWidth = stage!.width();
           const stageHeight = stage!.height();
 
@@ -1082,6 +1175,8 @@ class TShirtDesigner {
         //this.menuIndexSetter(5);
         this.setMenuWithNodeAndStage(imgNode, this.currentStage, 5);
         this.getWHROfNode();
+
+        //console.log('currentStage', this.currentStage.borderDiv?.style.x, this.currentStage.borderDiv?.style.y);
       };
       img.src = e.target?.result as string;
     };
@@ -1093,6 +1188,7 @@ class TShirtDesigner {
       console.error('Current stage or layer is not initialized');
       return;
     }
+    this.updateStagePositions();
     this.clearBorderNode(this.currentStage);
     //const stageWidth = this.currentStage.stage!.width();
     //const stageHeight = this.currentStage.stage!.height();
@@ -1110,6 +1206,7 @@ class TShirtDesigner {
 
     console.log(fontStyle);
     const textNode = new Konva.Text({
+      id: uuidv4(),
       text: text,
       x: this.currentStage.stage.width() / 2,
       y: this.currentStage.stage.height() / 2,
@@ -1167,6 +1264,7 @@ class TShirtDesigner {
     //this.menuIndexSetter(6);
     this.setMenuWithNodeAndStage(textNode, this.currentStage, 6);
     this.getRSOfNode();
+    console.log('currentStage', textNode.fontSize(), textNode.width(), textNode.height());
   }
 
   public changeTextColor(color: string) {
@@ -1272,6 +1370,7 @@ class TShirtDesigner {
               }
 
               design.push({
+                id: node.id(),
                 type: 'image',
                 src: cloudinary_url,
                 x: node.x(),
@@ -1293,6 +1392,7 @@ class TShirtDesigner {
             }
           } else if (node instanceof Konva.Text) {
             design.push({
+              id: node.id(),
               type: 'text',
               text: node.text(),
               x: node.x(),
@@ -1703,6 +1803,7 @@ class TShirtDesigner {
             });
 
             const imgNode = new Konva.Image({
+              id: (obj as any).id,
               image: img,
               x: (obj as any).x,
               y: (obj as any).y,
@@ -1756,6 +1857,7 @@ class TShirtDesigner {
             this.originImageOfStage[imgNode.id()] = originImage;
           } else if ((obj as any).type == 'text') {
             const textNode = new Konva.Text({
+              id: (obj as any).id,
               text: (obj as any).text,
               x: (obj as any).x,
               y: (obj as any).y,
@@ -1867,7 +1969,6 @@ class TShirtDesigner {
       if (this.currentStage.stage != null) {
         node.x(this.currentStage.stage.width() / 2);
       }
-      this.currentlyUsingTool = true;
       this.showBorderNode(this.currentStage.selectedNode, this.currentStage);
     }
   }
@@ -1877,13 +1978,11 @@ class TShirtDesigner {
       if (this.currentStage.stage != null) {
         node.y(this.currentStage.stage.height() / 2);
       }
-      this.currentlyUsingTool = true;
       this.showBorderNode(this.currentStage.selectedNode, this.currentStage);
     }
   }
 
   public bringToFrontNode() {
-    this.currentlyUsingTool = true;
     if (this.currentStage.selectedNode != null && this.currentStage.layer != null) {
 
       const nodeChildrend = this.currentStage.layer.getChildren();
@@ -1913,7 +2012,6 @@ class TShirtDesigner {
   }
 
   public sendToBackNode() {
-    this.currentlyUsingTool = true;
     if (this.currentStage.selectedNode != null && this.currentStage.layer != null) {
       const nodeChildrend = this.currentStage.layer.getChildren();
       if (nodeChildrend.length <= 1) {
@@ -1943,7 +2041,16 @@ class TShirtDesigner {
 
   public setWHOfNode(width: number | null, height: number | null) {
     if (this.currentStage.selectedNode != null) {
+
       const node = this.currentStage.selectedNode;
+      const noRotated = Math.abs(node.rotation()) <= 1 || Math.abs(node.rotation()) >= 359;
+
+      if (noRotated) {
+        node.offsetX(0);
+        node.offsetY(0);
+        node.x(node.x() - node.width() / 2);
+        node.y(node.y() - node.height() / 2);
+      }
       const clone = node.clone();
       if (width != null) {
         clone.width(width);
@@ -1957,15 +2064,23 @@ class TShirtDesigner {
           node.width(clone.width());
           node.height(clone.height());
         }
+        // if (cloneBounds.y >= this.currentStage.stage!.y() && cloneBounds.y + cloneBounds.height <= this.currentStage.stage!.height()) {
+        //   node.height(clone.height());
+        // }
       }
+      if (noRotated) {
+        node.x(node.x() + node.width() / 2);
+        node.y(node.y() + node.height() / 2);
+      }
+
       node.offsetX(node.width() / 2);
       node.offsetY(node.height() / 2);
+
       node.setAttr('rotationOfLastWidth', node.width());
       node.setAttr('rotationOfLastHeight', node.height());
       //this.setNodeBoder(node, this.currentStage);
       this.setMenuWithNodeAndStage(node, this.currentStage, 5);
       this.currentStage.layer!.draw();
-      this.currentlyUsingTool = true;
     }
   }
 
@@ -1973,6 +2088,10 @@ class TShirtDesigner {
 
     if (this.currentStage.selectedNode != null) {
       const node = this.currentStage.selectedNode;
+      node.offsetX(0);
+      node.offsetY(0);
+      node.x(node.x() - node.width() / 2);
+      node.y(node.y() - node.height() / 2);
       const clone = node.clone();
       if (instance != null) {
         clone.fontSize(instance);
@@ -1984,16 +2103,19 @@ class TShirtDesigner {
         }
       }
 
-      // node.offsetX(node.width() / 2);
-      // node.offsetY(node.height() / 2);
-      // node.setAttr('rotationOfLastWidth', node.width());
-      // node.setAttr('rotationOfLastHeight', node.height());
+      node.x(node.x() + node.width() / 2);
+      node.y(node.y() + node.height() / 2);
+      node.offsetX(node.width() / 2);
+      node.offsetY(node.height() / 2);
+      node.setAttr('rotationOfLastWidth', node.width());
+      node.setAttr('rotationOfLastHeight', node.height());
+
+
 
 
       this.setMenuWithNodeAndStage(node, this.currentStage, 6);
 
       this.currentStage.layer!.draw();
-      this.currentlyUsingTool = true;
       //this.resetRSOfNode();
       this.getRSOfNode();
     }
@@ -2070,7 +2192,6 @@ class TShirtDesigner {
       }
       //this.setNodeBoder(node, this.currentStage);
       this.currentStage.layer!.draw();
-      this.currentlyUsingTool = true;
 
       //rotateIcon.style.transform = `rotate(${newRotation}deg)`;
     }

@@ -1,5 +1,11 @@
 import React from "react";
-import { Printer, User, Image, Layout, FileText, Package } from "lucide-react";
+import { Printer, 
+	FileText, 
+	User, 
+	// Image, 
+	// Layout, 
+	// Package
+ } from "lucide-react";
 import Link from "next/link";
 import Wrapper from "../wrapper";
 
@@ -19,30 +25,30 @@ const SERVICES = [
 		link: "/default-channel/service",
 	},
 	{
-		icon: <Image />,
-		title: "Embroidery",
-		description:
-			"Single headed machines for custom orders. Dedicated quality embroidery staff. Tajima machines with 15 thread colors.",
-		link: "/default-channel/service",
-	},
-	{
-		icon: <Layout />,
-		title: "Hard Goods",
-		description: "Premium drinkware options. Mimaki and Grando machines. Professional finishing.",
-		link: "/default-channel/service",
-	},
-	{
 		icon: <FileText />,
 		title: "Custom Boxes",
 		description: "Eye-catching designs. Perfect for executive kits. Premium packaging solutions.",
 		link: "/default-channel/service",
 	},
-	{
-		icon: <Package />,
-		title: "Canvas Print",
-		description: "Latex HP printers. Vibrant colors. Durable materials.",
-		link: "/default-channel/service",
-	},
+	// {
+	// 	icon: <Image />,
+	// 	title: "Embroidery",
+	// 	description:
+	// 		"Single headed machines for custom orders. Dedicated quality embroidery staff. Tajima machines with 15 thread colors.",
+	// 	link: "/default-channel/service",
+	// },
+	// {
+	// 	icon: <Layout />,
+	// 	title: "Hard Goods",
+	// 	description: "Premium drinkware options. Mimaki and Grando machines. Professional finishing.",
+	// 	link: "/default-channel/service",
+	// },
+	// {
+	// 	icon: <Package />,
+	// 	title: "Canvas Print",
+	// 	description: "Latex HP printers. Vibrant colors. Durable materials.",
+	// 	link: "/default-channel/service",
+	// },
 ];
 
 interface ServiceCardProps {

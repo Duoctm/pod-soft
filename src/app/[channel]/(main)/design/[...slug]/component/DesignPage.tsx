@@ -14,6 +14,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Rnd } from "react-rnd";
 import Konva from 'konva';
 
+
 const StyledButton = styled(IconButton)(() => ({
   backgroundColor: 'transparent',
   border: 'none',
@@ -55,12 +56,15 @@ function DesignPage(param: DesignPageProps) {
   const [menuIndex, setMenuIndex] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>(0);
   const [resizeWidth, setResizeWidth] = useState<number | undefined>(undefined);
   const [resizeHeight, setResizeHeight] = useState<number | undefined>(undefined);
+  const [maxResizeWidth, setMaxResizeWidth] = useState<number | undefined>(undefined);
+  const [maxResizeHeight, setMaxResizeHeight] = useState<number | undefined>(undefined);
   const [rotationAngle, setRotationAngle] = useState<number | undefined>(undefined);
   const [resizeFontSize, setFontSize] = useState<number | undefined>(undefined);
+  const [maxResizeFontSize, setMaxFontSize] = useState<number | undefined>(undefined);
   const [variantIdOfUpdate, setVariantIdOfUpdate] = useState<string | null>(null);
   const [isSpinner, setSpinner] = useState<boolean>(false);
   const [cropImageUrl, setCropImageUrl] = useState<string>('');
-  const cropContainerRef = useRef<HTMLDivElement>(null);
+  var cropContainerRef = useRef<HTMLDivElement>();
   const [frameState, setFrameState] = useState({
     width: 200,
     height: 200,
@@ -70,18 +74,7 @@ function DesignPage(param: DesignPageProps) {
 
   console.log(showObjectMenu);
 
-  // useEffect(() => {
-  //   const container = cropContainerRef.current;
-  //   if (container) {
-  //     const { clientWidth, clientHeight } = container;
-  //     setFrameState({
-  //       width: clientWidth,
-  //       height: clientHeight,
-  //       left: 0,
-  //       top: 0,
-  //     });
-  //   }
-  // }, [cropImageUrl]);
+
 
   const loadProductData = async (productId: string) => {
     let result: Map<string, object>;
@@ -142,7 +135,7 @@ function DesignPage(param: DesignPageProps) {
     if (!loading) {
       // Initialize TShirtDesigner
       designerRef.current = new TShirtDesigner(data.sort((a, b) => a.z_index - b.z_index), productId, variantId, colorId, colorData,
-        setMenuIndex, setResizeWidth, setResizeHeight, setRotationAngle, setFontSize);
+        setMenuIndex, setResizeWidth, setResizeHeight, setRotationAngle, setFontSize, setMaxResizeWidth, setMaxResizeHeight, setMaxFontSize);
 
       // Thêm callback khi chọn/bỏ chọn đối tượng
       if (designerRef.current) {
@@ -266,14 +259,19 @@ function DesignPage(param: DesignPageProps) {
   const menuWidth = '10vw';
 
   const handleResizeWidthChange = (value: number | undefined) => {
+    if (value == undefined) {
+      return;
+    }
     setResizeWidth(value);
     if (designerRef.current && value !== undefined) {
-      designerRef.current.currentlyUsingTool = true;
       designerRef.current.setWHOfNode(value, null);
     }
   };
 
   const handleResizeHeightChange = (value: number | undefined) => {
+    if (value == undefined) {
+      return;
+    }
     setResizeHeight(value);
     if (designerRef.current && value !== undefined) {
       designerRef.current.setWHOfNode(null, value);
@@ -281,6 +279,9 @@ function DesignPage(param: DesignPageProps) {
   };
 
   const handleRotationChange = (value: number | undefined) => {
+    if (value == undefined) {
+      return;
+    }
     setRotationAngle(value);
     if (designerRef.current && value !== undefined) {
       designerRef.current.setROfNodeheight(value);
@@ -288,10 +289,29 @@ function DesignPage(param: DesignPageProps) {
   };
 
   const handleFontSizeChange = (value: number | undefined) => {
+    if (value == undefined) {
+      return;
+    }
     if (designerRef.current && value !== undefined) {
       designerRef.current.setRSOfNode(value);
     }
   };
+
+  const handleDeselect = () => {
+    if (designerRef.current) {
+      if (designerRef.current.onSelectObject) {
+        designerRef.current.onSelectObject(false);
+      }
+      if (designerRef.current.currentStage.borderDiv) {
+        designerRef.current.currentStage.borderDiv.style.display = 'none';
+      }
+      designerRef.current.clearBorderNode(designerRef.current.currentStage);
+      designerRef.current.resetWHROfNode();
+      designerRef.current.resetRSOfNode();
+      setMenuIndex(0);
+
+    }
+  }
 
   const handleThumbnailClick = (e: Event) => {
     if (designerRef.current != null) {
@@ -402,6 +422,8 @@ function DesignPage(param: DesignPageProps) {
     };
   };
 
+
+
   useEffect(() => {
     if (menuIndex === 3 && designerRef.current) {
       designerRef.current.changeFontWeight('normal');
@@ -409,6 +431,49 @@ function DesignPage(param: DesignPageProps) {
       designerRef.current.changeFontFamily('Montserrat');
     }
   }, [menuIndex]);
+
+
+
+  useEffect(() => {
+    return () => {
+      if (designerRef?.current?.currentStage.borderDiv) {
+        designerRef.current.currentStage.borderDiv.style.display = 'none';
+        designerRef.current.clearBorderNode(designerRef.current.currentStage);
+      }
+
+    };
+  }, []);
+
+
+  useEffect(() => {
+    console.log('cropImageUrl', cropImageUrl);
+    const container = cropContainerRef.current;
+    console.log('container', container?.style.width, container?.style.height);
+    if (container) {
+
+      const clientWidth = container.clientWidth / 2;
+      const clientHeight = container.clientHeight / 2;
+      const left = (container.clientWidth - clientWidth) / 2;
+      const top = (container.clientHeight - clientHeight) / 2;
+
+      setFrameState({
+        width: clientWidth,
+        height: clientHeight,
+        left,
+        top,
+      });
+      //setMenuIndex(7);
+      // }
+      //if (designerRef.current?.currentStage.selectedNode != null) {
+
+      // }
+    }
+    // if (designerRef.current?.currentStage.selectedNode != null) {
+    //   setMenuIndex(7);
+    // }
+
+
+  }, [cropImageUrl]); // 👈 chạy lại khi cropImageUrl thay đổi
 
 
 
@@ -445,6 +510,8 @@ function DesignPage(param: DesignPageProps) {
             <StyledButton
               onClick={() => {
                 //setIsColorModalOpen(true)
+
+                handleDeselect();
                 setMenuIndex(1);
               }}
               id="color"
@@ -453,14 +520,23 @@ function DesignPage(param: DesignPageProps) {
               <span className="text-xs">Colors</span>
             </StyledButton>
             <button className="bg-transparent border-none p-1.5 rounded cursor-pointer text-white hover:bg-white/10 hover:translate-x-1 transition-all flex flex-col items-center gap-0.5">
-              <label id="uploadFromPC" className="cursor-pointer flex flex-col items-center gap-0.5" onClick={() => setMenuIndex(2)}>
+              <label id="uploadFromPC" className="cursor-pointer flex flex-col items-center gap-0.5" onClick={() => {
+
+                handleDeselect();
+                setMenuIndex(2)
+              }
+              }>
                 <i className="fas fa-images text-2xl"></i>
                 <span className="text-xs">Images</span>
               </label>
             </button>
             <button
               id="addingText"
-              onClick={() => setMenuIndex(3)}
+              onClick={() => {
+
+                handleDeselect();
+                setMenuIndex(3);
+              }}
               className="bg-transparent border-none p-1.5 rounded cursor-pointer text-white hover:bg-white/10 hover:translate-x-1 transition-all flex flex-col items-center gap-0.5"
             >
               <i className="fas fa-font text-2xl"></i>
@@ -728,7 +804,7 @@ function DesignPage(param: DesignPageProps) {
                       <Box sx={{
                         display: 'flex',
                         gap: 1.5,
-                        mb: 3
+                        mb: 2
                       }}>
                         {/* Copy */}
                         <Box
@@ -750,7 +826,7 @@ function DesignPage(param: DesignPageProps) {
                           }}
                           onClick={() => {
                             if (designerRef.current) {
-                              designerRef.current.copySelectedNode(true);
+                              designerRef.current.copySelectedNode();
                             }
                           }}
                         >
@@ -790,6 +866,45 @@ function DesignPage(param: DesignPageProps) {
                           </Typography>
                         </Box>
 
+
+
+                      </Box>
+                      <Box sx={{
+                        display: 'flex',
+                        gap: 1.5,
+                        mb: 2
+                      }}>
+
+                        {/* minus */}
+                        <Box
+                          sx={{
+                            flex: 1,
+                            p: 1.5,
+                            bgcolor: 'white',
+                            borderRadius: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 1,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              bgcolor: '#e8e8e8',
+                              transform: 'translateY(-2px)'
+                            }
+                          }}
+                          onClick={() => {
+                            handleDeselect();
+                          }}
+                        >
+                          <i className="fas fa-times text-xl" style={{ color: '#282c34' }}></i>
+
+                          <Typography variant="caption" sx={{ color: '#282c34' }}>
+                            Deselect
+                          </Typography>
+                        </Box>
+
+
                         {/* Crop */}
                         <Box
                           sx={{
@@ -808,18 +923,39 @@ function DesignPage(param: DesignPageProps) {
                               transform: 'translateY(-2px)'
                             }
                           }}
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
                             if (designerRef?.current?.currentStage.selectedNode == undefined) {
                               return;
                             }
-                            const newUrl = designerRef.current?.originImageOfStage[designerRef.current.currentStage.selectedNode?.id()];
-                            if (newUrl && newUrl !== cropImageUrl) {
-                              setCropImageUrl(newUrl);
+                            var newUrl = designerRef.current?.originImageOfStage[designerRef.current.currentStage.selectedNode?.id()];
+
+                            setCropImageUrl(newUrl);
+                            if (designerRef.current?.currentStage.selectedNode != null) {
+                              setMenuIndex(7);
                             }
 
+                            // cropImage();
 
-                            setMenuIndex(7);
+
+
+                            // const container = cropContainerRef.current;
+                            // if (container) {
+                            //   //const { clientWidth, clientHeight } = container;
+                            //   const clientWidth = container.clientWidth / 2;
+                            //   const clientHeight = container.clientHeight / 2;
+                            //   const left = (container.clientWidth - clientWidth) / 2;
+                            //   const top = (container.clientHeight - clientHeight) / 2;
+                            //   setFrameState({
+                            //     width: clientWidth,
+                            //     height: clientHeight,
+                            //     left: left,
+                            //     top: top,
+                            //   });
+                            // }
+
+
+                            // setMenuIndex(7);
                           }}
                         >
                           <i className="fas fa-crop text-xl" style={{ color: '#282c34' }}></i>
@@ -859,14 +995,17 @@ function DesignPage(param: DesignPageProps) {
                               </Typography>
                               <input
                                 type="number"
-                                value={resizeWidth || ''}
+                                value={resizeWidth || 0}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                 }}
-                                onChange={(e) => handleResizeWidthChange(e.target.value ? Number(e.target.value) : undefined)}
+                                onChange={(e) => {
+                                  handleResizeWidthChange(e.target.value ? Number(e.target.value) : undefined)
+                                }}
                                 className="w-20 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Width"
                                 min="0"
+                                max={maxResizeWidth}
                               />
                               <Typography variant="caption" sx={{ color: '#666666' }}>
                                 px
@@ -877,7 +1016,7 @@ function DesignPage(param: DesignPageProps) {
                               value={resizeWidth || 0}
                               onChange={(e) => handleResizeWidthChange(Number(e.target.value))}
                               min="0"
-                              max="1000"
+                              max={maxResizeWidth}
                               className="w-full"
                               style={{ accentColor: '#1976d2' }}
                             />
@@ -896,7 +1035,7 @@ function DesignPage(param: DesignPageProps) {
                               </Typography>
                               <input
                                 type="number"
-                                value={resizeHeight || ''}
+                                value={resizeHeight || 0}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                 }}
@@ -904,6 +1043,7 @@ function DesignPage(param: DesignPageProps) {
                                 className="w-20 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Height"
                                 min="0"
+                                max={maxResizeHeight}
                               />
                               <Typography variant="caption" sx={{ color: '#666666' }}>
                                 px
@@ -914,7 +1054,7 @@ function DesignPage(param: DesignPageProps) {
                               value={resizeHeight || 0}
                               onChange={(e) => handleResizeHeightChange(Number(e.target.value))}
                               min="0"
-                              max="1000"
+                              max={maxResizeHeight}
                               className="w-full"
                               style={{ accentColor: '#1976d2' }}
                             />
@@ -948,6 +1088,7 @@ function DesignPage(param: DesignPageProps) {
                                 e.stopPropagation();
                               }}
                               onChange={(e) => handleRotationChange(e.target.value ? Number(e.target.value) : undefined)}
+                              min="0"
                               className="w-20 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="Angle"
                               max="360"
@@ -1225,14 +1366,14 @@ function DesignPage(param: DesignPageProps) {
                       p: 2
                     }}>
                       <Typography variant="subtitle2" sx={{ color: '#282c34', mb: 2 }}>
-                        Image Tools
+                        Text Tools
                       </Typography>
 
                       {/* Basic Tools */}
                       <Box sx={{
                         display: 'flex',
                         gap: 1.5,
-                        mb: 3
+                        mb: 2
                       }}>
                         {/* Copy */}
                         <Box
@@ -1254,7 +1395,7 @@ function DesignPage(param: DesignPageProps) {
                           }}
                           onClick={() => {
                             if (designerRef.current) {
-                              designerRef.current.copySelectedNode(true);
+                              designerRef.current.copySelectedNode();
                             }
                           }}
                         >
@@ -1293,6 +1434,44 @@ function DesignPage(param: DesignPageProps) {
                             Delete
                           </Typography>
                         </Box>
+
+
+
+                      </Box>
+                      <Box sx={{
+                        display: 'flex',
+                        gap: 1.5,
+                        mb: 2
+                      }}>
+
+                        {/* minus */}
+                        <Box
+                          sx={{
+                            flex: 1,
+                            p: 1.5,
+                            bgcolor: 'white',
+                            borderRadius: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 1,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              bgcolor: '#e8e8e8',
+                              transform: 'translateY(-2px)'
+                            }
+                          }}
+                          onClick={() => {
+                            handleDeselect();
+                          }}
+                        >
+                          <i className="fas fa-times text-xl" style={{ color: '#282c34' }}></i>
+
+                          <Typography variant="caption" sx={{ color: '#282c34' }}>
+                            Deselect
+                          </Typography>
+                        </Box>
                       </Box>
 
                       {/* Advanced Controls */}
@@ -1324,7 +1503,7 @@ function DesignPage(param: DesignPageProps) {
                               </Typography>
                               <input
                                 type="number"
-                                value={resizeFontSize || ''}
+                                value={resizeFontSize || 0}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                 }}
@@ -1332,6 +1511,7 @@ function DesignPage(param: DesignPageProps) {
                                 className="w-20 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Width"
                                 min="0"
+                                max={maxResizeFontSize}
                               />
                               <Typography variant="caption" sx={{ color: '#666666' }}>
                                 px
@@ -1342,7 +1522,7 @@ function DesignPage(param: DesignPageProps) {
                               value={resizeFontSize || 0}
                               onChange={(e) => handleFontSizeChange(Number(e.target.value))}
                               min="0"
-                              max="1000"
+                              max={maxResizeFontSize}
                               className="w-full"
                               style={{ accentColor: '#1976d2' }}
                             />
@@ -1379,6 +1559,7 @@ function DesignPage(param: DesignPageProps) {
                               className="w-20 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="Angle"
                               max="360"
+                              min="0"
                             />
                             <Typography variant="caption" sx={{ color: '#666666' }}>
                               deg
@@ -1526,6 +1707,7 @@ function DesignPage(param: DesignPageProps) {
 
                   <Box
                     sx={{
+                      id: 'cropContainer',
                       display: 'inline-block',
                       mb: 3,
                       bgcolor: '#f5f5f5',
@@ -1570,44 +1752,23 @@ function DesignPage(param: DesignPageProps) {
                             if (designerRef.current == null) {
                               return;
                             }
-                            designerRef.current.currentlyUsingTool = true;
                             const newState = {
                               ...frameState,
                               left: d.x,
                               top: d.y,
                             };
                             setFrameState(newState);
-                            setTimeout(() => {
-                              if (designerRef.current == null) {
-                                return;
-                              }
-                              designerRef.current.currentlyUsingTool = false;
-                            }, 100);
+
                           }}
 
 
-                          onDragStop={(e, d) => {
-                            if (designerRef.current == null) {
-                              return;
-                            }
-                            designerRef.current.currentlyUsingTool = true;
-                            //e.stopPropagation();
 
-                            console.log(e, d);
-                            setTimeout(() => {
-                              if (designerRef.current == null) {
-                                return;
-                              }
-                              designerRef.current.currentlyUsingTool = false;
-                            }, 100);
-                          }}
 
 
                           onResizeStop={(e, __, ref, ___, position) => {
                             if (designerRef.current == null) {
                               return;
                             }
-                            designerRef.current.currentlyUsingTool = true;
                             console.log(e);
 
                             const newState = {
@@ -1617,12 +1778,7 @@ function DesignPage(param: DesignPageProps) {
                               left: position.x,
                             };
                             setFrameState(newState);
-                            setTimeout(() => {
-                              if (designerRef.current == null) {
-                                return;
-                              }
-                              designerRef.current.currentlyUsingTool = false;
-                            }, 1000);
+
                           }}
 
                           style={{
@@ -1663,6 +1819,7 @@ function DesignPage(param: DesignPageProps) {
 
 
                         cropImage();
+                        //designerRef.current?.clearBorderNode(designerRef.current?.currentStage);
                       }}
                     >
                       Submit

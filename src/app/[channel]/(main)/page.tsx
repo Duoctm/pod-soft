@@ -1,4 +1,4 @@
-import AboutUs from "@/ui/components/home/AboutUs";
+// import AboutUs from "@/ui/components/home/AboutUs";
 import HeroPage from "@/ui/components/home/HeroPage";
 import OurProcess from "@/ui/components/home/OurProcess";
 import OurService from "@/ui/components/home/OurService";
@@ -16,7 +16,7 @@ export default async function Page({ params }: { params: { channel: string } }) 
 		<section className="min-h-screen w-screen overflow-y-auto overflow-x-hidden  after:relative ">
 			<HeroPage />
 			<SpecialOffer />
-			<AboutUs />
+			{/* <AboutUs /> */}
 			<OurProcess />
 			<OurService />
 			{/* <Statistics/> */}

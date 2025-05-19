@@ -76,6 +76,9 @@ const fetchProductDetail = async (productId: string) => {
     console.log("Lỗi khi truy vấn dữ liệu:", error);
   }
 
+
+  console.log("Danh sách màu sắc và thông tin liên quan:", listColorVariant);
+
   return listColorVariant;
 }
 

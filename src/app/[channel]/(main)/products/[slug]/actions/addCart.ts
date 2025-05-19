@@ -64,7 +64,7 @@ export async function addCart(
 		}
 
 		revalidatePath("/cart");
-		
+
 		return {
 			success: true,
 			checkout: updatedCheckout
@@ -73,10 +73,10 @@ export async function addCart(
 	} catch (error) {
 		return {
 			success: false,
-			error: { 
-				error: 3, 
-				type: "User", 
-				messages: [{ field: "user", message: (error as Error).message }] 
+			error: {
+				error: 3,
+				type: "User",
+				messages: [{ field: "user", message: (error as Error).message }]
 			}
 		};
 	}
