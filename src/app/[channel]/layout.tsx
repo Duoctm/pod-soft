@@ -5,10 +5,10 @@ import { Metadata } from "next";
 
 
 export const metadata: Metadata = {
-	title: "ZoomPrint",
+	title: "ZoomPrints",
 	description: "ZoomPrints is your gateway to rapid fast fulfillment minus the steep investment.",
 	openGraph: {
-		title: "ZoomPrint",
+		title: "ZoomPrints",
 		description: "ZoomPrints is your gateway to rapid fast fulfillment minus the steep investment.",
 		url: "../../",
 		images: [
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 				url: "./opengraph-image.png",
 				width: 1200,
 				height: 630,
-				alt: "ZoomPrint - In nhanh",
+				alt: "ZoomPrints",
 			},
 		],
 	},
