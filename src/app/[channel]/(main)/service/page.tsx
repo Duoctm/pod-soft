@@ -37,9 +37,8 @@ const ServicesPage = () => {
 						{services.map((service, _index) => (
 							<div
 								key={service.title}
-								className={`group overflow-hidden rounded-xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl ${
-									!service.isActive ? "pointer-events-none opacity-30" : ""
-								}`}
+								className={`group overflow-hidden rounded-xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl ${!service.isActive ? "pointer-events-none opacity-30" : ""
+									}`}
 							>
 								<div className="relative mb-6 h-48 w-full overflow-hidden rounded-lg">
 									<Image
@@ -104,7 +103,7 @@ const services = [
 			"No pretreatment stains",
 			"Leading digital printing innovation",
 		],
-		isActive: false,
+		isActive: true,
 	},
 	{
 		title: "Embroidery",
