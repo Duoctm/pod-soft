@@ -74,7 +74,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 
 
 	return (
-		<div className="flex min-h-screen w-full flex-col md:flex-row">
+		<div className="flex min-h-screen w-full flex-col md:flex-row gap-x-2">
 			{/* Mobile Filter Button */}
 			<button
 				className="fixed bottom-4 right-4 z-50 rounded-full bg-black p-4 text-white shadow-lg md:hidden"
@@ -85,9 +85,8 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 
 			{/* Sidebar Filter - Mobile Popup */}
 			<div
-				className={`fixed inset-0 z-50 transform bg-white transition-transform duration-300 ease-in-out md:hidden ${
-					isFilterOpen ? "translate-x-0" : "-translate-x-full"
-				}`}
+				className={`fixed inset-0 z-50 transform bg-white transition-transform duration-300 ease-in-out md:hidden ${isFilterOpen ? "translate-x-0" : "-translate-x-full"
+					}`}
 			>
 				<div className="flex h-full flex-col overflow-y-auto p-4">
 					<div className="mb-4 flex items-center justify-between">
@@ -107,19 +106,19 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 						Reset Filters
 					</button>
 
-						
+
 					{attributes &&
 						attributes.edges
-						.filter((attribute) =>
-							["COLOR", "SIZE", "GENDER", "BRAND", "PRINT TECHNOLOGY"].includes(attribute.node.name?.toUpperCase()),
-						)
-						// Sort attributes in specific order
-						.sort((a, b) => {
-							const order = ["COLOR", "SIZE", "BRAND","GENDER", "PRINT TECHNOLOGY"];
-							const aIndex = order.indexOf(a.node.name?.toUpperCase() || "");
-							const bIndex = order.indexOf(b.node.name?.toUpperCase() || "");
-							return aIndex - bIndex;
-						})
+							.filter((attribute) =>
+								["COLOR", "SIZE", "GENDER", "BRAND", "PRINT TECHNOLOGY"].includes(attribute.node.name?.toUpperCase()),
+							)
+							// Sort attributes in specific order
+							.sort((a, b) => {
+								const order = ["COLOR", "SIZE", "BRAND", "GENDER", "PRINT TECHNOLOGY"];
+								const aIndex = order.indexOf(a.node.name?.toUpperCase() || "");
+								const bIndex = order.indexOf(b.node.name?.toUpperCase() || "");
+								return aIndex - bIndex;
+							})
 							.map((attribute) => {
 								const { slug, name, choices } = attribute.node;
 								const options = choices?.edges || [];
@@ -168,7 +167,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 			</div>
 
 			{/* Sidebar Filter - Desktop */}
-			<div className="sticky top-40 hidden h-screen w-full max-w-[290px] overflow-auto bg-white md:block">
+			<div className="sticky top-40 hidden h-[calc(100vh-160px)] w-full max-w-[280px] overflow-y-auto bg-white md:block scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
 				<h2 className="mb-6 text-xl font-semibold capitalize text-gray-800 md:text-2xl lg:text-3xl">
 					Orders
 				</h2>
@@ -207,7 +206,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 						)
 						// Sort attributes in specific order
 						.sort((a, b) => {
-							const order = ["COLOR", "SIZE", "BRAND","GENDER", "PRINT TECHNOLOGY"];
+							const order = ["COLOR", "SIZE", "BRAND", "GENDER", "PRINT TECHNOLOGY"];
 							const aIndex = order.indexOf(a.node.name?.toUpperCase() || "");
 							const bIndex = order.indexOf(b.node.name?.toUpperCase() || "");
 							return aIndex - bIndex;
@@ -261,7 +260,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 			</div>
 
 			{/* Product Grid */}
-			<div className="flex-1 p-4 md:p-6">
+			<div className="flex-1">
 				{products && <ProductList products={products.edges.map((e) => e.node)} />}
 				{loading && (
 					<div className="w-full">
