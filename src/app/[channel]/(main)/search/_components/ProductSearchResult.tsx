@@ -55,6 +55,12 @@ const ProductSearchResult = ({ channel, search, after }: ProductSearchResultProp
 		}
 	}, [isIntersecting, loading, products?.pageInfo.hasNextPage, search]);
 
+	// Thêm effect này để load dữ liệu ban đầu
+	useEffect(() => {
+	  setProducts(null); // Reset products khi search thay đổi
+	  setCursor(after); // Set cursor ban đầu từ prop after
+	  fetchData();
+	}, [search, channel]); // Chỉ chạy khi search hoặc channel thay đổi
 	return (
 		<div className="min-h-screen w-full">
 			{products && <ProductList products={products.edges.map((e) => e.node)} />}

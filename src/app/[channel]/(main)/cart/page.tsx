@@ -8,9 +8,8 @@
 // import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
 // import Quanlity from "./quanlity"
 
-import { Checkout as CheckoutType } from "@/gql/graphql";
-
-import CartPage from "./CartPage";
+import { CartPage } from "./CartPage";
+import { type Checkout as CheckoutType } from "@/gql/graphql";
 
 export const metadata = {
 	title: "Shopping Cart - ZoomPrints",

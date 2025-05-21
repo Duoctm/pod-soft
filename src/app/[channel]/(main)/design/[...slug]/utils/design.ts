@@ -595,7 +595,7 @@ class TShirtDesigner {
     const resizeIcon = createIconWrapper('fas fa-arrows-alt-h', { right: '-22px', bottom: '-22px' }, () => { });
     resizeIcon.firstElementChild!.setAttribute('style', 'transform: rotate(45deg); font-size: 12px; color: #444;');
 
-    resizeIcon.addEventListener('mousedown', (e: MouseEvent) => {
+    /*resizeIcon.addEventListener('mousedown', (e: MouseEvent) => {
 
 
       e.stopPropagation();
@@ -623,55 +623,20 @@ class TShirtDesigner {
         const deltaX = moveEvent.clientX - startX;
         const deltaY = moveEvent.clientY - startY;
 
-        // if (instance != null) {
-        //   clone.fontSize(instance);
-        // }
-        // const cloneBounds = clone.getClientRect();
-        // if (node instanceof Konva.Text) {
-        //   if (cloneBounds.x >= this.currentStage.stage!.x() && cloneBounds.x + cloneBounds.width <= this.currentStage.stage!.width() && cloneBounds.y >= this.currentStage.stage!.y() && cloneBounds.y + cloneBounds.height <= this.currentStage.stage!.height()) {
-        //     node.fontSize(instance);
-        //   }
-        // }
+       
 
         if (node instanceof Konva.Text) {
-          // const xMin = Math.abs(deltaY) > Math.abs(deltaX) ? true : false;
-          // var scale = 1;
-          // if (xMin) {
-          //   scale = node.width() + deltaX / node.width();
-          // }
-          // else {
-          //   scale = node.height() + deltaY / node.height();
-          // }
+          
           const scale = (node.width() + (deltaX / 16)) / node.width();
           console.log('scale', scale);
-          //const desiredHeight = node.height() + (deltaY / 4);
-          //const desiredWidth = initialWidth + deltaX;
-          //const desiredHeight = initialHeight + deltaY;
-          //const newFontSize = (desiredWidth * 0.6) + (desiredHeight * (-0.6));
-          //const newFontSize = desiredHeight + 10;
+         
 
           const clone = node.clone();
-          /*if (startX < moveEvent.clientX) {
-            // clone.fontSize(node.fontSize() + 1);
-            clone.fontSize(node.fontSize() * scale);
-            //clone.fontSize(newFontSize);
-          }
-          else {
-            // clone.fontSize(node.fontSize() - 1);
-            clone.fontSize(node.fontSize() * scale);
-            //clone.fontSize(newFontSize);
-          }*/
+         
           clone.fontSize(node.fontSize() * scale);
           const cloneBounds = clone.getClientRect();
           if (cloneBounds.x >= 0 && cloneBounds.x + cloneBounds.width <= this.currentStage.stage!.width() && cloneBounds.y >= 0 && cloneBounds.y + cloneBounds.height <= this.currentStage.stage!.height() && clone.fontSize() >= 20) {
-            /*if (startX < moveEvent.clientX) {
-              // node.fontSize(node.fontSize() + 1);
-              node.fontSize(clone.fontSize());
-            }
-            else {
-              // node.fontSize(node.fontSize() - 1);
-              node.fontSize(clone.fontSize());
-            }*/
+           
             node.fontSize(clone.fontSize());
             this.getRSOfNode();
             updateBorderDiv();
@@ -686,10 +651,7 @@ class TShirtDesigner {
             node.width(initialWidth + deltaX);
             node.height(initialHeight + deltaY);
           }
-          // if (cloneBounds.y >= 0 && cloneBounds.y + cloneBounds.height <= stage.height()) {
-          //   node.height(initialHeight + deltaY);
-
-          // }
+          
           this.getWHROfNode();
         }
 
@@ -740,7 +702,129 @@ class TShirtDesigner {
       window.addEventListener('mouseup', onMouseUp);
 
 
-    });
+    });*/
+    const getPoint = (e: MouseEvent | TouchEvent) => {
+      if (e instanceof TouchEvent) {
+        const touch = e.touches[0] || e.changedTouches[0];
+        return { x: touch.clientX, y: touch.clientY };
+      } else {
+        return { x: e.clientX, y: e.clientY };
+      }
+    };
+
+    const handleResizeStart = (e: MouseEvent | TouchEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      rotateIcon.style.display = 'none';
+      const stage = stageConfig.stage!;
+      const layer = stageConfig.layer!;
+      const { x: startX, y: startY } = getPoint(e);
+      const initialWidth = node.width();
+      const initialHeight = node.height();
+
+      const noRotated = Math.abs(node.rotation()) <= 1 || Math.abs(node.rotation()) >= 359;
+
+      if (noRotated) {
+        node.offsetX(0);
+        node.offsetY(0);
+        node.x(node.x() - initialWidth / 2);
+        node.y(node.y() - initialHeight / 2);
+      }
+
+      stageConfig.borderDiv!.style.display = 'block';
+
+      const handleResizeMove = (moveEvent: MouseEvent | TouchEvent) => {
+        moveEvent.preventDefault();
+        const { x, y } = getPoint(moveEvent);
+        const deltaX = x - startX;
+        const deltaY = y - startY;
+
+        if (node instanceof Konva.Text) {
+          const scale = (node.width() + deltaX / 16) / node.width();
+          const clone = node.clone();
+          clone.fontSize(node.fontSize() * scale);
+
+          const cloneBounds = clone.getClientRect();
+          if (
+            cloneBounds.x >= 0 &&
+            cloneBounds.x + cloneBounds.width <= stage.width() &&
+            cloneBounds.y >= 0 &&
+            cloneBounds.y + cloneBounds.height <= stage.height() &&
+            clone.fontSize() >= 20
+          ) {
+            node.fontSize(clone.fontSize());
+            this.getRSOfNode();
+            updateBorderDiv();
+          }
+        }
+
+        if (node instanceof Konva.Image) {
+          const clone = node.clone();
+          clone.width(initialWidth + deltaX);
+          clone.height(initialHeight + deltaY);
+          const cloneBounds = clone.getClientRect();
+
+          if (
+            cloneBounds.x >= 0 &&
+            cloneBounds.x + cloneBounds.width <= stage.width() &&
+            cloneBounds.y >= 0 &&
+            cloneBounds.y + cloneBounds.height <= stage.height()
+          ) {
+            node.width(initialWidth + deltaX);
+            node.height(initialHeight + deltaY);
+          }
+          this.getWHROfNode();
+        }
+
+        if (!noRotated) {
+          node.offsetX(node.width() / 2);
+          node.offsetY(node.height() / 2);
+        }
+
+        node.setAttr('rotationOfLastWidth', node.width());
+        node.setAttr('rotationOfLastHeight', node.height());
+        updateBorderDiv();
+        layer.draw();
+      };
+
+      const handleResizeEnd = () => {
+        if (noRotated) {
+          node.x(node.x() + node.width() / 2);
+          node.y(node.y() + node.height() / 2);
+          node.offsetX(node.width() / 2);
+          node.offsetY(node.height() / 2);
+        }
+
+        rotateIcon.style.display = 'block';
+
+        window.removeEventListener('mousemove', handleResizeMove);
+        window.removeEventListener('mouseup', handleResizeEnd);
+        window.removeEventListener('touchmove', handleResizeMove);
+        window.removeEventListener('touchend', handleResizeEnd);
+
+        rotateIcon.style.pointerEvents = 'none';
+        resizeIcon.style.pointerEvents = 'none';
+        stageConfig.borderDiv!.style.pointerEvents = 'none';
+
+        if (node instanceof Konva.Image) {
+          this.setMenuWithNodeAndStage(node, this.currentStage, 5);
+        } else if (node instanceof Konva.Text) {
+          this.setMenuWithNodeAndStage(node, this.currentStage, 6);
+          console.log('resizeIcon', node.fontSize(), node.width(), node.height());
+        }
+      };
+
+      window.addEventListener('mousemove', handleResizeMove);
+      window.addEventListener('mouseup', handleResizeEnd);
+      window.addEventListener('touchmove', handleResizeMove, { passive: false });
+      window.addEventListener('touchend', handleResizeEnd);
+    };
+
+    // Gắn sự kiện chuột và cảm ứng
+    resizeIcon.addEventListener('mousedown', handleResizeStart);
+    resizeIcon.addEventListener('touchstart', handleResizeStart, { passive: false });
+
 
     const rotateIcon = createIconWrapper('fas fa-redo', {}, (/*e*/) => {
       // e.stopPropagation();
@@ -785,7 +869,7 @@ class TShirtDesigner {
     };
 
 
-    rotateIcon.addEventListener('mousedown', (e: MouseEvent) => {
+    /*rotateIcon.addEventListener('mousedown', (e: MouseEvent) => {
       e.stopPropagation();
       const stage = stageConfig.stage!;
       const rect = stage.container().getBoundingClientRect();
@@ -904,7 +988,121 @@ class TShirtDesigner {
 
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp);
-    });
+    });*/
+
+
+    const handleRotateStart = (e: MouseEvent | TouchEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      const stage = stageConfig.stage!;
+      const rect = stage.container().getBoundingClientRect();
+
+      const centerX = rect.left + node.x();
+      const centerY = rect.top + node.y();
+
+      const { x: startX, y: startY } = getPoint(e);
+      const startAngle = Math.atan2(startY - centerY, startX - centerX);
+      const initialRotation = node.rotation();
+
+      stageConfig.borderDiv!.style.display = 'block';
+
+      const handleRotateMove = (moveEvent: MouseEvent | TouchEvent) => {
+        moveEvent.preventDefault();
+        const { x, y } = getPoint(moveEvent);
+        const currentAngle = Math.atan2(y - centerY, x - centerX);
+        const deltaAngle = (currentAngle - startAngle) * (180 / Math.PI);
+
+        const newRotation = initialRotation + deltaAngle;
+        node.rotation(newRotation);
+        rotateIcon.style.transform = `rotate(${newRotation}deg)`;
+
+        if (node instanceof Konva.Text) {
+          updateBorderDiv();
+          this.getRSOfNode();
+          return;
+        }
+
+        const bounds = node.getClientRect();
+        const defaultWidth = parseFloat(node.getAttr('rotationOfLastWidth'));
+        const defaultHeight = parseFloat(node.getAttr('rotationOfLastHeight'));
+        const tempNode = node.clone();
+        tempNode.width(defaultWidth);
+        tempNode.height(defaultHeight);
+        const tempBounds = tempNode.getClientRect();
+
+        if (
+          tempBounds.x >= stage.x() &&
+          tempBounds.x + tempBounds.width <= stage.width() &&
+          tempBounds.y >= stage.y() &&
+          tempBounds.y + tempBounds.height <= stage.height()
+        ) {
+          node.width(defaultWidth);
+          node.height(defaultHeight);
+        } else {
+          if (bounds.x < 0) {
+            const scale = node.x() / (node.x() - bounds.x);
+            node.width(node.width() * scale);
+            node.height(node.height() * scale);
+          }
+          if (bounds.x + bounds.width > stage.width()) {
+            const excessWidth = (bounds.x + bounds.width) - stage.width();
+            const scale = (bounds.width - excessWidth) / bounds.width;
+            node.width(node.width() * scale);
+            node.height(node.height() * scale);
+          }
+          if (bounds.y < 0) {
+            const scale = node.y() / (node.y() - bounds.y);
+            node.width(node.width() * scale);
+            node.height(node.height() * scale);
+          }
+          if (bounds.y + bounds.height > stage.height()) {
+            const excessHeight = (bounds.y + bounds.height) - stage.height();
+            const scale = (bounds.height - excessHeight) / bounds.height;
+            node.width(node.width() * scale);
+            node.height(node.height() * scale);
+          }
+        }
+
+        node.offsetX(node.width() / 2);
+        node.offsetY(node.height() / 2);
+        updateBorderDiv();
+        stageConfig.layer!.draw();
+
+        if (node instanceof Konva.Image) {
+          this.getWHROfNode();
+        }
+      };
+
+      const handleRotateEnd = () => {
+        window.removeEventListener('mousemove', handleRotateMove);
+        window.removeEventListener('mouseup', handleRotateEnd);
+        window.removeEventListener('touchmove', handleRotateMove);
+        window.removeEventListener('touchend', handleRotateEnd);
+
+        rotateIcon.style.pointerEvents = 'none';
+        resizeIcon.style.pointerEvents = 'none';
+        stageConfig.borderDiv!.style.pointerEvents = 'none';
+
+        node.setAttr('rotationOfLastWidth', node.width());
+        node.setAttr('rotationOfLastHeight', node.height());
+
+        if (node instanceof Konva.Image) {
+          this.setMenuWithNodeAndStage(node, this.currentStage, 5);
+        } else if (node instanceof Konva.Text) {
+          this.setMenuWithNodeAndStage(node, this.currentStage, 6);
+        }
+      };
+
+      window.addEventListener('mousemove', handleRotateMove);
+      window.addEventListener('mouseup', handleRotateEnd);
+      window.addEventListener('touchmove', handleRotateMove, { passive: false });
+      window.addEventListener('touchend', handleRotateEnd);
+    };
+
+    // Gắn sự kiện cho chuột và cảm ứng
+    rotateIcon.addEventListener('mousedown', handleRotateStart);
+    rotateIcon.addEventListener('touchstart', handleRotateStart, { passive: false });
 
 
 
@@ -1269,6 +1467,7 @@ class TShirtDesigner {
 
   public changeTextColor(color: string) {
     this.textColor = color;
+
   }
 
   public changeFontStyle(style: string) {
@@ -1353,11 +1552,14 @@ class TShirtDesigner {
             try {
               let cloudinary_url = "";
               if (/^data:image\/[a-zA-Z]+;base64,/.test(imageElement.src)) {
+
                 const file = this.base64ToFile(imageElement.src, 'image.png');
 
                 try {
                   const formData = new FormData();
                   formData.append('file', file);
+
+
                   const response = await uploadImageRaw(formData);
                   cloudinary_url = (response as { file?: { cloudinary_url?: string } }).file?.cloudinary_url ?? "";
                 }
@@ -1368,7 +1570,7 @@ class TShirtDesigner {
               else {
                 cloudinary_url = imageElement.src;
               }
-
+              console.log('cloudinary_url', cloudinary_url);
               design.push({
                 id: node.id(),
                 type: 'image',

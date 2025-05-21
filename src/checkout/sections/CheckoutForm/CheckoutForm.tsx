@@ -79,7 +79,7 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 	useEffect(() => {
 		let isMounted = true;
 		if (slug) {
-			console.log(slug)
+			console.log(slug);
 			// Fetch countries
 			const fetchCountries = async () => {
 				try {
@@ -181,7 +181,7 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 						<Field
 							type="checkbox"
 							name="useShippingAsBilling"
-							className="mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+							className="mr-2 h-4 w-4 rounded border-gray-300 text-[#8B3958] focus:ring-[#8B3958]"
 						/>
 						Use shipping address as billing address
 					</label>
@@ -235,7 +235,11 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 				)}
 				<button
 					type="submit"
-					className="flex w-full justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+					className={`flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+						isSubmitting
+							? "cursor-not-allowed bg-gray-400 hover:bg-gray-500 focus:ring-gray-500"
+							: "bg-[#8B3958] hover:bg-[#7A314F] focus:ring-[#7A314F] text-white"
+					}`}
 					disabled={isSubmitting}
 				>
 					{isSubmitting ? (

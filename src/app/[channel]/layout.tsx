@@ -1,27 +1,6 @@
 import { type ReactNode } from "react";
 import { executeGraphQL } from "@/lib/graphql";
 import { ChannelsListDocument } from "@/gql/graphql";
-import { Metadata } from "next";
-
-
-export const metadata: Metadata = {
-	title: "ZoomPrints",
-	description: "ZoomPrints is your gateway to rapid fast fulfillment minus the steep investment.",
-	openGraph: {
-		title: "ZoomPrints",
-		description: "ZoomPrints is your gateway to rapid fast fulfillment minus the steep investment.",
-		url: "../../",
-		images: [
-			{
-				url: "./opengraph-image.png",
-				width: 1200,
-				height: 630,
-				alt: "ZoomPrints",
-			},
-		],
-	},
-};
-
 
 export const generateStaticParams = async () => {
 	// the `channels` query is protected

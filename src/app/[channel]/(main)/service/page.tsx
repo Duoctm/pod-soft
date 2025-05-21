@@ -1,6 +1,12 @@
 import Image from "next/image";
+import Link from "next/link";
+ 
+const ServicesPage = ({params}: {params: {
+	channel: string;
+}}) => {
 
-const ServicesPage = () => {
+ 
+
 	return (
 		<div className="min-h-screen w-full bg-gradient-to-b from-white to-gray-50">
 			<div className="w-full pb-16">
@@ -35,10 +41,12 @@ const ServicesPage = () => {
 				<div className="mx-auto max-w-[2000px] px-4">
 					<div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
 						{services.map((service, _index) => (
-							<div
+							<Link
+								href={`/${params.channel}/products`}
 								key={service.title}
-								className={`group overflow-hidden rounded-xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl ${!service.isActive ? "pointer-events-none opacity-30" : ""
-									}`}
+								className={`group overflow-hidden rounded-xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl ${
+									!service.isActive ? "pointer-events-none opacity-30" : ""
+								}`}
 							>
 								<div className="relative mb-6 h-48 w-full overflow-hidden rounded-lg">
 									<Image
@@ -49,7 +57,7 @@ const ServicesPage = () => {
 										className="transform transition duration-500 group-hover:scale-110"
 									/>
 									{!service.isActive && (
-										<div className="absolute right-2 top-2 rounded-full bg-yellow-500 px-3 py-1 text-sm font-semibold text-white">
+										<div className="absolute right-2 top-2 rounded-full bg-yellow-500 px-3 py-1 text-sm font-semibold text-white uppercase">
 											Coming Soon
 										</div>
 									)}
@@ -75,7 +83,7 @@ const ServicesPage = () => {
 										</li>
 									))}
 								</ul>
-							</div>
+							</Link>
 						))}
 					</div>
 				</div>

@@ -319,8 +319,6 @@ export const Checkout = () => {
 
 		if (hasErrors) {
 			if (inAddressForm) {
-				// update();
-				// toast.error("Error when updating address, please check the address and try again");
 				return;
 			}
 		} else {
@@ -333,7 +331,6 @@ export const Checkout = () => {
 		const dataCheckout = await getCheckoutServer({ id: checkoutId, languageCode: LanguageCodeEnum.EnUs });
 
 		if (!dataCheckout.checkout?.shippingMethods || dataCheckout.checkout.shippingMethods.length === 0) {
-
 			toast.error("Please type shipping address");
 			return;
 		}
@@ -392,15 +389,6 @@ export const Checkout = () => {
 									<Divider />
 								</div>
 							</Formik>
-							{/* <div className="my-2 flex">
-								<button
-									type="submit"
-									className="flex w-full justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-									onClick={handlePlaceOrder}
-								>
-									Place Order
-								</button>
-							</div> */}
 						</div>
 						<div className="order-1 bg-gray-50 px-4 py-10 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 lg:py-16">
 							<Suspense fallback={<SummarySkeleton />}>

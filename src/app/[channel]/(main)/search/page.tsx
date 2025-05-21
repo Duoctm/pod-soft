@@ -44,8 +44,6 @@ export default async function Page({
 		revalidate: 60,
 	});
 
-	console.log(products);
-
 	if (!products) {
 		notFound();
 	}

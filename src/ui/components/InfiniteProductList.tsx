@@ -65,12 +65,13 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 
 	useEffect(() => {
 		void fetchAttributes();
-		if (isIntersecting && !loading && ((products?.pageInfo && products?.pageInfo.hasNextPage))) {
+		if (isIntersecting && !loading && products?.pageInfo && products?.pageInfo.hasNextPage) {
 			fetchData();
 		}
-		console.log(products?.pageInfo)
-
+		console.log(products?.pageInfo);
 	}, [isIntersecting, loading, fetchData, products?.pageInfo, setProducts]);
+
+
 
 	return (
 		<div className="flex min-h-screen w-full flex-col md:flex-row">
@@ -96,18 +97,29 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 						</button>
 					</div>
 					<button
-					onClick={() => {
-						router.replace(pathname);
-						router.refresh();
-						setIsFilterOpen(false);
-					}}
-					className="mb-4 w-full rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
-				>
-					Reset Filters
-				</button>
+						onClick={() => {
+							router.replace(pathname);
+							router.refresh();
+							setIsFilterOpen(false);
+						}}
+						className="mb-4 w-full rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+					>
+						Reset Filters
+					</button>
+
+						
 					{attributes &&
 						attributes.edges
-							.filter((attribute) => ["SIZE", "COLOR", "GENDER"].includes(attribute.node.name?.toUpperCase()))
+						.filter((attribute) =>
+							["COLOR", "SIZE", "GENDER", "BRAND", "PRINT TECHNOLOGY"].includes(attribute.node.name?.toUpperCase()),
+						)
+						// Sort attributes in specific order
+						.sort((a, b) => {
+							const order = ["COLOR", "SIZE", "BRAND","GENDER", "PRINT TECHNOLOGY"];
+							const aIndex = order.indexOf(a.node.name?.toUpperCase() || "");
+							const bIndex = order.indexOf(b.node.name?.toUpperCase() || "");
+							return aIndex - bIndex;
+						})
 							.map((attribute) => {
 								const { slug, name, choices } = attribute.node;
 								const options = choices?.edges || [];
@@ -156,7 +168,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 			</div>
 
 			{/* Sidebar Filter - Desktop */}
-			<div className="sticky top-20 hidden h-screen max-w-[330px] overflow-auto bg-white md:block">
+			<div className="sticky top-40 hidden h-screen w-full max-w-[290px] overflow-auto bg-white md:block">
 				<h2 className="mb-6 text-xl font-semibold capitalize text-gray-800 md:text-2xl lg:text-3xl">
 					Orders
 				</h2>
@@ -172,7 +184,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 				{!attributes ? (
 					// Skeleton loading for sidebar filters
 					<div className="animate-pulse">
-						{[1, 2, 3].map((index) => (
+						{[1, 2, 3, 4].map((index) => (
 							<div key={index} className="mb-6">
 								{/* Filter header skeleton */}
 								<div className="mb-3 flex items-center justify-between">
@@ -190,7 +202,16 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 					</div>
 				) : (
 					attributes.edges
-						.filter((attribute) => ["SIZE", "COLOR", "GENDER"].includes(attribute.node.name?.toUpperCase()))
+						.filter((attribute) =>
+							["COLOR", "SIZE", "GENDER", "BRAND", "PRINT TECHNOLOGY"].includes(attribute.node.name?.toUpperCase()),
+						)
+						// Sort attributes in specific order
+						.sort((a, b) => {
+							const order = ["COLOR", "SIZE", "BRAND","GENDER", "PRINT TECHNOLOGY"];
+							const aIndex = order.indexOf(a.node.name?.toUpperCase() || "");
+							const bIndex = order.indexOf(b.node.name?.toUpperCase() || "");
+							return aIndex - bIndex;
+						})
 						.map((attribute) => {
 							const { slug, name, choices } = attribute.node;
 							const options = choices?.edges || [];
@@ -202,7 +223,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 											<ChevronDownIcon className="ui-open:rotate-180 h-5 w-5 transition-transform duration-200" />
 										</Disclosure.Button>
 										<Disclosure.Panel className="mt-2">
-											<div className="flex flex-wrap gap-3">
+											<div className="flex flex-wrap gap-2">
 												{options
 													.slice(0, MAX_VISIBLE_OPTIONS)
 													.filter((choice) => !!choice.node.name)
@@ -219,6 +240,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 															isColor={name === "COLOR"}
 														/>
 													))}
+
 												{options.length > MAX_VISIBLE_OPTIONS && (
 													<ShowMoreOptions
 														paramName={name?.toLocaleLowerCase() as string}

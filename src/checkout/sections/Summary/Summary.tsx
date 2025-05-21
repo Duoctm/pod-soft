@@ -6,11 +6,9 @@ import { SummaryMoneyRow } from "./SummaryMoneyRow";
 import { SummaryPromoCodeRow } from "./SummaryPromoCodeRow";
 import { SummaryItemMoneyEditableSection } from "./SummaryItemMoneyEditableSection";
 import { ChevronDownIcon } from "@/checkout/ui-kit/icons";
-
-import { getFormattedMoney } from "@/checkout/lib/utils/money";
 import { Divider, Money, Title } from "@/checkout/components";
 import {
-	type Money as MoneyType ,
+	type Money as MoneyType,
 	type CheckoutLineFragment,
 	type GiftCardFragment,
 	type OrderLineFragment,
@@ -48,8 +46,8 @@ export const Summary: FC<SummaryProps> = ({
 		return {
 			...priceGross,
 			amount: priceGross.amount + voucherDiscount,
-		}
-	}
+		};
+	};
 
 	return (
 		<div
@@ -68,7 +66,11 @@ export const Summary: FC<SummaryProps> = ({
 						return (
 							<SummaryItem line={line} key={line?.id}>
 								{editable ? (
-									<SummaryItemMoneyEditableSection line={line as CheckoutLineFragment} id={id} update={update} />
+									<SummaryItemMoneyEditableSection
+										line={line as CheckoutLineFragment}
+										id={id}
+										update={update}
+									/>
 								) : (
 									<SummaryItemMoneySection line={line as OrderLineFragment} />
 								)}
@@ -80,11 +82,15 @@ export const Summary: FC<SummaryProps> = ({
 			{editable && (
 				<>
 					<PromoCodeAdd id={id} update={update} />
-					<Divider  className="mt-4"/>
+					<Divider className="mt-4" />
 				</>
 			)}
 			<div className="mt-4 flex max-w-full flex-col">
-				<SummaryMoneyRow label="Subtotal" money={hanlePriceBeforeAddVoucher(subtotalPrice?.gross as MoneyType, discount?.amount as number)} ariaLabel="subtotal price" />
+				<SummaryMoneyRow
+					label="Subtotal"
+					money={hanlePriceBeforeAddVoucher(subtotalPrice?.gross as MoneyType, discount?.amount as number)}
+					ariaLabel="subtotal price"
+				/>
 				{voucherCode && (
 					<SummaryPromoCodeRow
 						id={id}
@@ -112,15 +118,24 @@ export const Summary: FC<SummaryProps> = ({
 					/>
 				))}
 				<SummaryMoneyRow label="Shipping cost" ariaLabel="shipping cost" money={shippingPrice?.gross} />
-				<Divider className="my-4" />
+				<div className="flex flex-row items-baseline justify-between pb-4">
+					<div className="flex flex-row items-baseline">
+						<p>Tax</p>
+					</div>
+					<Money ariaLabel="total price" money={totalPrice?.tax} data-testid="totalOrderPrice" />
+				</div>
+				<Divider className="mb-2" />
+
 				<div className="flex flex-row items-baseline justify-between pb-4">
 					<div className="flex flex-row items-baseline">
 						<p className="font-bold">Total price</p>
-						<p color="secondary" className="ml-2">
-							includes {getFormattedMoney(totalPrice?.tax)} tax
-						</p>
 					</div>
-					<Money ariaLabel="total price" money={totalPrice?.gross} data-testid="totalOrderPrice" />
+					<Money
+						className="font-bold text-[#8B3958]"
+						ariaLabel="total price"
+						money={totalPrice?.gross}
+						data-testid="totalOrderPrice"
+					/>
 				</div>
 			</div>
 		</div>

@@ -1,9 +1,8 @@
 "use client";
 
 import { useTransition } from "react";
+import { Loader } from "lucide-react";
 import { deleteLineFromCheckout } from "./actions";
-import { Trash ,Loader} from "lucide-react";
- 
 
 type Props = {
 	lineId: string;
@@ -18,17 +17,26 @@ export const DeleteLineButton = ({ lineId, checkoutId, onRemove }: Props) => {
 		<button
 			type="button"
 			disabled={isPending}
-			className="text-sm text-neutral-500 hover:text-neutral-900 "
+			// className="flex text-sm font-semibold bg-red-500 text-white hover:bg-red-600 px-3 py-1 rounded-md"
 			onClick={() => {
 				if (isPending) return;
 				startTransition(() => {
-					deleteLineFromCheckout({ lineId, checkoutId })
+					void deleteLineFromCheckout({ lineId, checkoutId });
 					onRemove?.();
 				});
 			}}
 			aria-disabled={isPending}
 		>
-			{isPending ? <Loader className="w-10 h-10 spin" /> : <Trash  className="w-7 h-7 text-red-500"/>}
+			{isPending ? (
+				<Loader className="spin h-10 w-10" />
+			) : (
+				<span
+		 			className="text-sm md:text-blue-500 md:underline md:font-medium  border md:border-none py-1 border-black bg-white  px-2 rounded-full"
+					// className="flex text-sm font-semibold bg-red-500 text-white hover:bg-red-600 px-3 py-1 rounded-md"
+				>
+					Delete
+				</span>
+			)}
 			<span className="sr-only">line from cart</span>
 		</button>
 	);

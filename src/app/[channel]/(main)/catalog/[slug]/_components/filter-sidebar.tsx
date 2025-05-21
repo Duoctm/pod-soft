@@ -54,11 +54,11 @@ export function ShowMoreOptions({
 					))}
 			<button
 				type="button"
-				className="ml-2 text-sm text-blue-600 underline"
+				className="ml-2 text-sm text-blue-600 underline block text-end"
 				onClick={() => setShowAll((prev) => !prev)}
 			>
 				{showAll ? "Show Less" : `Show More (${options.length - MAX_VISIBLE_OPTIONS})`}
 			</button>
-		</>
+		</ >
 	);
 }

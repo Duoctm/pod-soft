@@ -4,10 +4,10 @@ export default function SpecialOffer() {
 	return (
 		<div className="w-full bg-[#263246] py-12 sm:py-[120px]">
 			<Wrapper className="flex flex-col items-center justify-center px-4 sm:px-0">
-				<h3 className="captitalize w-full max-w-[877px] text-center text-2xl font-bold  text-white sm:text-[32px] leading-[71.25px] md:text-5xl lg:text-[56px]">
+				<h3 className="captitalize w-full max-w-[877px] text-center text-[32px]  font-bold  text-white sm:text-[32px] leading-[38px] md:leading-[71.25px] md:text-5xl lg:text-[56px]">
 				First Time Customer  <br/><span className="text-[#FD8C6F] leading-[71.25px]">25% Off Whole Order</span> For Today 
 				</h3>
-				<span className="w-full py-3 text-center md:text-[26px] font-normal leading-[140%] text-[#BCBBC9] sm:py-4 sm:text-[14px]">
+				<span className="w-full py-3 text-center md:text-[26px] font-normal leading-[140%] text-[#BCBBC9] sm:py-4 text-[13px]">
 					See, Touch, and Feel the Excellence of ZoomPrints
 				</span>
 				{/* <Link

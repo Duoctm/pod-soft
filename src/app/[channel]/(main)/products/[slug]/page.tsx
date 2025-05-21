@@ -18,7 +18,6 @@ import { Product, ProductVariant, TaxedMoney } from "@/gql/graphql";
 import Swipper from "./_components/Swipper";
 import { Ruler } from "lucide-react";
 import SizeGuideModal from "./guide";
-import Wrapper from "@/ui/components/wrapper";
 
 // Initialize the parser once
 const parser = edjsHTML();
@@ -335,29 +334,23 @@ export default function Page({ params }: PageProps) {
 	}, [opstions, optionList, productData?.seachKey]);
 
 	return (
-		<Wrapper className="flex min-h-screen flex-col items-center py-8 font-sans">
+		<div className="flex min-h-screen flex-col items-center py-8 font-sans">
 			{/* <SizeGuideModal catalog={productData?.product?.category?.name  === "tee" || productData?.product?.category?.name === "fleece" ? productData?.product?.category?.name : "tee"} /> */}
 
 			<ToastContainer position="top-center" />
-			<div className="relative flex w-[95%] max-w-7xl flex-col gap-8 rounded-lg md:flex-row md:p-8">
+			<div className="relative flex w-[95%] max-w-7xl flex-col gap-8 rounded-lg p-4 md:flex-row md:p-8">
 				{/* Image Section */}
-				<ProductTitle
-					name={productData?.product?.name}
-					isLoading={loading}
-					className="text-[32px] font-bold md:hidden"
-				/>
-
 				<div className="w-full md:w-1/2 lg:w-2/5">
 					<Swipper images={imageSlider} loading={loading} />
-					<div className="hidden w-full md:block">
+					<div className="w-full">
 						<ProductDescription descriptionHtml={descriptionHtml} title="Descriptions" />
 					</div>
 				</div>
 
 				{/* Product Details Section */}
-				<div className="relative flex w-full flex-col rounded-lg md:w-1/2 lg:w-3/5">
+				<div className="relative flex w-full flex-col rounded-lg px-4 md:w-1/2 md:px-6 lg:w-3/5">
 					<div className="mb-24 flex-grow space-y-6">
-						<ProductTitle name={productData?.product?.name} isLoading={loading} className="hidden md:block" />
+						<ProductTitle name={productData?.product?.name} isLoading={loading} />
 						{/* <ProductDescription descriptionHtml={features} isLoading={loading} /> */}
 
 						<div className="mt-4 w-full">
@@ -372,34 +365,33 @@ export default function Page({ params }: PageProps) {
 										)
 									)}
 								</div>
-								<div className="flex flex-1 items-center justify-end">
-									{loading ? (
-										<div className="flex items-center gap-x-2">
-											<div className="h-5 w-5 animate-pulse rounded bg-gray-200" />
-											<div className="h-4 w-20 animate-pulse rounded bg-gray-200" />
-										</div>
-									) : (
-										<button className="flex items-center gap-x-2" onClick={() => setShowSizeGuide(true)}>
-											<Ruler />
-											<span className="underline">Size Guide</span>
-										</button>
-									)}
-
-									{showSizeGuide && (
-										<SizeGuideModal
-											setShowSizeGuide={setShowSizeGuide}
-											catalog={
-												productData?.product?.category?.slug === "tee" ||
-												productData?.product?.category?.slug === "fleece"
-													? productData?.product?.category?.slug
-													: "tee"
-											}
-										/>
-									)}
-								</div>
 							</div>
 						</div>
+						<div className="flex flex-1 items-center justify-end">
+							{loading ? (
+								<div className="flex items-center gap-x-2">
+									<div className="h-5 w-5 animate-pulse rounded bg-gray-200" />
+									<div className="h-4 w-20 animate-pulse rounded bg-gray-200" />
+								</div>
+							) : (
+								<button className="flex items-center gap-x-2" onClick={() => setShowSizeGuide(true)}>
+									<Ruler />
+									<span className="underline">Size Guide</span>
+								</button>
+							)}
 
+							{showSizeGuide && (
+								<SizeGuideModal
+									setShowSizeGuide={setShowSizeGuide}
+									catalog={
+										productData?.product?.category?.slug === "tee" ||
+										productData?.product?.category?.slug === "fleece"
+											? productData?.product?.category?.slug
+											: "tee"
+									}
+								/>
+							)}
+						</div>
 						{/* Interactive Product Options */}
 						<div className="space-y-4">
 							{optionList.map((option) => {
@@ -540,29 +532,32 @@ export default function Page({ params }: PageProps) {
 									</div>
 								</>
 							) : (
-								<div className="flex items-center gap-3">
-									<input
-										type="number"
-										value={sizeQuantitie}
-										onChange={(e) => {
-											setSizeQuantitie(parseInt(e.target.value));
-										}}
-										max={quantityLimitPerCustomer}
-										min="1"
-										className="w-20 rounded-md border border-gray-300 bg-white px-3 py-2 text-center text-gray-900 shadow-sm 
+								<>
+									<div className="flex w-full items-center justify-center gap-4 rounded-lg bg-gray-50 p-3 md:w-auto">
+										<label className="text-sm font-medium text-gray-700">Quantity:</label>
+										<input
+											type="number"
+											value={sizeQuantitie}
+											onChange={(e) => {
+												setSizeQuantitie(parseInt(e.target.value));
+											}}
+											max={quantityLimitPerCustomer}
+											min="1"
+											className="w-20 rounded-md border border-gray-300 bg-white px-3 py-2 text-center text-gray-900 shadow-sm 
 												transition duration-200 ease-in-out hover:border-[#8B3958]
 												focus:border-[#8B3958] focus:outline-none focus:ring-2
 												focus:ring-[#8B3958]"
-									/>
+										/>
+									</div>
 
-									<div className="flex w-full flex-row items-center justify-center gap-3">
+									<div className="flex w-full flex-col gap-4 sm:flex-row">
 										<button
 											id="add-to-cart-button"
-											className="flex flex-1 transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
-											py-3 text-[12px] font-semibold text-white shadow-lg 
-											transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
-											focus:outline-none focus:ring-2
-											focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+											className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
+												py-3 text-base font-semibold text-white shadow-lg 
+												transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
+												focus:outline-none focus:ring-2
+												focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
 											onClick={async () => {
 												let totalQuanlity = 0;
 
@@ -610,14 +605,14 @@ export default function Page({ params }: PageProps) {
 										{isCustomDesign == true && (
 											<Link
 												href={`/${channel}/design/1/${productData?.product?.id}/${selectColorAttributeValueId}`}
-												className="flex-1"
+												className="w-full sm:w-auto"
 											>
 												<button
 													className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
-          py-3 text-[12px] font-semibold text-white shadow-lg 
-          transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
-          focus:outline-none
-          focus:ring-2 focus:ring-[#8B3958] focus:ring-offset-2 disabled:opacity-50"
+														py-3 text-base font-semibold text-white shadow-lg 
+														transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
+														focus:outline-none
+														focus:ring-2 focus:ring-[#8B3958] focus:ring-offset-2 disabled:opacity-50 sm:w-auto"
 													onClick={() => {
 														localStorage.setItem(
 															"cart",
@@ -637,22 +632,19 @@ export default function Page({ params }: PageProps) {
 													>
 														<path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
 													</svg>
-													Design
+													Customize Design
 												</button>
 											</Link>
 										)}
 									</div>
-								</div>
+								</>
 							)}
 						</div>
 						{/* Action Buttons */}
 						<ProductDescription descriptionHtml={features} isLoading={loading} />
-						<div className="block w-full  md:hidden">
-							<ProductDescription descriptionHtml={descriptionHtml} title="Descriptions" />
-						</div>
 					</div>
 				</div>
 			</div>
-		</Wrapper>
+		</div>
 	);
 }

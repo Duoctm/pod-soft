@@ -12,35 +12,34 @@ function ConfirmContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
-	const email = searchParams.get("email");
+	const email = decodeURIComponent(searchParams.get("email") || "");
 	const token = searchParams.get("token");
 
 	useEffect(() => {
-		console.log(email, token)
-		if (!email || !token) return;
-		 
+		if (!email || !token) {
+			setConfirmStatus("error");
+			setErrorMessage("Invalid confirmation link");
+			return;
+		}
 
-		(async () => {
+		const confirmAccountServerAction = async () => {
 			try {
-				const res = await confirmAccountOnServer(decodeURIComponent(email), token);
-				console.log(res)
-				if (res?.user) {
+				const comfirmedAccount = await confirmAccountOnServer(email, token);
+
+				if (comfirmedAccount?.user && comfirmedAccount.errors.length === 0) {
 					setConfirmStatus("success");
 				} else {
+					const errorMessages = comfirmedAccount?.errors.map((e) => e.message).join(", ") as string;
 					setConfirmStatus("error");
-					if (res?.user) {
-						setErrorMessage(res?.errors.map((e) => e.message).join(", "));
-						return
-					}
-					setErrorMessage("Something wrong")
-					return;
+					setErrorMessage(errorMessages);
 				}
 			} catch (err) {
 				setConfirmStatus("error");
-				setErrorMessage("Server error");
+				setErrorMessage("Invalid confirmation link.");
 			}
-		})();
-	}, [searchParams]);
+		};
+		void confirmAccountServerAction();
+	}, [email, token]);
 
 	// Countdown & redirect
 	useEffect(() => {

@@ -1,10 +1,10 @@
 import React, { type FormEvent, useState, useRef } from "react";
+import { LoaderCircle } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import { addPromodeCode } from "@/checkout/hooks/useAddPromoddeCode";
 import "react-toastify/dist/ReactToastify.css";
-import { LoaderCircle } from "lucide-react";
- 
-export const PromoCodeAdd = ({ id, update }: { id: string , update: ()=> void}) => {
+
+export const PromoCodeAdd = ({ id, update }: { id: string; update: () => void }) => {
 	const [voucherCode, setVoucherCode] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [spamCount, setSpamCount] = useState(0);
@@ -18,38 +18,28 @@ export const PromoCodeAdd = ({ id, update }: { id: string , update: ()=> void}) 
 
 		try {
 			const result = await addPromodeCode(voucherCode, id);
-			console.log(result)
 
-			if (result?.success === false) {
-				const errors = result?.data;
-				if (errors.length > 0) {
-					errors.map((err: any) => {
+			if (!result?.success) {
+				const errors = result?.data?.errors;
+				if (errors && errors.length > 0) {
+					errors?.map((err) => {
 						toast.error(err.message);
 					});
-					// Count as a spam attempt
-					setSpamCount((prev) => prev + 1);
-					checkSpam(spamCount + 1);
-					setLoading(false);
-					return;
 				} else {
 					toast.error("In valid promode code");
-					setSpamCount((prev) => prev + 1);
-					checkSpam(spamCount + 1);
-					setLoading(false);
-					return;
 				}
-			}
-			if (result?.success) {
+			} else {
 				toast.success("Promo code applied successfully!");
 				setVoucherCode("");
 				setSpamCount(0); // Reset spam count on success
 				update();
+				return;
 			}
 		} catch (error) {
 			console.error("Failed to apply promo code:", error);
+		} finally {
 			setSpamCount((prev) => prev + 1);
 			checkSpam(spamCount + 1);
-		} finally {
 			setLoading(false);
 		}
 	};
@@ -93,18 +83,16 @@ export const PromoCodeAdd = ({ id, update }: { id: string , update: ()=> void}) 
 
 				<button
 					type="submit"
-					className="inline-flex justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition duration-150 ease-in-out hover:bg-gray-800 focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2"
+					className="inline-flex justify-center rounded-md border border-transparent bg-[#8B3958] px-4 py-2 text-sm font-medium text-white shadow-sm transition duration-150 ease-in-out hover:bg-[#7A314F] focus:bg-[#7A314F] focus:outline-none focus:ring-2 focus:ring-[#7A314F] focus:ring-offset-2"
 					disabled={loading || isLocked}
 				>
-					{loading ? (
-						<LoaderCircle className="animate-spin h-5 w-5 mr-2" />
-					) : (
-						"Apply"
-					)}
+					{loading ? <LoaderCircle className="mr-2 h-5 w-5 animate-spin" /> : "Apply"}
 				</button>
 			</div>
 			{isLocked && (
-				<p className="mt-2 text-sm text-red-600">You have been temporarily locked out for spamming. Please wait 1 minute.</p>
+				<p className="mt-2 text-sm text-red-600">
+					You have been temporarily locked out for spamming. Please wait 1 minute.
+				</p>
 			)}
 		</form>
 	);
