@@ -49,31 +49,42 @@ export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> =
 			<div className="flex flex-wrap gap-2">
 				{sortedValues.filter(value => value !== null).map((value) => {
 					const isSelected = selectedValue === value;
-
 					const colorMatch = value.match(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/);
 					const colorCode = isColor && colorMatch ? colorMatch[0] : null;
-					const baseClasses =
-						"flex h-9 max-w-[2.5rem] items-center justify-center rounded-md border px-3 text-sm transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 text-black";
-					const colorStyle = isColor ? { backgroundColor: colorCode || "#f9fafb", borderRadius: "100%" } : {};
-					const stateClasses = isSelected
-						? "border-black ring-1 ring-black ring-offset-1"
-						: "border-gray-300 hover:border-gray-500";
-					const extraClasses = isColor ? `w-9 p-0 ${isSelected ? "ring-offset-2" : ""}` : "";
+					const colorName = value.replace(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/, "").trim();
+
+					if (isColor) {
+						return value && (
+							<div className="relative group" key={value}>
+								<button
+									className={`w-8 h-8 rounded-full border-2 transition-all duration-150 
+										${isSelected 
+											? 'border-slate-700 ring-2 ring-slate-300 ring-offset-2' 
+											: 'border-slate-300 hover:border-slate-400'
+										}`}
+									style={{ backgroundColor: colorCode || "#f9fafb" }}
+									onClick={() => onSelect(value)}
+									title={colorName} // Add native HTML tooltip
+								>
+									<span className="sr-only">{colorName}</span>
+								</button>
+							</div>
+						);
+					}
 
 					return value && (
 						<button
 							key={value}
-							className={`${baseClasses} ${stateClasses} ${extraClasses}`}
-							style={colorStyle}
+							className={`flex h-8 items-center justify-center rounded-md px-3 text-sm
+								transition-all duration-150 
+								${isSelected
+									? 'bg-[#8C3859] text-white border-slate-300'
+									: 'border border-slate-200 hover:border-gray-300'
+								}`}
 							onClick={() => onSelect(value)}
 							title={value}
 						>
-							{isColor ? null : value}
-							{isColor && (
-								<span className="sr-only">
-									{value.replace(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/, "").trim()}
-								</span>
-							)}
+							{value}
 						</button>
 					);
 				})}

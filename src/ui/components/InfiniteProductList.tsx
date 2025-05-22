@@ -18,7 +18,7 @@ type InfiniteProductListProps = {
 	first: number;
 };
 
-const MAX_VISIBLE_OPTIONS = 6;
+const MAX_VISIBLE_OPTIONS = 4;
 
 const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 	const [loading, setLoading] = useState(false);
@@ -59,22 +59,23 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 
 			setCursor(newData.pageInfo.endCursor);
 		}
-
 		setLoading(false);
+		return;
 	}, [cursor, channel, first, loading]);
 
 	useEffect(() => {
+		void fetchData(); 
 		void fetchAttributes();
-		if (isIntersecting && !loading && products?.pageInfo && products?.pageInfo.hasNextPage) {
-			fetchData();
+	}, []);
+
+	useEffect(() => {
+		if (isIntersecting && !loading && products?.pageInfo?.hasNextPage) {
+			void fetchData(); // Load more when scrolled
 		}
-		console.log(products?.pageInfo);
-	}, [isIntersecting, loading, fetchData, products?.pageInfo, setProducts]);
-
-
+	}, [isIntersecting, loading, products?.pageInfo]);
 
 	return (
-		<div className="flex min-h-screen w-full flex-col md:flex-row gap-x-2">
+		<div className="flex min-h-screen w-full flex-col gap-x-2 md:flex-row">
 			{/* Mobile Filter Button */}
 			<button
 				className="fixed bottom-4 right-4 z-50 rounded-full bg-black p-4 text-white shadow-lg md:hidden"
@@ -85,8 +86,9 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 
 			{/* Sidebar Filter - Mobile Popup */}
 			<div
-				className={`fixed inset-0 z-50 transform bg-white transition-transform duration-300 ease-in-out md:hidden ${isFilterOpen ? "translate-x-0" : "-translate-x-full"
-					}`}
+				className={`fixed inset-0 z-50 transform bg-white transition-transform duration-300 ease-in-out md:hidden ${
+					isFilterOpen ? "translate-x-0" : "-translate-x-full"
+				}`}
 			>
 				<div className="flex h-full flex-col overflow-y-auto p-4">
 					<div className="mb-4 flex items-center justify-between">
@@ -106,15 +108,13 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 						Reset Filters
 					</button>
 
-
 					{attributes &&
 						attributes.edges
-							.filter((attribute) =>
-								["COLOR", "SIZE", "GENDER", "BRAND", "PRINT TECHNOLOGY"].includes(attribute.node.name?.toUpperCase()),
-							)
+							.filter((attribute) => ["SIZE", "GENDER", "BRAND"].includes(attribute.node.name?.toUpperCase()))
 							// Sort attributes in specific order
 							.sort((a, b) => {
-								const order = ["COLOR", "SIZE", "BRAND", "GENDER", "PRINT TECHNOLOGY"];
+								const order = ["SIZE", "BRAND", "GENDER"];
+								// const order = ["COLOR", "SIZE", "BRAND","GENDER", "PRINT TECHNOLOGY"];
 								const aIndex = order.indexOf(a.node.name?.toUpperCase() || "");
 								const bIndex = order.indexOf(b.node.name?.toUpperCase() || "");
 								return aIndex - bIndex;
@@ -167,7 +167,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 			</div>
 
 			{/* Sidebar Filter - Desktop */}
-			<div className="sticky top-40 hidden h-[calc(100vh-160px)] w-full max-w-[280px] overflow-y-auto bg-white md:block scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+			<div className="scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 sticky top-40 hidden h-[calc(100vh-160px)] w-full max-w-[280px] overflow-y-auto bg-white md:block">
 				<h2 className="mb-6 text-xl font-semibold capitalize text-gray-800 md:text-2xl lg:text-3xl">
 					Orders
 				</h2>
@@ -201,12 +201,11 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 					</div>
 				) : (
 					attributes.edges
-						.filter((attribute) =>
-							["COLOR", "SIZE", "GENDER", "BRAND", "PRINT TECHNOLOGY"].includes(attribute.node.name?.toUpperCase()),
-						)
+						.filter((attribute) => ["SIZE", "GENDER", "BRAND"].includes(attribute.node.name?.toUpperCase()))
 						// Sort attributes in specific order
 						.sort((a, b) => {
-							const order = ["COLOR", "SIZE", "BRAND", "GENDER", "PRINT TECHNOLOGY"];
+							const order = ["SIZE", "BRAND", "GENDER"];
+							// const order = ["COLOR", "SIZE", "BRAND","GENDER", "PRINT TECHNOLOGY"];
 							const aIndex = order.indexOf(a.node.name?.toUpperCase() || "");
 							const bIndex = order.indexOf(b.node.name?.toUpperCase() || "");
 							return aIndex - bIndex;
@@ -222,7 +221,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 											<ChevronDownIcon className="ui-open:rotate-180 h-5 w-5 transition-transform duration-200" />
 										</Disclosure.Button>
 										<Disclosure.Panel className="mt-2">
-											<div className="flex flex-wrap gap-2">
+											<div className="flex flex-wrap gap-1">
 												{options
 													.slice(0, MAX_VISIBLE_OPTIONS)
 													.filter((choice) => !!choice.node.name)
@@ -261,12 +260,12 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 
 			{/* Product Grid */}
 			<div className="flex-1">
-				{products && <ProductList products={products.edges.map((e) => e.node)} />}
-				{loading && (
+				{/* Hiển thị loading khi chưa có dữ liệu lần đầu */}
+				{loading && !products && (
 					<div className="w-full">
 						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-							{[1, 2, 3, 4, 5, 6].map((item) => (
-								<div key={item} className="animate-pulse">
+							{[...Array(6)].map((_, idx) => (
+								<div key={idx} className="animate-pulse">
 									<div className="mb-3 aspect-square rounded-lg bg-gray-200"></div>
 									<div className="mb-2 h-4 w-3/4 rounded bg-gray-200"></div>
 									<div className="h-4 w-1/2 rounded bg-gray-200"></div>
@@ -275,6 +274,20 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 						</div>
 					</div>
 				)}
+
+
+
+				{/* Hiển thị danh sách sản phẩm nếu có */}
+				{(products && products.edges && products.edges.length > 0 )&& !loading  && (
+					<ProductList products={products.edges.map((e) => e.node)} />
+				)}
+
+				{/* Loading khi đang fetch thêm sản phẩm (trang tiếp theo) */}
+				{loading && products && products.edges.length > 0 && (
+					<div className="mt-4 text-center text-gray-500">Đang tải thêm sản phẩm...</div>
+				)}
+
+				{/* Trigger điểm quan sát cho infinite scroll */}
 				<div ref={setRef} className="h-10"></div>
 			</div>
 		</div>

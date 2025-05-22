@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo } from "react";
 import { filterOptions } from "../actions/filter-option";
 import { type CategoryType } from "../types";
 import { getProductList } from "../../../products/[slug]/actions/getProductList";
+import { cn } from "@/lib/utils";
 
 interface FilterOptionProps {
 	attributeName: string | null;
@@ -138,28 +139,21 @@ export const FilterOption = React.memo(function FilterOption({
 	return (
 		<div
 			onClick={handleClickSelect}
-			className={`
-				flex cursor-pointer items-center
-				justify-center transition-all duration-200
-				ease-in-out
-				hover:scale-105
-				${
-					isColor
-						? "h-10 w-10 rounded-full shadow-md hover:shadow-lg"
-						: "px-2 py-2 rounded-md shadow-sm hover:shadow-md"
-				}
-				${selected ? "border-2 border-black ring-2 ring-gray-200" : "border border-gray-200 hover:border-gray-300"}
-			`}
+			className={cn(
+				"text-sm font-medium flex cursor-pointer items-center justify-center transition-all duration-200 ease-in-out hover:bg-[#8C3859] hover:text-white",
+				isColor
+					? "w-10 h-10 border-2 rounded-full shadow-md hover:shadow-lg"
+					: "min-w-14 px-2 py-2 rounded-md shadow-sm hover:shadow-md",
+				selected
+					? " ring-gray-200 !bg-[#8C3859] !text-white"
+					: "border-2 border-gray-200 hover:border-gray-300"
+			)}
 			style={{
-				backgroundColor: isColor ? splitAttributeName || undefined : "white",
+				backgroundColor: isColor ? splitAttributeName || undefined : "",
 			}}
 		>
 			{!isColor && (
 				<span
-					className={`
-					text-sm font-medium
-					${selected ? "text-black" : "text-gray-600"}
-				`}
 				>
 					{splitAttributeName}
 				</span>

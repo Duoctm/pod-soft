@@ -554,7 +554,7 @@ export default function Page({ params }: PageProps) {
 										<button
 											id="add-to-cart-button"
 											className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
-												py-3 text-base font-semibold text-white shadow-lg 
+												py-2 text-base font-semibold text-white shadow-lg 
 												transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
 												focus:outline-none focus:ring-2
 												focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
