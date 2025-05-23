@@ -167,7 +167,7 @@ const InfiniteProductList = ({ channel, first }: InfiniteProductListProps) => {
 			</div>
 
 			{/* Sidebar Filter - Desktop */}
-			<div className="scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 sticky top-40 hidden h-[calc(100vh-160px)] w-full max-w-[280px] overflow-y-auto bg-white md:block">
+			<div className="scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 sticky top-40 hidden h-[calc(100vh-160px)] w-full max-w-[250px] overflow-y-auto bg-white md:block">
 				<h2 className="mb-6 text-xl font-semibold capitalize text-gray-800 md:text-2xl lg:text-3xl">
 					Orders
 				</h2>

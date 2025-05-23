@@ -3,6 +3,7 @@ import { UploadFileDocument } from "@/gql/graphql";
 
 const uploadPdf = async (data: FormData) => {
     const file = data.get('file') as File;
+
     const operations = JSON.stringify({
         query: UploadFileDocument,
         variables: { file: null },

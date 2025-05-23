@@ -56,7 +56,7 @@ export const updateCurentAddress = async (
 		country: { country: string; code: string };
 	},
 ) => {
-	try { 
+	try {
 		const { accountAddressUpdate } = await executeGraphQL(AccountAddressUpdateDocument, {
 			variables: {
 				id: address_id,
@@ -95,7 +95,7 @@ export const updateAddress = async (
 		country: { country: string; code: string };
 	},
 ) => {
-	try { 
+	try {
 		const { accountAddressCreate } = await executeGraphQL(AccountAddressCreateDocument, {
 			variables: {
 				input: {

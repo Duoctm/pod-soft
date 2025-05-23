@@ -531,6 +531,23 @@ class TShirtDesigner {
 
   }
 
+  public trimTextToFitStageWidth(textNode: Konva.Text, stage: Konva.Stage) {
+    let text = textNode.text();
+    let fontSize = textNode.fontSize();
+
+    while (textNode.width() > stage.width() && fontSize > 10) {
+      fontSize -= 1;
+      textNode.fontSize(fontSize);
+    }
+
+    while (textNode.width() > stage.width() && text.length > 0) {
+      text = text.slice(0, -1);
+      textNode.text(text);
+    }
+  }
+
+
+
   private setNodeBoder(node: Konva.Node, stageConfig: StageConfig) {
     this.clearBorderNode(stageConfig);
     stageConfig.selectedNode = node;
@@ -751,7 +768,7 @@ class TShirtDesigner {
             cloneBounds.x + cloneBounds.width <= stage.width() &&
             cloneBounds.y >= 0 &&
             cloneBounds.y + cloneBounds.height <= stage.height() &&
-            clone.fontSize() >= 20
+            clone.fontSize() >= 10
           ) {
             node.fontSize(clone.fontSize());
             this.getRSOfNode();
@@ -1417,6 +1434,8 @@ class TShirtDesigner {
       align: 'center',
       padding: 5,
     });
+
+    this.trimTextToFitStageWidth(textNode, this.currentStage.stage);
 
     // Căn giữa text node
     textNode.offsetX(textNode.width() / 2);
@@ -2300,7 +2319,7 @@ class TShirtDesigner {
       }
       const cloneBounds = clone.getClientRect();
       if (node instanceof Konva.Text) {
-        if (cloneBounds.x >= this.currentStage.stage!.x() && cloneBounds.x + cloneBounds.width <= this.currentStage.stage!.width() && cloneBounds.y >= this.currentStage.stage!.y() && cloneBounds.y + cloneBounds.height <= this.currentStage.stage!.height()) {
+        if (cloneBounds.x >= this.currentStage.stage!.x() && cloneBounds.x + cloneBounds.width <= this.currentStage.stage!.width() && cloneBounds.y >= this.currentStage.stage!.y() && cloneBounds.y + cloneBounds.height <= this.currentStage.stage!.height() && clone.fontSize() > 10) {
           node.fontSize(instance);
         }
       }

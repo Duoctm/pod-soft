@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import React from "react";
 
 interface ProductTitleProps {
@@ -8,17 +9,17 @@ interface ProductTitleProps {
 
 export const ProductTitle: React.FC<ProductTitleProps> = ({ 
   name, 
-  className = "mb-4 text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight",
+  className,
   isLoading = false
 }) => {
   if (isLoading || !name || name === "") {
     return (
-      <div className={`${className} animate-pulse bg-gray-200 rounded h-8 w-3/4`} />
+      <div className={cn('animate-pulse bg-gray-200 rounded h-8 w-3/4 ', className)} />
     );
   }
   
   return (
-    <h1 className={`${className} break-words leading-tight transition-all duration-200`}>
+    <h1 className={`${className} break-words leading-tight transition-all duration-200 mb-4 text-[32px] lg:text-4xl font-bold tracking-tight`}>
       {name}
     </h1>
   );

@@ -7,6 +7,6 @@ export async function logout() {
 	getServerAuthClient().signOut();
 	const clean = await cookies();
 	clean.delete("checkoutId-default-channel")
-	
-	
+
+
 }

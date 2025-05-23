@@ -1,11 +1,11 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useFormik } from "formik";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import * as Yup from "yup";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import clsx from "clsx";
 import { setPasswordOnServer } from "./actions/server";
 import "react-toastify/dist/ReactToastify.css"; // Import the CSS
@@ -20,6 +20,8 @@ const validationSchema = Yup.object({
 function ConfirmPasswordContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
 	const email = searchParams.get("email");
 	const token = searchParams.get("token");
@@ -85,16 +87,29 @@ function ConfirmPasswordContent() {
 					<label className="sr-only" htmlFor="password">
 						New Password
 					</label>
-					<input
-						type="password"
-						id="password"
-						{...formik.getFieldProps("password")}
-						className={clsx(
-							"w-full rounded border bg-neutral-50 px-4 py-2",
-							formik.touched.password && formik.errors.password && "border-red-500",
-						)}
-						placeholder="New Password"
-					/>
+					<div className="relative">
+						<input
+							type={showPassword ? "text" : "password"}
+							id="password"
+							{...formik.getFieldProps("password")}
+							className={clsx(
+								"w-full rounded border bg-neutral-50 px-4 py-2 pr-10",
+								formik.touched.password && formik.errors.password && "border-red-500",
+							)}
+							placeholder="New Password"
+						/>
+						<button
+							type="button"
+							onClick={() => setShowPassword(!showPassword)}
+							className="absolute right-2 top-1/2 -translate-y-1/2 transform"
+						>
+							{showPassword ? (
+								<EyeOff className="h-5 w-5 text-gray-500" />
+							) : (
+								<Eye className="h-5 w-5 text-gray-500" />
+							)}
+						</button>
+					</div>
 					{formik.touched.password && formik.errors.password && (
 						<div className="mt-1 text-sm text-red-500">{formik.errors.password}</div>
 					)}
@@ -104,16 +119,29 @@ function ConfirmPasswordContent() {
 					<label className="sr-only" htmlFor="confirmPassword">
 						Confirm Password
 					</label>
-					<input
-						type="password"
-						id="confirmPassword"
-						{...formik.getFieldProps("confirmPassword")}
-						className={clsx(
-							"w-full rounded border bg-neutral-50 px-4 py-2",
-							formik.touched.confirmPassword && formik.errors.confirmPassword && "border-red-500",
-						)}
-						placeholder="Confirm Password"
-					/>
+					<div className="relative">
+						<input
+							type={showConfirmPassword ? "text" : "password"}
+							id="confirmPassword"
+							{...formik.getFieldProps("confirmPassword")}
+							className={clsx(
+								"w-full rounded border bg-neutral-50 px-4 py-2 pr-10",
+								formik.touched.confirmPassword && formik.errors.confirmPassword && "border-red-500",
+							)}
+							placeholder="Confirm Password"
+						/>
+						<button
+							type="button"
+							onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+							className="absolute right-2 top-1/2 -translate-y-1/2 transform"
+						>
+							{showConfirmPassword ? (
+								<EyeOff className="h-5 w-5 text-gray-500" />
+							) : (
+								<Eye className="h-5 w-5 text-gray-500" />
+							)}
+						</button>
+					</div>
 					{formik.touched.confirmPassword && formik.errors.confirmPassword && (
 						<div className="mt-1 text-sm text-red-500">{formik.errors.confirmPassword}</div>
 					)}

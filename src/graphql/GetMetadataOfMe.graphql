@@ -1,0 +1,8 @@
+query GetMetadataOfMe {
+    me {
+        metadata {
+            key
+            value
+        }
+    }
+}

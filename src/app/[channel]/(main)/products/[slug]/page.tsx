@@ -338,24 +338,25 @@ export default function Page({ params }: PageProps) {
 			{/* <SizeGuideModal catalog={productData?.product?.category?.name  === "tee" || productData?.product?.category?.name === "fleece" ? productData?.product?.category?.name : "tee"} /> */}
 
 			<ToastContainer position="top-center" />
-			<div className="relative flex w-[95%] max-w-7xl flex-col gap-8 rounded-lg p-4 md:flex-row md:p-8">
+			<ProductTitle name={productData?.product?.name} isLoading={loading}  className="md:hidden mb-7 px-4"/>
+			<div className="relative flex w-full max-w-7xl flex-col gap-2 md:gap-8 rounded-lg md:flex-row px-4">
 				{/* Image Section */}
-				<div className="w-full md:w-1/2 lg:w-2/5">
+				<div className="w-full md:w-1/2 lg:w-[35%]">
 					<Swipper images={imageSlider} loading={loading} />
-					<div className="w-full">
+					<div className="w-full hidden md:block">
 						<ProductDescription descriptionHtml={descriptionHtml} title="Descriptions" />
 					</div>
 				</div>
 
 				{/* Product Details Section */}
-				<div className="relative flex w-full flex-col rounded-lg px-4 md:w-1/2 md:px-6 lg:w-3/5">
+				<div className="relative flex w-full flex-col rounded-lg md:w-1/2 md:px-6 lg:w-[65%]">
 					<div className="mb-24 flex-grow space-y-6">
-						<ProductTitle name={productData?.product?.name} isLoading={loading} />
+						<ProductTitle name={productData?.product?.name} isLoading={loading}  className="hidden md:flex"/>
 						{/* <ProductDescription descriptionHtml={features} isLoading={loading} /> */}
 
 						<div className="mt-4 w-full">
 							<div className="flex flex-row items-center justify-between">
-								<div className="ml-2 text-2xl font-extrabold text-black sm:text-3xl md:text-4xl lg:text-5xl">
+								<div className="ml-2 font-extrabold text-black text-3xl md:text-4xl lg:text-5xl">
 									{loading || !defaultPricing ? (
 										<div className="h-6 w-24 animate-pulse rounded bg-gray-200 sm:h-7 sm:w-28 md:h-8 md:w-32"></div>
 									) : (
@@ -365,9 +366,7 @@ export default function Page({ params }: PageProps) {
 										)
 									)}
 								</div>
-							</div>
-						</div>
-						<div className="flex flex-1 items-center justify-end">
+								<div className="flex flex-1 items-center justify-end">
 							{loading ? (
 								<div className="flex items-center gap-x-2">
 									<div className="h-5 w-5 animate-pulse rounded bg-gray-200" />
@@ -391,6 +390,8 @@ export default function Page({ params }: PageProps) {
 									}
 								/>
 							)}
+						</div>
+							</div>
 						</div>
 						{/* Interactive Product Options */}
 						<div className="space-y-4">
@@ -459,8 +460,8 @@ export default function Page({ params }: PageProps) {
 						</div>
 
 						{/* Size Selector with Quantity */}
-						<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-							{/* {sizeValues.map((size, index) => {
+						{/* <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+							{sizeValues.map((size, index) => {
 								const isSelected = opstions["SIZE"] === size;
 								const baseClasses =
 									"relative flex  w-full flex-col items-center justify-evenly rounded-lg border p-1 transition-all duration-200 hover:shadow-sm";
@@ -520,22 +521,20 @@ export default function Page({ params }: PageProps) {
 										</div>
 									</div>
 								);
-							})} */}
-						</div>
-						<div className="mt-8 flex w-full flex-col items-center gap-6 md:flex-row">
+							})}
+						</div> */}
+						<div className="flex gap-2 flex-col sm:flex-row sm:justify-start">
 							{loading ? (
 								<>
 									<div className="h-14 w-full animate-pulse rounded-lg bg-gray-200 md:w-48"></div>
-									<div className="flex w-full flex-col gap-4 sm:flex-row">
+									<div className="flex w-full gap-4  flex-row">
 										<div className="h-14 w-full animate-pulse rounded-lg bg-gray-200 sm:w-48"></div>
 										<div className="h-14 w-full animate-pulse rounded-lg bg-gray-200 sm:w-48"></div>
 									</div>
 								</>
 							) : (
 								<>
-									<div className="flex w-full items-center justify-center gap-4 rounded-lg bg-gray-50 p-3 md:w-auto">
-										<label className="text-sm font-medium text-gray-700">Quantity:</label>
-										<input
+									<input
 											type="number"
 											value={sizeQuantitie}
 											onChange={(e) => {
@@ -543,21 +542,20 @@ export default function Page({ params }: PageProps) {
 											}}
 											max={quantityLimitPerCustomer}
 											min="1"
-											className="w-20 rounded-md border border-gray-300 bg-white px-3 py-2 text-center text-gray-900 shadow-sm 
+											className="w-28 rounded-md border border-gray-300 bg-white text-sm px-3 py-1 text-center text-gray-900 shadow-sm 
 												transition duration-200 ease-in-out hover:border-[#8B3958]
 												focus:border-[#8B3958] focus:outline-none focus:ring-2
 												focus:ring-[#8B3958]"
 										/>
-									</div>
 
-									<div className="flex w-full flex-col gap-4 sm:flex-row">
+									<div className="flex gap-2 flex-row-reverse ">
 										<button
-											id="add-to-cart-button"
-											className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
-												py-2 text-base font-semibold text-white shadow-lg 
-												transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
-												focus:outline-none focus:ring-2
-												focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+											id="add-to-cart-button "
+											className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-5 
+											py-2 text-sm font-semibold text-white shadow-lg 
+											transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
+											focus:outline-none focus:ring-2
+											focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
 											onClick={async () => {
 												let totalQuanlity = 0;
 
@@ -573,7 +571,6 @@ export default function Page({ params }: PageProps) {
 
 												const items = getVariantsToAdd(variantIds, sizeQuantities);
 												items.map((item) => (item.quantity = sizeQuantitie));
-												console.log(items);
 												const result = await addCart(params, items);
 												if (result?.error?.error == 2) {
 													result.error.messages.forEach((item) => {
@@ -586,6 +583,7 @@ export default function Page({ params }: PageProps) {
 												} else {
 													toast.success("Product added to cart");
 												}
+												setSizeQuantitie(1)
 												setTimeout(() => {
 													document.getElementById("add-to-cart-button")?.removeAttribute("disabled");
 												}, 300);
@@ -599,7 +597,10 @@ export default function Page({ params }: PageProps) {
 											>
 												<path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3z" />
 											</svg>
+											<p>
+
 											Add to Cart
+											</p>
 										</button>
 
 										{isCustomDesign == true && (
@@ -608,11 +609,11 @@ export default function Page({ params }: PageProps) {
 												className="w-full sm:w-auto"
 											>
 												<button
-													className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-6 
-														py-3 text-base font-semibold text-white shadow-lg 
+														className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-5 
+														py-2 text-sm font-semibold text-white shadow-lg 
 														transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
-														focus:outline-none
-														focus:ring-2 focus:ring-[#8B3958] focus:ring-offset-2 disabled:opacity-50 sm:w-auto"
+														focus:outline-none focus:ring-2
+														focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
 													onClick={() => {
 														localStorage.setItem(
 															"cart",
@@ -632,7 +633,7 @@ export default function Page({ params }: PageProps) {
 													>
 														<path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
 													</svg>
-													Customize Design
+													Design
 												</button>
 											</Link>
 										)}
@@ -642,6 +643,9 @@ export default function Page({ params }: PageProps) {
 						</div>
 						{/* Action Buttons */}
 						<ProductDescription descriptionHtml={features} isLoading={loading} />
+						<div className="w-full md:hidden block">
+						<ProductDescription descriptionHtml={descriptionHtml} title="Descriptions" />
+					</div>
 					</div>
 				</div>
 			</div>

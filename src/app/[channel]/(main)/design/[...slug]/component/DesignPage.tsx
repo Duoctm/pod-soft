@@ -64,7 +64,9 @@ function DesignPage(param: DesignPageProps) {
   const [variantIdOfUpdate, setVariantIdOfUpdate] = useState<string | null>(null);
   const [isSpinner, setSpinner] = useState<boolean>(false);
   const [cropImageUrl, setCropImageUrl] = useState<string>("");
-  var cropContainerRef = useRef<HTMLDivElement>();
+  const cropContainerRefMobile = useRef<HTMLDivElement | null>(null);
+  const cropContainerRefDesktop = useRef<HTMLDivElement | null>(null);
+
   const [isShowDialog, setIsShowDialog] = useState<boolean>(false);
   const [isShowFaceDialog, setIsShowFaceDialog] = useState<boolean>(false);
 
@@ -259,6 +261,8 @@ function DesignPage(param: DesignPageProps) {
     }
   }, [loading, data, param.designInfor]);
 
+
+
   const colors = [
     "#FFFFFF",
     "#000000",
@@ -391,7 +395,7 @@ function DesignPage(param: DesignPageProps) {
     }
   };
 
-  const cropImage = () => {
+  const cropImage = (cropContainerRef: React.RefObject<HTMLDivElement>) => {
     if (!cropContainerRef.current) return;
     const image = new Image();
     image.crossOrigin = "anonymous";
@@ -434,6 +438,7 @@ function DesignPage(param: DesignPageProps) {
         newImage.src = croppedDataUrl;
 
         newImage.onload = () => {
+
           if (
             designerRef.current &&
             designerRef.current.currentStage &&
@@ -446,6 +451,7 @@ function DesignPage(param: DesignPageProps) {
             imageNode.offsetY(imageNode.height() / 2);
             imageNode.x(designerRef.current?.currentStage.stage?.width() / 2);
             imageNode.y(designerRef.current?.currentStage.stage?.height() / 2);
+            imageNode.rotation(0);
             designerRef.current?.showBorderNode(imageNode, designerRef.current?.currentStage);
 
             // imageNode.x(((designerRef.current?.currentStage.stage?.width() - imageNode.width()) / 2) * scale);
@@ -476,23 +482,27 @@ function DesignPage(param: DesignPageProps) {
   }, []);
 
   useEffect(() => {
-    //const container = cropContainerRef.current;
+    const containerWidth = 300;
+    const containerHeight = 180;
 
 
     const img = new Image();
     img.src = cropImageUrl;
 
-    // Đợi ảnh load xong
+
     img.onload = () => {
-      // Bây giờ width và height mới chính xác
-      const scaleWidth = 500 / img.width;
-      const scaleHeight = 300 / img.height;
+      let scaleWidth = 1;
+      let scaleHeight = 1;
+      if (img.width > containerWidth) {
+        scaleWidth = containerWidth / img.width;
+      }
+      if (img.height > containerHeight) {
+        scaleHeight = containerHeight / img.height;
+      }
       const standardWidth = img.width * scaleWidth;
       const standardHeight = img.height * scaleHeight;
       const clientWidth = standardWidth / 2;
       const clientHeight = standardHeight / 2;
-      //const left = (img.clientWidth - clientWidth) / 2;
-      //const top = (img.clientHeight - clientHeight) / 2;
 
       setFrameState({
         width: clientWidth,
@@ -500,35 +510,9 @@ function DesignPage(param: DesignPageProps) {
         left: 0,
         top: 0,
       });
-
-      console.log("Kích thước ảnh:", img.width, img.height);
     };
 
-
-    /*if (container) {
-      const clientWidth = container.clientWidth / 2;
-      const clientHeight = container.clientHeight / 2;
-      const left = (container.clientWidth - clientWidth) / 2;
-      const top = (container.clientHeight - clientHeight) / 2;
-
-
-
-      setFrameState({
-        width: clientWidth,
-        height: clientHeight,
-        left,
-        top,
-      });
-      //setMenuIndex(7);
-      // }
-      //if (designerRef.current?.currentStage.selectedNode != null) {
-
-      // }
-    }*/
-    // if (designerRef.current?.currentStage.selectedNode != null) {
-    //   setMenuIndex(7);
-    // }
-  }, [cropImageUrl]); // 👈 chạy lại khi cropImageUrl thay đổi
+  }, [cropImageUrl]);
 
   return (
     <>
@@ -601,7 +585,7 @@ function DesignPage(param: DesignPageProps) {
             {menuIndex === 0 && (
               <Box>
                 <Typography variant="h4" sx={{ color: "#000000", mb: 3, textAlign: "center" }}>
-                  Choose your next step
+                  Choose next step
                 </Typography>
                 <Box
                   sx={{
@@ -802,7 +786,7 @@ function DesignPage(param: DesignPageProps) {
                   >
                     <i className="fas fa-cloud-upload-alt fa-3x mb-3" style={{ color: "#282c34" }}></i>
                     <Typography variant="h6" sx={{ color: "#282c34", mb: 1 }}>
-                      Click to upload or drag and drop
+                      Click to upload
                     </Typography>
                     <Typography variant="body2" sx={{ color: "#666666" }}>
                       JPEG, PNG, GIF files are allowed
@@ -954,24 +938,7 @@ function DesignPage(param: DesignPageProps) {
                             setMenuIndex(7);
                           }
 
-                          // cropImage();
 
-                          // const container = cropContainerRef.current;
-                          // if (container) {
-                          //   //const { clientWidth, clientHeight } = container;
-                          //   const clientWidth = container.clientWidth / 2;
-                          //   const clientHeight = container.clientHeight / 2;
-                          //   const left = (container.clientWidth - clientWidth) / 2;
-                          //   const top = (container.clientHeight - clientHeight) / 2;
-                          //   setFrameState({
-                          //     width: clientWidth,
-                          //     height: clientHeight,
-                          //     left: left,
-                          //     top: top,
-                          //   });
-                          // }
-
-                          // setMenuIndex(7);
                         }}
                       >
                         <i className="fas fa-crop text-xl" style={{ color: "#282c34" }}></i>
@@ -1745,19 +1712,19 @@ function DesignPage(param: DesignPageProps) {
 
                 <Box
                   sx={{
-                    id: "cropContainer",
-                    display: "inline-block",
+                    display: "flex",
                     mb: 3,
                     bgcolor: "#f5f5f5",
                     border: "2px dashed #ccc",
-                    maxWidth: 500, // Giới hạn chiều rộng tối đa
-                    maxHeight: 300, // Giới hạn chiều cao tối đa
+                    maxWidth: 300, // Giới hạn chiều rộng tối đa
+                    maxHeight: 600, // Giới hạn chiều cao tối đa
                     width: "fit-content",
                     height: "fit-content",
                     overflow: "hidden",
+                    justifyContent: "center",
                     mx: "auto", // căn giữa ngang
                   }}
-                  ref={cropContainerRef}
+                  ref={cropContainerRefDesktop}
                 >
                   {cropImageUrl ? (
                     <Box
@@ -1766,17 +1733,15 @@ function DesignPage(param: DesignPageProps) {
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
-                        maxWidth: 500,
-                        maxHeight: 300,
+                        maxWidth: 300,
+                        maxHeight: 600
                       }}
                     >
                       <img
                         src={cropImageUrl}
                         style={{
-                          maxWidth: 500,
-                          maxHeight: 300,
-                          height: "auto",
-                          width: "auto",
+                          width: "100%",           // Chiếm hết chiều rộng của Box
+                          height: "100%",
                           objectFit: "contain",
                           display: "block",
                         }}
@@ -1846,8 +1811,8 @@ function DesignPage(param: DesignPageProps) {
                     onClick={(e) => {
                       e.stopPropagation();
 
-                      cropImage();
-                      designerRef.current?.clearBorderNode(designerRef.current?.currentStage);
+                      cropImage(cropContainerRefDesktop);
+                      //designerRef.current?.clearBorderNode(designerRef.current?.currentStage);
                     }}
                   >
                     Submit
@@ -1977,7 +1942,7 @@ function DesignPage(param: DesignPageProps) {
                     }
                     if (hasObjectInStage == true) {
                       metaData = await designerRef.current.exportDesignToJson();
-                      console.log("metaData", metaData);
+                      //console.log("metaData", metaData);
                     }
                     var result = false;
                     if (param.typeDesign == 1) {
@@ -2054,7 +2019,7 @@ function DesignPage(param: DesignPageProps) {
         />
         <MousePointerClickIcon
           onClick={() => handleDeselect()}
-          className="absolute right-1 top-15 z-10 block h-12 w-12 rounded-full bg-[#8C3859] p-3 lg:hidden"
+          className="fixed right-1 bottom-20 z-10 block h-12 w-12 rounded-full bg-[#8C3859] p-3 lg:hidden"
           stroke="white"
         />
       </Box>
@@ -2086,7 +2051,7 @@ function DesignPage(param: DesignPageProps) {
             {menuIndex === 0 && (
               <Box>
                 <Typography variant="h4" sx={{ color: "#000000", mb: 3, textAlign: "center" }}>
-                  Choose your next step
+                  Choose next step
                 </Typography>
                 <Box
                   sx={{
@@ -3287,23 +3252,23 @@ function DesignPage(param: DesignPageProps) {
 
                 <Box
                   sx={{
-                    id: "cropContainer",
                     display: {
-                      xs: "inline-block", // Show on small screens
-                      sm: "inline-block", // Show on medium screens
+                      xs: "flex", // Show on small screens
+                      sm: "flex", // Show on medium screens
                       lg: "none", // Hide on large screens
                     },
                     mb: 3,
                     bgcolor: "#f5f5f5",
                     border: "2px dashed #ccc",
-                    maxWidth: 350, // Maximum width limit
+                    maxWidth: 500, // Maximum width limit
                     maxHeight: 300, // Maximum height limit
                     width: "fit-content",
                     height: "fit-content",
                     overflow: "hidden",
                     mx: "auto", // Center horizontally
+                    justifyContent: "center",
                   }}
-                  ref={cropContainerRef}
+                  ref={cropContainerRefMobile}
                 >
                   {cropImageUrl ? (
                     <Box
@@ -3319,10 +3284,8 @@ function DesignPage(param: DesignPageProps) {
                       <img
                         src={cropImageUrl}
                         style={{
-                          maxWidth: 500,
-                          maxHeight: 300,
-                          height: "auto",
-                          width: "auto",
+                          width: "100%",           // Chiếm hết chiều rộng của Box
+                          height: "100%",
                           objectFit: "contain",
                           display: "block",
                         }}
@@ -3394,7 +3357,7 @@ function DesignPage(param: DesignPageProps) {
                     onClick={(e) => {
                       e.stopPropagation();
 
-                      cropImage();
+                      cropImage(cropContainerRefMobile);
                       //designerRef.current?.clearBorderNode(designerRef.current?.currentStage);
                     }}
                   >
@@ -3475,9 +3438,10 @@ function DesignPage(param: DesignPageProps) {
         </div>
       </div>
 
-      <div className="fixed bottom-0 right-0">
+      <div className="fixed bottom-0 right-0 block  md:hidden">
         {(param.typeDesign == 1 || (param.typeDesign == 2 && variantId != variantIdOfUpdate)) && (
           <Button
+            className="flex h-12 w-12  items-center justify-center rounded-full bg-[#8C3859] p-2"
             onClick={async () => {
               const isLogin = await checkUser();
               console.log("aaaaaaaaaaaaaaaaaaaaaa", isLogin);
@@ -3532,7 +3496,7 @@ function DesignPage(param: DesignPageProps) {
             }}
           >
             <ShoppingCart
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#8C3859] p-2"
+              className="flex h-12 w-12  items-center justify-center rounded-full bg-[#8C3859] p-2"
               stroke="white"
             />
           </Button>
@@ -3540,7 +3504,7 @@ function DesignPage(param: DesignPageProps) {
 
         {param.typeDesign === 2 && variantId === variantIdOfUpdate && (
           <Button
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#8C3859]"
+
             onClick={async () => {
               setSpinner(true);
               const cartId = localStorage.getItem("cartId");
@@ -3561,7 +3525,9 @@ function DesignPage(param: DesignPageProps) {
               setSpinner(false);
             }}
           >
-            <ShoppingCart />
+            <ShoppingCart
+              stroke="white"
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#8C3859] p-2" />
           </Button>
         )}
       </div>

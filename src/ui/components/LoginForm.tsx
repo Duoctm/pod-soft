@@ -76,7 +76,7 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 					)}
 				</div>
 
-				<div className="relative mb-4">
+				<div className="relative">
 					<input
 						type={showPassword ? "text" : "password"}
 						placeholder="Password"
@@ -95,12 +95,12 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 					>
 						{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
 					</button>
+				</div>
 					{formik.touched.password && formik.errors.password && (
 						<div className="mt-1 text-sm text-red-500">{formik.errors.password}</div>
 					)}
-				</div>
 				<div>
-					<div className="mb-4">
+					<div className="my-4">
 						<div>
 							<Link
 								href={`/${params?.channel}/reset-password`}

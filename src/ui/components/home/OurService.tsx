@@ -77,9 +77,9 @@ function ServiceCard({ icon, title, description, link }: ServiceCardProps) {
 const OurService = () => {
 	return (
 		<Wrapper className="flex flex-col items-center justify-center py-12 md:py-24">
-			<div className="flex w-full max-w-[544px] flex-col text-center">
+			<div className="flex w-full max-w-[544px] flex-col text-left md:text-center">
 				<span className="space-x-[16%] text-xs md:text-[18px] font-semibold uppercase text-[#EF816B]">Our Services</span>
-				<h3 className="w-full max-w-[720px] md:py-4 text-[40px] md:text-[50px] font-bold leading-[110%] md:leading-[120%]">
+				<h3 className=" w-full max-w-[720px] md:py-4 text-[40px] md:text-[50px] font-bold leading-[110%] md:leading-[120%]">
 					Printing Solutions for All Your Needs
 				</h3>
 				{/* <p className="max-w-[487px] py-2 md:py-4 text-sm md:text-base font-normal leading-6 text-[#909098]">

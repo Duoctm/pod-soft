@@ -1,6 +1,14 @@
+"use client"
+
 import React, { useState } from 'react';
+import {getUserMetadata} from "./MetadataApi"
+
+
 
 const AddDocumentModal = ({ onClose, onSubmit }) => {
+
+
+
   const [file, setFile] = useState(null);
   const [docName, setDocName] = useState('');
   const [error, setError] = useState('');

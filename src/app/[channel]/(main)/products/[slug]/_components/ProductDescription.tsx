@@ -30,11 +30,11 @@ export const ProductDescription: React.FC<ProductDescriptionProps> = ({
 					<div className="h-4 w-4/12 animate-pulse rounded bg-neutral-200" />
 				</div>
 			) : descriptionHtml && descriptionHtml.length > 0 ? (
-				<div className="prose prose-sm prose-stone max-w-none space-y-2 text-neutral-600 md:prose-base md:space-y-3">
+				<div className="prose prose-sm prose-stone max-w-none space-y-2 text-neutral-600 md:prose-base md:space-y-1">
 					{descriptionHtml.map((content, index) => (
 						<div
 							key={index}
-							className="text-sm md:text-base"
+							className="text-sm md:text-base py-0"
 							dangerouslySetInnerHTML={{ __html: xss(content) }}
 						/>
 					))}

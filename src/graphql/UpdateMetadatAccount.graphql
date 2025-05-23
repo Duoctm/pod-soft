@@ -1,0 +1,18 @@
+mutation UpdateMetadatAccount($metadata: [MetadataInput!]!) {
+  accountUpdate(
+    input: {
+      metadata: $metadata
+    }
+  ) {
+    user {
+      metadata {
+        key
+        value
+      }
+    }
+    errors {
+      field
+      message
+    }
+  }
+}
