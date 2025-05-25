@@ -5,15 +5,15 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { Typography, IconButton, Box, Paper, Button } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { toast, ToastContainer } from "react-toastify";
+import { Rnd } from "react-rnd";
+import Konva from "konva";
+import { Pen, ShirtIcon, ShoppingCart, XIcon, MousePointerClickIcon } from "lucide-react";
 import TShirtDesigner from "../utils/design";
 import { type DesignInfo, type PrintFaceData } from "..//utils/type";
 import { getMetaDtataFromColorVariant, getVariantIdFromColorVariant } from "../utils/data";
 import { addItem, UpdateDesign, checkUser } from "../utils/checkout";
 import { fetchProductDetail } from "../utils/test";
 import "react-toastify/dist/ReactToastify.css";
-import { Rnd } from "react-rnd";
-import Konva from "konva";
-import { Pen, ShirtIcon, ShoppingCart, XIcon, MousePointerClickIcon } from "lucide-react";
 
 const StyledButton = styled(IconButton)(() => ({
   backgroundColor: "transparent",
@@ -375,15 +375,15 @@ function DesignPage(param: DesignPageProps) {
     });
     target.classList.add("active");
     for (const item in sort_data) {
-      let imageDom = document.getElementById(sort_data[item].code + "Image") as HTMLImageElement;
-      let previewDom = document.getElementById("preview-" + sort_data[item].code);
+      const imageDom = document.getElementById(sort_data[item].code + "Image") as HTMLImageElement;
+      const previewDom = document.getElementById("preview-" + sort_data[item].code);
       imageDom.style.display = "none";
       previewDom!.style.display = "none";
     }
 
     for (const item in sort_data) {
-      let imageDom = document.getElementById(sort_data[item].code + "Image") as HTMLImageElement;
-      let previewDom = document.getElementById("preview-" + sort_data[item].code);
+      const imageDom = document.getElementById(sort_data[item].code + "Image") as HTMLImageElement;
+      const previewDom = document.getElementById("preview-" + sort_data[item].code);
 
       if (view === sort_data[item].code) {
         imageDom.style.display = "block";
@@ -444,20 +444,22 @@ function DesignPage(param: DesignPageProps) {
             designerRef.current.currentStage &&
             designerRef.current.currentStage.stage
           ) {
-            const scale = designerRef.current?.currentStage.stage?.width() / newImage.width;
-            imageNode.width(newImage.width * scale * 0.8);
-            imageNode.height(newImage.height * scale * 0.8);
+            // const scale = designerRef.current?.currentStage.stage?.width() / newImage.width;
+            // imageNode.width(newImage.width * scale * 0.8);
+            //  imageNode.height(newImage.height * scale * 0.8);
             imageNode.offsetX(imageNode.width() / 2);
             imageNode.offsetY(imageNode.height() / 2);
             imageNode.x(designerRef.current?.currentStage.stage?.width() / 2);
             imageNode.y(designerRef.current?.currentStage.stage?.height() / 2);
-            imageNode.rotation(0);
+            // imageNode.rotation(0);
             designerRef.current?.showBorderNode(imageNode, designerRef.current?.currentStage);
 
             // imageNode.x(((designerRef.current?.currentStage.stage?.width() - imageNode.width()) / 2) * scale);
             // imageNode.y(((designerRef.current?.currentStage.stage?.height() - imageNode.height()) / 2) * scale);
             imageNode.image(newImage);
             imageNode.getLayer()?.draw();
+            //imageNode.setAttr('rotationOfLastWidth', imageNode.width());
+            //imageNode.setAttr('rotationOfLastHeight', imageNode.height());
           }
         };
       }
@@ -928,7 +930,7 @@ function DesignPage(param: DesignPageProps) {
                           if (designerRef?.current?.currentStage.selectedNode == undefined) {
                             return;
                           }
-                          var newUrl =
+                          const newUrl =
                             designerRef.current?.originImageOfStage[
                             designerRef.current.currentStage.selectedNode?.id()
                             ];
@@ -1230,7 +1232,7 @@ function DesignPage(param: DesignPageProps) {
                   <div className="space-y-6">
                     <div>
                       <textarea
-                        className="w-full rounded-lg border p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-0 focus:border-gray-300"
                         id="textInput"
                         rows={3}
                         placeholder="Enter your text here..."
@@ -1307,7 +1309,7 @@ function DesignPage(param: DesignPageProps) {
                     <div id="fontFamily">
                       <h5 className="mb-3 text-lg font-medium">Font Family</h5>
                       <select
-                        className="w-full rounded-lg border p-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border p-2"
                         id="chooseFontFamily"
                         onChange={(e) => {
                           if (designerRef.current) {
@@ -1339,7 +1341,7 @@ function DesignPage(param: DesignPageProps) {
                     <div className="text-center">
                       <button
                         type="button"
-                        className="w-full rounded-lg bg-[#8C3859] px-6 py-2.5 text-white hover:bg-[#8C3859]/70 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                        className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-0 focus:border-gray-300"
                         id="submitText"
                         onClick={() => {
                           const text = (
@@ -1944,7 +1946,7 @@ function DesignPage(param: DesignPageProps) {
                       metaData = await designerRef.current.exportDesignToJson();
                       //console.log("metaData", metaData);
                     }
-                    var result = false;
+                    let result = false;
                     if (param.typeDesign == 1) {
                       result = (await addItem(
                         cartItem.params,
@@ -2264,7 +2266,7 @@ function DesignPage(param: DesignPageProps) {
                     >
                       <i className="fas fa-cloud-upload-alt fa-3x mb-3" style={{ color: "#282c34" }}></i>
                       <Typography variant="h6" sx={{ color: "#282c34", mb: 1 }}>
-                        Click to upload or drag and drop
+                        Click to upload
                       </Typography>
                       <Typography variant="body2" sx={{ color: "#666666" }}>
                         JPEG, PNG, GIF files are allowed
@@ -2415,7 +2417,7 @@ function DesignPage(param: DesignPageProps) {
                           if (designerRef?.current?.currentStage.selectedNode == undefined) {
                             return;
                           }
-                          var newUrl =
+                          const newUrl =
                             designerRef.current?.originImageOfStage[
                             designerRef.current.currentStage.selectedNode?.id()
                             ];
@@ -2742,7 +2744,7 @@ function DesignPage(param: DesignPageProps) {
                   <div className="space-y-6">
                     <div>
                       <textarea
-                        className="block w-full rounded-lg border p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 lg:hidden"
+                        className="w-full rounded-lg border border-gray-300 p-3 focus:outline-none focus:ring-0 focus:border-gray-300"
                         id="textInput-mobile"
                         rows={3}
                         placeholder="Enter your text here..."
@@ -3290,7 +3292,6 @@ function DesignPage(param: DesignPageProps) {
                           display: "block",
                         }}
                       />
-
                       <Rnd
                         size={{ width: frameState.width, height: frameState.height }}
                         position={{ x: frameState.left, y: frameState.top }}
@@ -3388,7 +3389,7 @@ function DesignPage(param: DesignPageProps) {
               <XIcon className="h-6 w-6" />
             </button>
           </div>
-          <Paper id="leftMenu" className="flex h-full w-full flex-col gap-1 gap-y-2 px-2" elevation={3}>
+          <Paper id="leftMenu" className="flex h-full w-full flex-col gap-1 gap-y-2 px-2" elevation={0}>
             {sort_data.map((item: PrintFaceData, index: number) => (
               <Box
                 key={item.code}
@@ -3444,13 +3445,11 @@ function DesignPage(param: DesignPageProps) {
             className="flex h-12 w-12  items-center justify-center rounded-full bg-[#8C3859] p-2"
             onClick={async () => {
               const isLogin = await checkUser();
-              console.log("aaaaaaaaaaaaaaaaaaaaaa", isLogin);
               if (isLogin == false) {
                 window.location.replace(`/${param.channel}/login`);
               }
               setSpinner(true);
               const json = localStorage.getItem("cart");
-
               if (json != null && json !== undefined) {
                 const cartItem = JSON.parse(json) as {
                   // Ép kiểu trực tiếp ở đây
@@ -3473,7 +3472,10 @@ function DesignPage(param: DesignPageProps) {
                   if (hasObjectInStage == true) {
                     metaData = await designerRef.current.exportDesignToJson();
                   }
-                  var result = false;
+                  let result = false;
+                  // console.log(cartItem.params,
+                  //   variantId,
+                  //   cartItem.quantity);
                   if (param.typeDesign == 1) {
                     result = (await addItem(
                       cartItem.params,
