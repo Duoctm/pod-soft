@@ -38,6 +38,8 @@ export function CartPage({ params }: CartPageProps) {
 	const [checkoutId, setCheckoutId] = useState<string>("");
 	const [loading, setLoading] = useState(false);
 
+
+
 	const fetchCheckout = useCallback(async () => {
 		setLoading(true);
 		try {
@@ -164,7 +166,10 @@ export function CartPage({ params }: CartPageProps) {
 							<DeleteLineButton
 								checkoutId={checkoutId}
 								lineId={item.id}
-								onRemove={() => setItems((prev) => prev.filter((line) => line.id !== item.id))}
+								onRemove={() => {
+									void fetchCheckout()
+									setItems((prev) => prev.filter((line) => line.id !== item.id))
+								}}
 							/>
 							|
 						</div>
@@ -224,7 +229,7 @@ export function CartPage({ params }: CartPageProps) {
 						{items.map(renderCartItem)}
 						<div className="mt-2 flex flex-1 justify-end py-2">
 							<p className="font-medium">
-								{`Subtotal ( ${totalSubtotal} items): `}
+								{`Subtotal ( ${totalSubtotal} items ): `}
 								{formatMoney(checkout.totalPrice.gross.amount, checkout.totalPrice.gross.currency)}
 							</p>
 						</div>
