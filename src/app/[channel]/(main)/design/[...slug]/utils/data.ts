@@ -216,6 +216,22 @@ const getVariantIdFromColorVariant = (colorId: string, listColorVariant: Map<str
 }
 
 
+const getVariantIdFromColorSize = (colorId: string | undefined, sizeId: string | undefined, variantColorSize: Map<string, object>) => {
+  for (const [key, entry] of variantColorSize.entries()) {
+    const typedEntry = entry as { color?: string; size?: string };
+    if (typedEntry.color === colorId && typedEntry.size === sizeId) {
+      return key;
+    }
+  }
+
+
+  console.error(`cannot find variant`);
+  return null;
+
+}
+
+
+
 const getMetaDtataFromColorVariant = (colorId: string, listColorVariant: Map<string, object>) => {
   const colorVariant = listColorVariant.get(colorId);
   if (colorVariant && (colorVariant as any).meta_data) {
@@ -324,4 +340,4 @@ async function updateCheckoutLineMetadata(id: string, metadata: { key: string; v
 }
 
 
-export { fetchProductDetail, getMetaDtataFromColorVariant, getVariantIdFromColorVariant, uploadImage, updateCheckoutLineMetadata };
+export { fetchProductDetail, getMetaDtataFromColorVariant, getVariantIdFromColorVariant, uploadImage, updateCheckoutLineMetadata, getVariantIdFromColorSize };

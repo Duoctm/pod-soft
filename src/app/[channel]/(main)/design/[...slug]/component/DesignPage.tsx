@@ -5,15 +5,15 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { Typography, IconButton, Box, Paper, Button } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { toast, ToastContainer } from "react-toastify";
-import { Rnd } from "react-rnd";
-import Konva from "konva";
-import { Pen, ShirtIcon, ShoppingCart, XIcon, MousePointerClickIcon } from "lucide-react";
 import TShirtDesigner from "../utils/design";
 import { type DesignInfo, type PrintFaceData } from "..//utils/type";
-import { getMetaDtataFromColorVariant, getVariantIdFromColorVariant } from "../utils/data";
+import { getMetaDtataFromColorVariant, getVariantIdFromColorSize } from "../utils/data";
 import { addItem, UpdateDesign, checkUser } from "../utils/checkout";
 import { fetchProductDetail } from "../utils/test";
 import "react-toastify/dist/ReactToastify.css";
+import { Rnd } from "react-rnd";
+import Konva from "konva";
+import { Pen, ShirtIcon, ShoppingCart, XIcon, MousePointerClickIcon } from "lucide-react";
 
 const StyledButton = styled(IconButton)(() => ({
   backgroundColor: "transparent",
@@ -34,6 +34,7 @@ const StyledButton = styled(IconButton)(() => ({
 }));
 
 interface DesignPageProps {
+  variantId: string,
   productId: string;
   colorId: string;
   designInfor: DesignInfo | null;
@@ -42,6 +43,9 @@ interface DesignPageProps {
 }
 
 function DesignPage(param: DesignPageProps) {
+  const [variantSizeColor, setVariantSizeColor] = useState<Map<string, object> | null>(new Map());
+  const [sizeIdDefault, setSizeIdDefault] = useState<string>();
+
   const [colorData, setColorData] = useState<Map<string, object>>(new Map());
   const [data, setData] = useState<PrintFaceData[]>([]);
   const [colorLoading, setColorLoading] = useState(true);
@@ -77,16 +81,25 @@ function DesignPage(param: DesignPageProps) {
     left: 0,
   });
 
-  console.log(showObjectMenu);
+  console.warn(showObjectMenu);
 
   const loadProductData = async (productId: string) => {
     let result: Map<string, object>;
+    let variantSizeColor: Map<string, object> | null = null;
+    let sizeIdDefault: string = "";
     if (param.designInfor?.colorData != null) {
       result = new Map(Object.entries(param.designInfor.colorData)); //param.designInfor.colorData;
+      sizeIdDefault = param.designInfor.sizeIdDefault ?? "";
+      variantSizeColor = param.designInfor.variantSizeColorData != null ? new Map(Object.entries(param.designInfor.variantSizeColorData)) : null;
     } else {
-      result = await fetchProductDetail(productId);
+      const data = await fetchProductDetail(productId, param.variantId);
+      result = data.listColorVariant;
+      sizeIdDefault = data.sizeIdDefault;
+      variantSizeColor = data.listVariantSizeColor;
     }
     setColorData(result);
+    setSizeIdDefault(sizeIdDefault);
+    setVariantSizeColor(variantSizeColor);
   };
 
   const updateVariant = (colorId: string, productId: string, colorData: Map<string, object>) => {
@@ -94,8 +107,9 @@ function DesignPage(param: DesignPageProps) {
     setData(result);
     setProductId(productId);
     setColorId(colorId);
-    const variant = getVariantIdFromColorVariant(colorId, colorData);
-    setVariantId(variant);
+    // const variant = getVariantIdFromColorVariant(colorId, colorData);
+    // setVariantId(variant);
+    setVariantId(param.variantId);
   };
 
   useEffect(() => {
@@ -140,6 +154,8 @@ function DesignPage(param: DesignPageProps) {
         variantId,
         colorId,
         colorData,
+        sizeIdDefault,
+        variantSizeColor,
         setMenuIndex,
         setResizeWidth,
         setResizeHeight,
@@ -375,15 +391,15 @@ function DesignPage(param: DesignPageProps) {
     });
     target.classList.add("active");
     for (const item in sort_data) {
-      const imageDom = document.getElementById(sort_data[item].code + "Image") as HTMLImageElement;
-      const previewDom = document.getElementById("preview-" + sort_data[item].code);
+      let imageDom = document.getElementById(sort_data[item].code + "Image") as HTMLImageElement;
+      let previewDom = document.getElementById("preview-" + sort_data[item].code);
       imageDom.style.display = "none";
       previewDom!.style.display = "none";
     }
 
     for (const item in sort_data) {
-      const imageDom = document.getElementById(sort_data[item].code + "Image") as HTMLImageElement;
-      const previewDom = document.getElementById("preview-" + sort_data[item].code);
+      let imageDom = document.getElementById(sort_data[item].code + "Image") as HTMLImageElement;
+      let previewDom = document.getElementById("preview-" + sort_data[item].code);
 
       if (view === sort_data[item].code) {
         imageDom.style.display = "block";
@@ -425,7 +441,7 @@ function DesignPage(param: DesignPageProps) {
         );
 
         const croppedDataUrl = canvas.toDataURL();
-        console.log("Cropped image data URL:", croppedDataUrl);
+
 
         const imageNode = designerRef.current?.currentStage?.selectedNode;
 
@@ -703,10 +719,15 @@ function DesignPage(param: DesignPageProps) {
 
                           designerRef.current.data = result;
                           designerRef.current.colorValue = key;
-                          const selectVariant = getVariantIdFromColorVariant(key, colorData);
-                          designerRef.current.variantId = selectVariant;
-                          designerRef.current.updateStagePositions();
-                          setVariantId(selectVariant);
+                          if (variantSizeColor) {
+                            const selectVariant = getVariantIdFromColorSize(key, sizeIdDefault, variantSizeColor) //getVariantIdFromColorVariant(key, colorData);
+
+                            if (selectVariant !== undefined) {
+                              designerRef.current.variantId = selectVariant;
+                              designerRef.current.updateStagePositions();
+                              setVariantId(selectVariant); // selectVariant là string hoặc null
+                            }
+                          }
                         }
                       }}
                       sx={{
@@ -930,7 +951,7 @@ function DesignPage(param: DesignPageProps) {
                           if (designerRef?.current?.currentStage.selectedNode == undefined) {
                             return;
                           }
-                          const newUrl =
+                          var newUrl =
                             designerRef.current?.originImageOfStage[
                             designerRef.current.currentStage.selectedNode?.id()
                             ];
@@ -1753,7 +1774,7 @@ function DesignPage(param: DesignPageProps) {
                         position={{ x: frameState.left, y: frameState.top }}
                         bounds="parent"
                         onDrag={(e, d) => {
-                          console.log(e, d);
+                          console.warn(e, d);
                           if (designerRef.current == null) {
                             return;
                           }
@@ -1768,7 +1789,7 @@ function DesignPage(param: DesignPageProps) {
                           if (designerRef.current == null) {
                             return;
                           }
-                          console.log(e);
+                          console.warn(e);
 
                           const newState = {
                             width: parseInt(ref.style.width),
@@ -1924,6 +1945,7 @@ function DesignPage(param: DesignPageProps) {
                 setSpinner(true);
                 const json = localStorage.getItem("cart");
 
+
                 if (json != null && json !== undefined) {
                   const cartItem = JSON.parse(json) as {
                     params: any; // Loại của params có thể thay đổi tuỳ theo nhu cầu
@@ -1946,8 +1968,9 @@ function DesignPage(param: DesignPageProps) {
                       metaData = await designerRef.current.exportDesignToJson();
                       //console.log("metaData", metaData);
                     }
-                    let result = false;
+                    var result = false;
                     if (param.typeDesign == 1) {
+
                       result = (await addItem(
                         cartItem.params,
                         variantId,
@@ -2171,10 +2194,16 @@ function DesignPage(param: DesignPageProps) {
 
                           designerRef.current.data = result;
                           designerRef.current.colorValue = key;
-                          const selectVariant = getVariantIdFromColorVariant(key, colorData);
-                          designerRef.current.variantId = selectVariant;
-                          designerRef.current.updateStagePositions();
-                          setVariantId(selectVariant);
+
+                          if (variantSizeColor) {
+                            const selectVariant = getVariantIdFromColorSize(key, sizeIdDefault, variantSizeColor) //getVariantIdFromColorVariant(key, colorData);
+
+                            designerRef.current.variantId = selectVariant ?? designerRef.current.variantId;
+                            designerRef.current.updateStagePositions();
+                            if (selectVariant !== undefined) {
+                              setVariantId(selectVariant); // selectVariant là string hoặc null
+                            }
+                          }
                           setIsShowDialog(false);
                         }
                       }}
@@ -2417,7 +2446,7 @@ function DesignPage(param: DesignPageProps) {
                           if (designerRef?.current?.currentStage.selectedNode == undefined) {
                             return;
                           }
-                          const newUrl =
+                          var newUrl =
                             designerRef.current?.originImageOfStage[
                             designerRef.current.currentStage.selectedNode?.id()
                             ];
@@ -3297,7 +3326,7 @@ function DesignPage(param: DesignPageProps) {
                         position={{ x: frameState.left, y: frameState.top }}
                         bounds="parent"
                         onDrag={(e, d) => {
-                          console.log(e, d);
+                          console.warn(e, d);
                           if (designerRef.current == null) {
                             return;
                           }
@@ -3312,7 +3341,7 @@ function DesignPage(param: DesignPageProps) {
                           if (designerRef.current == null) {
                             return;
                           }
-                          console.log(e);
+                          console.warn(e);
 
                           const newState = {
                             width: parseInt(ref.style.width),
@@ -3472,7 +3501,7 @@ function DesignPage(param: DesignPageProps) {
                   if (hasObjectInStage == true) {
                     metaData = await designerRef.current.exportDesignToJson();
                   }
-                  let result = false;
+                  var result = false;
                   // console.log(cartItem.params,
                   //   variantId,
                   //   cartItem.quantity);

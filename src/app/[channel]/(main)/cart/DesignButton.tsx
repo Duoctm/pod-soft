@@ -1,13 +1,14 @@
 "use client";
 type DesignButtonProps = {
 	colorId: string;
+	variantId: string;
 	productId: string;
 	params: Record<string, string>;
 	selectedVariantId: string;
 	quantity: number;
 };
 
-export function DesignButton({ productId, colorId, params, selectedVariantId, quantity }: DesignButtonProps) {
+export function DesignButton({ productId, colorId, variantId, params, selectedVariantId, quantity }: DesignButtonProps) {
 	return (
 		<button
 			type="button"
@@ -18,7 +19,7 @@ export function DesignButton({ productId, colorId, params, selectedVariantId, qu
 					quantity: quantity,
 				});
 				localStorage.setItem('cart', cartInfo);
-				window.location.replace(`design/1/${productId}/${colorId}`);
+				window.location.replace(`design/1/${productId}/${colorId}/${variantId}`);
 			}}
 			className="text-sm md:text-blue-500 md:underline md:font-medium  border md:border-none py-1 border-black bg-white  px-2 rounded-full"
 

@@ -40,8 +40,8 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 					if (params?.channel) {
 						await getCheckoutDetail(params?.channel);
 					}
-
-					router.push("/");
+					const redirectUrl = searchParams.get('redirect') || '/'
+					router.push(redirectUrl);
 				} else {
 					toast.error("Email or password is incorrect");
 					// resetForm();
@@ -96,9 +96,9 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 						{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
 					</button>
 				</div>
-					{formik.touched.password && formik.errors.password && (
-						<div className="mt-1 text-sm text-red-500">{formik.errors.password}</div>
-					)}
+				{formik.touched.password && formik.errors.password && (
+					<div className="mt-1 text-sm text-red-500">{formik.errors.password}</div>
+				)}
 				<div>
 					<div className="my-4">
 						<div>
@@ -109,14 +109,14 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 								Forgot your password?
 							</Link>
 						</div>
-						<div className="mt-2">
+						{/* <div className="mt-2">
 							<Link
 								href={`/${params?.channel}/request-email-confirmation`}
 								className="block text-sm font-medium text-neutral-800 underline hover:text-neutral-600"
 							>
 								Didn&apos;t receive your confirmation email?
 							</Link>
-						</div>
+						</div> */}
 					</div>
 				</div>
 				<button

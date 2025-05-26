@@ -1,8 +1,7 @@
 "use client";
-import { useRef } from "react";
+import {  useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import Wrapper from "@/ui/components/wrapper";
 
 const ServicesPage = ({
 	params,
@@ -58,7 +57,7 @@ const ServicesPage = ({
 				</div>
 
 				{/* Services Grid */}
-				<Wrapper>
+				<div className="mx-auto max-w-[2000px] px-4">
 					<div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
 						{services.map((service, _index) => (
 							<Link
@@ -73,8 +72,9 @@ const ServicesPage = ({
 									</div>
 								)}
 								<div
-									className={`group flex flex-1 flex-col overflow-hidden rounded-xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl ${!service.isActive ? "pointer-events-none opacity-30" : ""
-										}`}
+									className={`group flex flex-1 flex-col overflow-hidden rounded-xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl ${
+										!service.isActive ? "pointer-events-none opacity-30" : ""
+									}`}
 								>
 									<div className="relative mb-6 h-48 w-full overflow-hidden rounded-lg">
 										<Image
@@ -110,7 +110,7 @@ const ServicesPage = ({
 							</Link>
 						))}
 					</div>
-				</Wrapper>
+				</div>
 			</div>
 		</div>
 	);

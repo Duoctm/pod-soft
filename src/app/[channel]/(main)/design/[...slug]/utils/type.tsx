@@ -48,6 +48,8 @@ export interface DesignInfo {
   variantId: string | null,
   colorData: Record<string, object>;
   colorValue: string,
+  sizeIdDefault: string | undefined,
+  variantSizeColorData: Record<string, object> | null;
   faces: PrintFaceData[];
   backgroundColor: string;
   designs: Array<DesignFace>;

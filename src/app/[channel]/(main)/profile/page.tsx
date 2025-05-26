@@ -56,7 +56,6 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 			}
 
 			if (user) {
-				console.log(user);
 				setUser(user as unknown as UserType);
 				setAddress(user?.addresses[0] as unknown as Address);
 				if (user.addresses.length > 0)

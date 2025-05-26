@@ -2,7 +2,7 @@
 
 import edjsHTML from "editorjs-html";
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { notFound } from "next/navigation";
+import { notFound, usePathname, useRouter } from "next/navigation";
 import xss from "xss";
 import { toast, ToastContainer } from "react-toastify";
 import Link from "next/link";
@@ -84,6 +84,9 @@ function getVariantsToAdd(
 }
 
 export default function Page({ params }: PageProps) {
+
+	const router = useRouter();
+	const pathname = usePathname()
 	const { slug, channel } = params;
 	const [productData, setProductData] = useState<ProductDetailsState | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
@@ -338,7 +341,7 @@ export default function Page({ params }: PageProps) {
 			{/* <SizeGuideModal catalog={productData?.product?.category?.name  === "tee" || productData?.product?.category?.name === "fleece" ? productData?.product?.category?.name : "tee"} /> */}
 
 			<ToastContainer position="top-center" />
-			<ProductTitle name={productData?.product?.name} isLoading={loading}  className="md:hidden mb-7 px-4"/>
+			<ProductTitle name={productData?.product?.name} isLoading={loading} className="md:hidden mb-7 px-4" />
 			<div className="relative flex w-full max-w-7xl flex-col gap-2 md:gap-8 rounded-lg md:flex-row px-4">
 				{/* Image Section */}
 				<div className="w-full md:w-1/2 lg:w-[35%]">
@@ -351,7 +354,7 @@ export default function Page({ params }: PageProps) {
 				{/* Product Details Section */}
 				<div className="relative flex w-full flex-col rounded-lg md:w-1/2 md:px-6 lg:w-[65%]">
 					<div className="mb-24 flex-grow space-y-6">
-						<ProductTitle name={productData?.product?.name} isLoading={loading}  className="hidden md:flex"/>
+						<ProductTitle name={productData?.product?.name} isLoading={loading} className="hidden md:flex" />
 						{/* <ProductDescription descriptionHtml={features} isLoading={loading} /> */}
 
 						<div className="mt-4 w-full">
@@ -367,30 +370,30 @@ export default function Page({ params }: PageProps) {
 									)}
 								</div>
 								<div className="flex flex-1 items-center justify-end">
-							{loading ? (
-								<div className="flex items-center gap-x-2">
-									<div className="h-5 w-5 animate-pulse rounded bg-gray-200" />
-									<div className="h-4 w-20 animate-pulse rounded bg-gray-200" />
-								</div>
-							) : (
-								<button className="flex items-center gap-x-2" onClick={() => setShowSizeGuide(true)}>
-									<Ruler />
-									<span className="underline">Size Guide</span>
-								</button>
-							)}
+									{loading ? (
+										<div className="flex items-center gap-x-2">
+											<div className="h-5 w-5 animate-pulse rounded bg-gray-200" />
+											<div className="h-4 w-20 animate-pulse rounded bg-gray-200" />
+										</div>
+									) : (
+										<button className="flex items-center gap-x-2" onClick={() => setShowSizeGuide(true)}>
+											<Ruler />
+											<span className="underline">Size Guide</span>
+										</button>
+									)}
 
-							{showSizeGuide && (
-								<SizeGuideModal
-									setShowSizeGuide={setShowSizeGuide}
-									catalog={
-										productData?.product?.category?.slug === "tee" ||
-										productData?.product?.category?.slug === "fleece"
-											? productData?.product?.category?.slug
-											: "tee"
-									}
-								/>
-							)}
-						</div>
+									{showSizeGuide && (
+										<SizeGuideModal
+											setShowSizeGuide={setShowSizeGuide}
+											catalog={
+												productData?.product?.category?.slug === "tee" ||
+													productData?.product?.category?.slug === "fleece"
+													? productData?.product?.category?.slug
+													: "tee"
+											}
+										/>
+									)}
+								</div>
 							</div>
 						</div>
 						{/* Interactive Product Options */}
@@ -535,18 +538,18 @@ export default function Page({ params }: PageProps) {
 							) : (
 								<>
 									<input
-											type="number"
-											value={sizeQuantitie}
-											onChange={(e) => {
-												setSizeQuantitie(parseInt(e.target.value));
-											}}
-											max={quantityLimitPerCustomer}
-											min="1"
-											className="w-28 rounded-md border border-gray-300 bg-white text-sm px-3 py-1 text-center text-gray-900 shadow-sm 
+										type="number"
+										value={sizeQuantitie}
+										onChange={(e) => {
+											setSizeQuantitie(parseInt(e.target.value));
+										}}
+										max={quantityLimitPerCustomer}
+										min="1"
+										className="w-28 rounded-md border border-gray-300 bg-white text-sm px-3 py-1 text-center text-gray-900 shadow-sm 
 												transition duration-200 ease-in-out hover:border-[#8B3958]
 												focus:border-[#8B3958] focus:outline-none focus:ring-2
 												focus:ring-[#8B3958]"
-										/>
+									/>
 
 									<div className="flex gap-2 flex-row-reverse ">
 										<button
@@ -577,7 +580,8 @@ export default function Page({ params }: PageProps) {
 														toast.error(item.message);
 													});
 												} else if (result?.error?.error == 1) {
-													window.location.replace(`/${params.channel}/login`);
+													// window.location.replace(`/${params.channel}/login`);
+													router.push(`/${params.channel}/login?redirect=${encodeURIComponent(pathname)}`)
 												} else if (result?.error?.error == 3) {
 													toast.error("Something went wrong. Please try again later");
 												} else {
@@ -599,17 +603,17 @@ export default function Page({ params }: PageProps) {
 											</svg>
 											<p>
 
-											Add to Cart
+												Add to Cart
 											</p>
 										</button>
 
 										{isCustomDesign == true && (
 											<Link
-												href={`/${channel}/design/1/${productData?.product?.id}/${selectColorAttributeValueId}`}
+												href={`/${channel}/design/1/${productData?.product?.id}/${selectColorAttributeValueId}/${selectedVariantId}`}
 												className="w-full sm:w-auto"
 											>
 												<button
-														className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-5 
+													className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-5 
 														py-2 text-sm font-semibold text-white shadow-lg 
 														transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
 														focus:outline-none focus:ring-2
@@ -644,8 +648,8 @@ export default function Page({ params }: PageProps) {
 						{/* Action Buttons */}
 						<ProductDescription descriptionHtml={features} isLoading={loading} />
 						<div className="w-full md:hidden block">
-						<ProductDescription descriptionHtml={descriptionHtml} title="Descriptions" />
-					</div>
+							<ProductDescription descriptionHtml={descriptionHtml} title="Descriptions" />
+						</div>
 					</div>
 				</div>
 			</div>

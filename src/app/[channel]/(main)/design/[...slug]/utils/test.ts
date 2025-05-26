@@ -42,9 +42,12 @@ interface UpdateMetadataResponse {
 }
 
 
-const fetchProductDetail = async (productId: string) => {
-  const listColorVariant = new Map<string, object>();
+const fetchProductDetail = async (productId: string, variantId: string) => {
 
+  const listColorVariant = new Map<string, object>();
+  const listVariantSizeColor = new Map<string, object>();
+  const tempListVariantSizeColor = new Map<string, object>();
+  let sizeIdDefault = '';
   try {
 
     const rawData = await fetchRawProductDetail(productId);
@@ -57,8 +60,11 @@ const fetchProductDetail = async (productId: string) => {
       for (const variant of variants) {
         const metaData = variant.metadata?.find((item: any) => item.key === "custom_json");
 
+        const colorAttribute = variant.attributes?.find((attr: any) => attr.attribute?.name === "COLOR");
+
         if (metaData != null) {
-          const colorValue = variant.attributes?.[0]?.values?.[0]?.name.split("-")[1] || '';
+
+          const colorValue = colorAttribute?.values?.[0]?.name?.split("-")[1] || '';
           if (variant.attributes?.[0]?.values?.[0]?.id && !listColorVariant.has(variant.attributes[0].values[0].id)) {
             listColorVariant.set(variant.attributes[0].values[0].id, {
               variant_id: variant.id,
@@ -68,7 +74,32 @@ const fetchProductDetail = async (productId: string) => {
             });
           }
         }
+        const sizeAttribute = variant.attributes?.find((attr: any) => attr.attribute?.name === "SIZE");
+        tempListVariantSizeColor.set(variant.id, { color: colorAttribute?.values[0].id, size: sizeAttribute?.values[0].id });
       }
+      for (const [key, value] of tempListVariantSizeColor.entries()) {
+        if (key === variantId) {
+          sizeIdDefault = (value as { size?: string }).size || '';
+
+
+          break;
+        }
+      }
+
+
+
+
+      for (const [key, value] of tempListVariantSizeColor.entries()) {
+        const typedValue = value as { size?: string };
+        if (typedValue.size === sizeIdDefault) {
+          listVariantSizeColor.set(key, typedValue);
+        }
+      }
+
+
+
+
+
     } else {
       console.error("Dữ liệu không hợp lệ: không tìm thấy trường 'product'");
     }
@@ -77,9 +108,7 @@ const fetchProductDetail = async (productId: string) => {
   }
 
 
-  console.log("Danh sách màu sắc và thông tin liên quan:", listColorVariant);
-
-  return listColorVariant;
+  return { listColorVariant: listColorVariant, listVariantSizeColor: listVariantSizeColor, sizeIdDefault: sizeIdDefault };
 }
 
 
