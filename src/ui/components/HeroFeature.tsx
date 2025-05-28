@@ -27,7 +27,7 @@ const FEATURES = [
 
 const HeroFeature = () => {
 	return (
-		<div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6 mt-28">
+		<div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4  gap-2 md:gap-6 mt-6 md:mt-28">
 			{FEATURES.map((feature, index) => (
 				<div key={index} className="flex md:flex-row flex-col items-center text-center md:text-start gap-3 sm:gap-5 w-full sm:max-w-[263px] p-[1.5px]">
 					<div className="w-[50px] h-[50px] sm:w-[62px] sm:h-[62px] rounded-md bg-[#FFEDE9] flex items-center justify-center">

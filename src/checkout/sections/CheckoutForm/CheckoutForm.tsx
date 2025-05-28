@@ -248,7 +248,7 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 							Loading...
 						</>
 					) : (
-						"Place Order"
+						"Save Address"
 					)}
 				</button>
 			</Form>

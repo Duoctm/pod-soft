@@ -6,7 +6,7 @@ import HeroFeature from "../HeroFeature";
 const LeftSideHero = () => {
 	return (
 		<div className="flex flex-1 flex-col text-[#424255] md:px-4 lg:px-0">
-			<h1 className="mt-4 max-w-[582px] text-4xl font-bold leading-[110%] md:mt-6 md:text-6xl lg:text-7xl">
+			<h1 className="max-w-[582px] text-4xl font-bold leading-[110%] md:mt-6 md:text-6xl lg:text-7xl">
 				Welcome to ZoomPrints
 			</h1>
 			<span className="mt-4 text-lg w-full font-bold leading-[140%] md:mt-6 md:text-[32px]">
@@ -64,47 +64,7 @@ const LeftSideHero = () => {
 
 const RightSideHero = () => {
 	return (
-		<div className="mt-8 flex flex-1 flex-row gap-4 md:mt-0 md:gap-5">
-			{/* <div className="flex flex-1 flex-col">
-				<RatePanel />
-				<div className="relative mb-[30px] ml-4 mt-8 flex h-[80px] w-[100px] flex-col items-center justify-center overflow-hidden rounded-md text-[#0E0E0E] md:mb-[50px] md:ml-12 md:mt-16 md:h-[100px] md:w-[117px]"></div>
-				<div className="relative flex w-full flex-col overflow-hidden rounded-xl bg-[#271E32] text-white">
-					<Image src={"/images/line-bg.png"} alt="" className="absolute inset-0" fill />
-					<div className="z-10 px-4 py-5 md:px-6 md:py-7">
-						<div className="relative z-10 flex items-center justify-between">
-							<span className="text-xs font-medium leading-[140%] md:text-sm">How It Works?</span>
-							<Image
-								src={"/play-icon.svg"}
-								alt=""
-								width={16}
-								height={16}
-								className="md:h-[20px] md:w-[20px]"
-							/>
-						</div>
-						<h4 className="relative z-10 flex w-full items-center justify-center text-2xl font-bold leading-[140%] md:text-[32px]">
-							Wanna <br />
-							Know How
-							<br />
-							We Work..
-						</h4>
-						<Image
-							src={"/images/arrow.png"}
-							height={1}
-							width={100}
-							alt=""
-							className="z-10 mt-4 w-full md:mt-6"
-						/>
-					</div>
-					<Image
-						src={"/images/hero-right-side.jpg"}
-						height={274}
-						width={274}
-						alt=""
-						loading="lazy"
-						className="z-10 mt-2 w-full bg-cover bg-center bg-no-repeat"
-					/>
-				</div>
-			</div> */}
+		<div className="mt-4 flex flex-1 flex-row gap-4 md:mt-0 md:gap-5">
 			<div className="relative flex-1 flex-col">
 				{/* <Label /> */}
 				<Image
@@ -123,7 +83,7 @@ const RightSideHero = () => {
 
 const HeroPage = () => {
 	return (
-		<Wrapper className="flex flex-1 flex-col py-6 md:py-10 ">
+		<Wrapper className="flex flex-1 flex-col md:py-10 min-h-[calc(100vh-142px)] py-6">
 			<div className="flex w-full flex-col lg:flex-row">
 				<LeftSideHero />
 				<RightSideHero />

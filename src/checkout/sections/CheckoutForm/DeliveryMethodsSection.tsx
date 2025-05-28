@@ -1,48 +1,40 @@
-import { useEffect, useState, useMemo } from "react";
-import { type FormikHelpers } from "formik";
+import { useState, useMemo } from "react";
+
 import { toast } from "react-toastify";
 import { Title } from "@/checkout/components/Title";
 import { getFormattedMoney } from "@/checkout/lib/utils/money";
 import { DeliveryMethodsSkeleton } from "@/checkout/sections/DeliveryMethods/DeliveryMethodsSkeleton";
-import { type User } from "@/checkout/hooks/useUserServer";
-import { type Checkout } from "@/checkout/graphql";
-import { useFormContext } from "@/checkout/hooks/useForm";
+
 import { updateDeliveryMethod } from "@/checkout/hooks/checkoutDeliveryMethodUpdate";
-import { type FormValues } from "@/checkout/lib/utils/type";
 
-type DeliveryMethodsProps = {
-	user: User | null;
-	checkout: Checkout | null;
-	handleSubmitAddress: (
-		values: FormValues,
-		{ setSubmitting, setFieldError }: FormikHelpers<FormValues>,
-		inAddressForm: boolean,
-	) => Promise<void>;
-};
+import { useUser } from "@/checkout/hooks/useUser";
+import { type Checkout as CheckoutType } from "@/checkout/graphql";
 
-export const DeliveryMethods = ({ user, checkout, handleSubmitAddress }: DeliveryMethodsProps) => {
+interface DeliveryMethodsProps {
+	checkout: CheckoutType
+	update: () => void
+}
+
+export const DeliveryMethods = ({ checkout, update}: DeliveryMethodsProps) => {
+	const { authenticated: user } = useUser();
+
 	const shippingMethods = checkout?.shippingMethods || [];
 	const shippingAddress = checkout?.shippingAddress || null;
-	const { values, setSubmitting, setFieldError } = useFormContext<FormValues>();
-	const [isRequireUpdateAddress, setIsRequireUpdateAddress] = useState(false);
+	// const { values  } = useFormContext<FormValues>();
+	// const [isRequireUpdateAddress, setIsRequireUpdateAddress] = useState(false);
 	const [checkoutDeliveryMethodId, setCheckoutDeliveryMethodId] = useState<string>(() => {
 		if (checkout?.deliveryMethod) {
 			return checkout.deliveryMethod.id;
 		}
 		return "";
 	});
+ 
+
 
 	const deliveryMethod = useMemo(() => {
 		return shippingMethods.find((method) => method.id === checkoutDeliveryMethodId);
 	}, [checkoutDeliveryMethodId, shippingMethods]);
 
-	useEffect(() => {
-		if (values.shippingAddress.country !== shippingAddress?.country.code) {
-			setIsRequireUpdateAddress(true);
-		} else {
-			setIsRequireUpdateAddress(false);
-		}
-	}, [values.shippingAddress.country, shippingAddress?.country.code]);
 
 	const getSubtitle = ({ min, max }: { min?: number | null; max?: number | null }) => {
 		if (!min || !max) {
@@ -54,7 +46,7 @@ export const DeliveryMethods = ({ user, checkout, handleSubmitAddress }: Deliver
 
 	const handleChangeDeliveryMethod = async (e: React.ChangeEvent<HTMLSelectElement>) => {
 		setCheckoutDeliveryMethodId(e.target.value);
-		await handleSubmitAddress(values, { setSubmitting, setFieldError } as FormikHelpers<FormValues>, false);
+		// await handleSubmitAddress(values, { setSubmitting, setFieldError } as FormikHelpers<FormValues>, false);
 		const updateDeliveryMethodUpdateResult = await updateDeliveryMethod({
 			id: checkout?.id || "",
 			deliveryMethodId: e.target.value,
@@ -64,6 +56,7 @@ export const DeliveryMethods = ({ user, checkout, handleSubmitAddress }: Deliver
 			toast.error(error.message);
 		} else {
 			toast.success("Delivery method updated successfully");
+			update()
 		}
 	};
 
@@ -75,7 +68,7 @@ export const DeliveryMethods = ({ user, checkout, handleSubmitAddress }: Deliver
 		<div className="py-4" data-testid="deliveryMethods">
 			<Title className="mb-2">Delivery methods</Title>
 			{!user && !checkout && <DeliveryMethodsSkeleton />}
-			{(user && !shippingAddress) || isRequireUpdateAddress ? (
+			{user && !shippingAddress ? (
 				<p>Please fill in shipping address to see available shipping methods</p>
 			) : (
 				<>

@@ -144,8 +144,9 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 							{products.map((item) => {
 								if (!item.variant) return null;
 								const product = item.variant.product;
+								const {name : variantName} = item.variant 
+								const {category} = item.variant.product 
 								const media = item.variant.media;
-
 								return (
 									<div
 										key={product.id}
@@ -166,7 +167,9 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 											<div>
 												<h3 className="font-medium text-neutral-900">{product.name}</h3>
 											</div>
-											<div className="mt-4 flex items-center justify-between">
+												<p className="text-sm text-slate-500">Type: {category?.name}</p>
+												<p className="text-sm text-slate-500">Variant: {variantName}</p>
+											<div className="flex items-center justify-between">
 												<div className="flex items-center space-x-2">
 													<span className="text-sm font-medium text-neutral-700">Quantity:</span>
 													<span className="text-sm text-neutral-600">{item.quantity}</span>

@@ -30,11 +30,11 @@ const populars: PopularyType[] = [
 
 const Popular = () => {
 	return (
-		<div className="w-full bg-[#FFFFFF] px-6 py-[80px]">
-			<div className="relative mx-auto w-full max-w-[1200px]">
+		<div className="w-full bg-[#FFFFFF] px-4 py-6 md:mt-0 md:py-20">
+			<div className="relative mx-auto w-full max-w-[1200px] flex flex-col gap-6 md:gap-10">
 				{/* Heading and Button */}
-				<div className="mb-[60px] flex flex-col gap-[16px] md:flex-row md:items-center md:justify-between">
-					<div className="flex flex-col gap-[16px]">
+				<div className="flex flex-col gap-[16px] md:flex-row md:items-center md:justify-between">
+					<div className="flex flex-col gap-2 md:gap-[16px]">
 						<div className="text-[18px] font-semibold uppercase leading-[100%] tracking-[0.16em] text-[#EF816B]">
 							POPULAR PRODUCTS
 						</div>
@@ -43,17 +43,10 @@ const Popular = () => {
 							ZoomPrints Picks
 						</div>
 					</div>
-
-					{/* <Link
-						href={"/default-channel/products"}
-						className="flex h-[49px] w-[183px] items-center justify-center gap-[10px] rounded-[8px] bg-[#8B3958] px-[38px] py-[20px] shadow-[0px_8px_24px_0px_#FD8C6F40]"
-					>
-						<div className="text-center text-[14px] font-semibold leading-[100%] text-[#F3F3FF]">See All</div>
-					</Link> */}
 				</div>
 
 				{/* Popular Items */}
-				<div className="grid grid-cols-1 gap-[20px] sm:grid-cols-2 md:grid-cols-4">
+				<div className="grid grid-cols-1 gap-[20px] sm:grid-cols-2 md:grid-cols-4 mb-4">
 					{populars.map((item, index) => (
 						<div key={index} className="flex w-full flex-col gap-[24.4px]">
 							{/* Image + Tag */}

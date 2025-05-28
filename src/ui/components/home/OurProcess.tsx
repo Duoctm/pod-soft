@@ -15,8 +15,8 @@ const Process = ({ number, name }: { number: number | string; name: string }) =>
 
 const OurProcess = () => {
 	return (
-		<div className="bg-[#FFEDE9] py-12 lg:py-24">
-			<Wrapper className="flex flex-col lg:flex-row lg:items-center gap-y-12 lg:gap-y0">
+		<div className="bg-[#FFEDE9] py-6 lg:py-24">
+			<Wrapper className="flex flex-col lg:flex-row lg:items-center ">
 				<div className="flex flex-1 flex-col ">
 					<span className="space-x-[16%] text-xs md:text-[18px] font-semibold uppercase text-[#EF816B]">
 						OUR PROCESS
@@ -25,10 +25,10 @@ const OurProcess = () => {
 						Your Guide to <br />
 						Our Process
 					</h3>
-					<p className="max-w-[487px] py-2 md:py-4 text-sm md:text-base font-normal leading-6 text-[#909098]">
+					<p className="max-w-[487px] md:py-4 text-sm md:text-base font-normal leading-6 text-[#909098]">
 					A step-by-step guide to help you move from idea to finished product with ease and confidence.
 					</p>
-					<div className="flex flex-col gap-y-6 md:gap-y-11 pt-6 md:pt-12">
+					<div className="flex flex-col gap-y-4 md:gap-y-11 pt-6 md:pt-12">
 						<Process number="1" name="Pick your product" />
 						<Process number="2" name="Design" />
 						<Process number="3" name="Let's us do the rest!" />

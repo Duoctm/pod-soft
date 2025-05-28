@@ -53,26 +53,28 @@ const renderNavigationColumn = ({ links }: (typeof footerNavigation)[0], channel
 
 export async function Footer({ channel }: FooterProps) {
 	return (
-		<div className="flex flex-col bg-[#1C1C1C] py-8 md:py-16">
-			<Wrapper className="flex flex-col items-start justify-between gap-8 lg:gap-32 md:flex-row md:items-end md:gap-0">
-				<div className="flex w-full flex-col gap-y-5 md:w-auto flex-1">
-					<Image src="/images/main-logo.png" alt="Logo" className="object-cover" width={200} height={100} />
-					<p className="max-w-full text-[14px] font-[400] leading-[24px] tracking-[0%] text-white  md:text-[16px] md:leading-[26px]">
-						Digital printing for the promotional product industry.
-					</p>
-				</div>
-				<div className="md:w-aut flex w-full flex-1 flex-row items-center gap-8 md:gap-16">
-					{footerNavigation.map((section, index) => (
-						<div key={index} className="flex w-full">
-							{renderNavigationColumn(section, channel, section.title)}
-						</div>
-					))}
-				</div>
-			</Wrapper>
-			<hr className="my-4 border-t border-[#424255] md:my-6" />
-			<div className="text-center text-xs text-[#F3F3FF] md:text-sm">
+		<>
+			<div className="flex flex-col bg-[#1C1C1C] py-6 md:pt-16">
+				<Wrapper className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-end md:gap-0 md:pb-4 lg:gap-32">
+					<div className="flex w-full flex-1 flex-col gap-y-5 md:w-auto">
+						<Image src="/images/main-logo.png" alt="Logo" className="object-cover" width={150} height={100} />
+						<p className="max-w-full text-[14px] font-[400] leading-[24px] tracking-[0%] text-white  md:text-[16px] md:leading-[26px]">
+							Digital printing for the promotional product industry.
+						</p>
+					</div>
+					<div className="md:w-aut flex w-full flex-1 flex-row items-center gap-8 md:gap-16">
+						{footerNavigation.map((section, index) => (
+							<div key={index} className="flex w-full">
+								{renderNavigationColumn(section, channel, section.title)}
+							</div>
+						))}
+					</div>
+				</Wrapper>
+			</div>
+				<hr className="border-t border-[#424255]" />
+			<div className="py-6 text-center text-xs text-[#F3F3FF] md:text-sm bg-[#1C1C1C]">
 				© 2025 ZoomPrints. All rights reserved.
 			</div>
-		</div>
+		</>
 	);
 }

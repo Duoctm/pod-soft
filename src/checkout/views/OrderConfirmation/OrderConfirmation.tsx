@@ -1,5 +1,5 @@
-import { Suspense } from "react";
-import { Summary, SummarySkeleton } from "@/checkout/sections/Summary";
+// import { Suspense } from "react";
+// import { Summary, SummarySkeleton } from "@/checkout/sections/Summary";
 import { OrderInfo } from "@/checkout/sections/OrderInfo";
 import { useOrder } from "@/checkout/hooks/useOrder";
 
@@ -20,8 +20,9 @@ export const OrderConfirmation = () => {
 				</header>
 				<OrderInfo />
 			</div>
-			<Suspense fallback={<SummarySkeleton />}>
+			{/* <Suspense fallback={<SummarySkeleton />}>
 				<Summary
+
 					{...order}
 					// for now there can only be one voucher per order in the api
 					discount={order?.discounts?.find(({ type }) => type === "VOUCHER")?.amount}
@@ -31,7 +32,7 @@ export const OrderConfirmation = () => {
 					editable={false}
 					update={() => {}}
 				/>
-			</Suspense>
+			</Suspense> */}
 		</main>
 	);
 };

@@ -28,8 +28,10 @@ import { updateBillingAddress } from "@/checkout/hooks/useBillingAddressUpdate";
 import { checkoutCompleteServerFunc } from "@/checkout/hooks/useCheckoutCompleteServer";
 import { AddressSchema } from "@/checkout/lib/utils/validate";
 import { type Address, type FormValues } from "@/checkout/lib/utils/type";
-import { updateDeliveryMethod } from "@/checkout/hooks/checkoutDeliveryMethodUpdate";
-
+import AddressEditDialogForm from "@/checkout/sections/AddressEditForm/AddressEditDialogForm";
+import CustomerAddressInfo from "@/checkout/sections/CustomerAddressInfo/CustomerAddressInfo";
+import { DeliveryMethods } from "@/checkout/sections/CheckoutForm/DeliveryMethodsSection";
+// import { DeliveryMethods } from "@/checkout/sections/DeliveryMethods";
 // Define the shape for the entire checkout form
 const CheckoutSchema = Yup.object().shape({
 	shippingAddress: AddressSchema.required(),
@@ -107,6 +109,10 @@ export const Checkout = () => {
 	const [loadingCheckout, setLoadingCheckout] = useState(true);
 	const checkoutId = useMemo(() => extractCheckoutIdFromUrl(), []);
 	const [date, setDate] = useState(() => new Date().toLocaleString());
+	const [isLoadingPlaceOrder, setIsLoadingPlaceOrder] = useState(false);
+
+
+	const [isOpenAddressEditDialog, setIsOpenAddressEditDialog] = useState(false);
 
 	const update = () => {
 		setDate(() => new Date().toLocaleString());
@@ -150,7 +156,7 @@ export const Checkout = () => {
 		const fetchCheckout = async () => {
 			try {
 				const data = await getCheckoutServer({ id: checkoutId, languageCode: LanguageCodeEnum.EnUs });
-
+				console.log(data);
 				if (isMounted) {
 					setCheckout(data.checkout as CheckoutType);
 				}
@@ -262,11 +268,11 @@ export const Checkout = () => {
 	const handleSubmit = async (
 		values: FormValues,
 		{ setSubmitting, setFieldError }: FormikHelpers<FormValues>,
-		inAddressForm = true,
 	) => {
 		setSubmitting(true);
-
 		let hasErrors = false;
+		console.log(mapFormDataToApiAddress(values.shippingAddress))
+
 
 		const shippingAddressUpdateResult: CheckoutShippingAddressUpdateMutation = await updateShippingAddress({
 			checkoutId: checkoutId,
@@ -317,17 +323,16 @@ export const Checkout = () => {
 			});
 		}
 
-		if (hasErrors) {
-			if (inAddressForm) {
-				return;
-			}
-		} else {
-			await handlePlaceOrder();
+		if (!hasErrors) {
+			update();
+			handleOpenAddressEditDialog();
 		}
+		
 		setSubmitting(false);
 	};
 
 	const handlePlaceOrder = async () => {
+		setIsLoadingPlaceOrder(true);
 		const dataCheckout = await getCheckoutServer({ id: checkoutId, languageCode: LanguageCodeEnum.EnUs });
 
 		if (!dataCheckout.checkout?.shippingMethods || dataCheckout.checkout.shippingMethods.length === 0) {
@@ -335,10 +340,10 @@ export const Checkout = () => {
 			return;
 		}
 
-		await updateDeliveryMethod({
-			id: dataCheckout.checkout?.id || "",
-			deliveryMethodId: dataCheckout.checkout?.shippingMethods[0].id || "",
-		});
+		// await updateDeliveryMethod({
+		// 	id: dataCheckout.checkout?.id || "",
+		// 	deliveryMethodId: dataCheckout.checkout?.shippingMethods[0].id || "",
+		// });
 
 		if (!dataCheckout.checkout) {
 			toast.error("Checkout is not available");
@@ -353,6 +358,7 @@ export const Checkout = () => {
 			if (completeCheckoutErrors && completeCheckoutErrors.length > 0) {
 				completeCheckoutErrors.forEach((error: CheckoutError) => {
 					toast.error(error.message);
+					setIsLoadingPlaceOrder(false);
 				});
 			} else {
 				const notification = (message: string) => {
@@ -364,8 +370,13 @@ export const Checkout = () => {
 					}, 2500);
 				};
 				notification("The order has been placed successfully!");
+				setIsLoadingPlaceOrder(false);
 			}
 		}
+	};
+
+	const handleOpenAddressEditDialog = () => {
+		setIsOpenAddressEditDialog(!isOpenAddressEditDialog);
 	};
 
 	return isCheckoutInvalid ? (
@@ -383,21 +394,44 @@ export const Checkout = () => {
 							<Divider />
 							<Contact user={user} />
 							<Divider />
-							<Formik initialValues={initialValues} validationSchema={CheckoutSchema} onSubmit={handleSubmit}>
-								<div>
-									<AddressCheckoutForm slug={checkout?.channel.slug || ""} />
-									<Divider />
-								</div>
-							</Formik>
+							<div className="mt-2">
+								{checkout?.shippingAddress ? (
+									<>
+										<CustomerAddressInfo shippingAddress={checkout.shippingAddress} openDialog={handleOpenAddressEditDialog}  />
+										<DeliveryMethods  checkout={checkout} update={update}/>
+										
+									</>
+								) : (
+									<>
+										<button
+											className="block rounded-full bg-[#8C3859]  px-4 py-2 text-white hover:bg-[#8C3859]/70"
+											onClick={handleOpenAddressEditDialog}
+										>
+											Add a new delivery address
+										</button>
+									</>
+								)}
+							</div>
+
+
 						</div>
+
 						<div className="order-1 bg-gray-50 px-4 py-10 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 lg:py-16">
 							<Suspense fallback={<SummarySkeleton />}>
-								{checkout && <Summary {...checkout} update={update} />}
+								{checkout && <Summary {...checkout} update={update} onPlaceOrder={handlePlaceOrder} show={Boolean(checkout.shippingAddress)} loading={isLoadingPlaceOrder}/>}
 							</Suspense>
 						</div>
 					</div>
 				)}
 			</div>
+
+			<AddressEditDialogForm onClose={handleOpenAddressEditDialog} open={isOpenAddressEditDialog}>
+				<Formik initialValues={initialValues} validationSchema={CheckoutSchema} onSubmit={handleSubmit}>
+					<div>
+						<AddressCheckoutForm slug={checkout?.channel.slug || ""} />
+					</div>
+				</Formik>
+			</AddressEditDialogForm>
 		</ErrorBoundary>
 	);
 };

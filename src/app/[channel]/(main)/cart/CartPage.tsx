@@ -156,6 +156,7 @@ export function CartPage({ params }: CartPageProps) {
 							{Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && (
 								<DesignButton
 									colorId={item.variant.attributes[0].values[0].id}
+									variantId={item.variant.id}
 									productId={item.variant.product.id}
 									params={params}
 									quantity={1}
@@ -180,6 +181,7 @@ export function CartPage({ params }: CartPageProps) {
 							{Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && (
 								<DesignButton
 									colorId={item.variant.attributes[0].values[0].id}
+									variantId={item.variant.id}
 									productId={item.variant.product.id}
 									params={params}
 									quantity={1}

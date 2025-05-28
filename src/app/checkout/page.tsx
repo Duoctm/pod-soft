@@ -20,7 +20,7 @@ export default function CheckoutPage({
 
 	return (
 		<div className="min-h-dvh bg-white">
-			<div className="mx-auto flex max-w-7xl flex-col px-4">
+			<div className="mx-auto flex max-w-7xl flex-col px-8 py-8">
 				<div className="flex items-center font-bold">
 					<LinkWithChannel aria-label="homepage" href="/" className="flex items-center">
 						<Image src="/images/main-logo.png" alt="ZoomPrints" width={150} height={70} />

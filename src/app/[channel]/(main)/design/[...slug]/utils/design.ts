@@ -21,6 +21,8 @@ class TShirtDesigner {
   public colorValue: string;
   public variantId: string | null;
   private colorData: Map<string, object>;
+  private sizeIdDefault: string | undefined;
+  private variantSizeColorData: Map<string, object> | null;
   public stages: StageConfig[] = [];
 
   public currentStage: StageConfig;
@@ -202,7 +204,7 @@ class TShirtDesigner {
 
   };
 
-  constructor(data: PrintFaceData[], productId: string, variantId: string | null, colorValue: string, colorData: Map<string, object>,
+  constructor(data: PrintFaceData[], productId: string, variantId: string | null, colorValue: string, colorData: Map<string, object>, sizeIdDefault: string | undefined, variantSizeColorData: Map<string, object> | null,
     menuIndexSetter: React.Dispatch<React.SetStateAction<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>>,
     resizeWidthSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
     resizeHeightSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
@@ -217,6 +219,8 @@ class TShirtDesigner {
     this.colorValue = colorValue;
     this.variantId = variantId;
     this.colorData = colorData;
+    this.sizeIdDefault = sizeIdDefault;
+    this.variantSizeColorData = variantSizeColorData;
     this.menuIndexSetter = menuIndexSetter;
     this.resizeWidthSetter = resizeWidthSetter;
     this.resizeHeightSetter = resizeHeightSetter;
@@ -274,8 +278,7 @@ class TShirtDesigner {
 
       if (doms.length > 0) {
 
-        doms.forEach((item, index) => {
-          console.log(item);
+        doms.forEach((_, index) => {
           this.setupStage(this.stages[index], this.data[index], doms[index], 'preview-' + this.data[index].code);
           if (index === 0) {
             this.stages[index].stage!.container().style.display = 'block';
@@ -304,8 +307,7 @@ class TShirtDesigner {
         initStages();
       }
     };
-    doms.forEach((item, index) => {
-      console.log(item);
+    doms.forEach((_, index) => {
       if (doms[index].complete) {
         onImageLoad();
       } else {
@@ -828,7 +830,7 @@ class TShirtDesigner {
           this.setMenuWithNodeAndStage(node, this.currentStage, 5);
         } else if (node instanceof Konva.Text) {
           this.setMenuWithNodeAndStage(node, this.currentStage, 6);
-          console.log('resizeIcon', node.fontSize(), node.width(), node.height());
+          //console.log('resizeIcon', node.fontSize(), node.width(), node.height());
         }
       };
 
@@ -1352,7 +1354,7 @@ class TShirtDesigner {
 
         imgNode.dragBoundFunc(function (pos) {
           const stage = imgNode.getStage();
-          console.log('stage', stage);
+          //console.log('stage', stage);
           const stageWidth = stage!.width();
           const stageHeight = stage!.height();
 
@@ -1408,7 +1410,7 @@ class TShirtDesigner {
     //const stageWidth = this.currentStage.stage!.width();
     //const stageHeight = this.currentStage.stage!.height();
     var fontStyle = "";
-    console.log(this.fontStyle, this.fontWeight);
+    //console.log(this.fontStyle, this.fontWeight);
     if (this.fontWeight === 'bold') {
       fontStyle += "700";
       if (this.fontStyle != 'normal') {
@@ -1419,7 +1421,7 @@ class TShirtDesigner {
       fontStyle = this.fontStyle;
     }
 
-    console.log(fontStyle);
+    //console.log(fontStyle);
     const textNode = new Konva.Text({
       id: uuidv4(),
       text: text,
@@ -1481,7 +1483,7 @@ class TShirtDesigner {
     //this.menuIndexSetter(6);
     this.setMenuWithNodeAndStage(textNode, this.currentStage, 6);
     this.getRSOfNode();
-    console.log('currentStage', textNode.fontSize(), textNode.width(), textNode.height());
+    //console.log('currentStage', textNode.fontSize(), textNode.width(), textNode.height());
   }
 
   public changeTextColor(color: string) {
@@ -1512,7 +1514,7 @@ class TShirtDesigner {
 
   public changeFontWeight(fontWeight: string) {
     this.fontWeight = fontWeight;
-    console.log(this.fontWeight)
+    //console.log(this.fontWeight)
   }
 
   public imageElementToFile(image: HTMLImageElement, fileName = 'image.png'): Promise<File> {
@@ -1589,7 +1591,7 @@ class TShirtDesigner {
               else {
                 cloudinary_url = imageElement.src;
               }
-              console.log('cloudinary_url', cloudinary_url);
+              //console.log('cloudinary_url', cloudinary_url);
               design.push({
                 id: node.id(),
                 type: 'image',
@@ -1691,7 +1693,7 @@ class TShirtDesigner {
         designOfStage.designs = await getStageInfo(this.stages[item]);
         designs.push(designOfStage);
       } catch (error) {
-        console.log('co loi ne', error);
+        console.log(error);
       }
     }
 
@@ -1702,6 +1704,8 @@ class TShirtDesigner {
       colorValue: this.colorValue,
       variantId: this.variantId,
       colorData: Object.fromEntries(this.colorData),
+      sizeIdDefault: this.sizeIdDefault,
+      variantSizeColorData: this.variantSizeColorData != null ? Object.fromEntries(this.variantSizeColorData) : null,
       faces: this.data,
       backgroundColor: this.backgroundColor,
       designs: designs,
