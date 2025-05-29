@@ -18,6 +18,7 @@ import { Product, ProductVariant, TaxedMoney } from "@/gql/graphql";
 import Swipper from "./_components/Swipper";
 import { Ruler } from "lucide-react";
 import SizeGuideModal from "./guide";
+import { useNavigateLogin } from "@/hooks/useNavigateLogin";
 
 // Initialize the parser once
 const parser = edjsHTML();
@@ -589,7 +590,8 @@ export default function Page({ params }: PageProps) {
 													});
 												} else if (result?.error?.error == 1) {
 													// window.location.replace(`/${params.channel}/login`);
-													router.push(`/${params.channel}/login?redirect=${encodeURIComponent(pathname)}`)
+													// router.push(`/${params.channel}/login?redirect=${encodeURIComponent(pathname)}`)
+													useNavigateLogin(channel)
 												} else if (result?.error?.error == 3) {
 													toast.error("Something went wrong. Please try again later");
 												} else {
