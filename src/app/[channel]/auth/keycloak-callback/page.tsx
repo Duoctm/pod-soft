@@ -70,7 +70,7 @@ function KeycloakCallbackContent() {
         if (code && state) {
             const saleorApiUrl = process.env.NEXT_PUBLIC_SALEOR_API_URL;
             if (!saleorApiUrl) {
-                toast.error("Saleor API URL is not configured!");
+                toast.error("Zoomprints API URL is not configured!");
                 console.error("Error: NEXT_PUBLIC_SALEOR_API_URL is not set for callback page.");
                 setTimeout(() => router.push("/login"), 3000);
                 return;
@@ -153,7 +153,7 @@ function KeycloakCallbackContent() {
                         // Redirect to home page or user dashboard
                         router.push("/");
                     } else {
-                        let errorMessages = "Failed to obtain Saleor tokens.";
+                        let errorMessages = "Failed to obtain Zoomprints tokens.";
                         if (tokenData?.accountErrors && tokenData.accountErrors.length > 0) {
                             errorMessages = tokenData.accountErrors.map(e => e.message || "Account error").join(", ");
                         } else if (tokenData?.errors && tokenData.errors.length > 0) {
@@ -166,7 +166,7 @@ function KeycloakCallbackContent() {
                         setTimeout(() => router.push("/login"), 3000);
                     }
                 } catch (fetchError) {
-                    toast.error("Error connecting to Saleor API during token exchange.");
+                    toast.error("Error connecting to Zoomprints API during token exchange.");
                     console.error("Fetch Error for externalObtainAccessTokens:", fetchError);
                     setTimeout(() => router.push("/login"), 3000);
                 }
@@ -182,9 +182,6 @@ function KeycloakCallbackContent() {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
             <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-            <p style={{ marginTop: '20px', fontSize: '18px', color: '#333' }}>
-                Loading...
-            </p>
             <ToastContainer
                 position="top-right"
                 autoClose={5000}

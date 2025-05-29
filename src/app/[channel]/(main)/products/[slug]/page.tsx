@@ -138,10 +138,12 @@ export default function Page({ params }: PageProps) {
 			setError(null);
 			try {
 				const data = await getProductDetails(slug, channel);
-				if (!data.product) {
-					notFound();
+				console.log(data)
+				if (!data.product == null) {
+					return notFound();
 				}
-				if (data.product.variants != null) {
+
+				if (data.product && data.product.variants != null) {
 					for (const item of data.product.variants) {
 						const variant = item as typeof item & { metadata?: { key: string; value: string }[] };
 
@@ -338,6 +340,11 @@ export default function Page({ params }: PageProps) {
 			return productData?.seachKey[searchKey] || prev;
 		});
 	}, [opstions, optionList, productData?.seachKey]);
+
+
+	if (!productData) {
+		return notFound();
+	}
 
 	return (
 		<div className="flex min-h-screen flex-col items-center py-8 font-sans">
