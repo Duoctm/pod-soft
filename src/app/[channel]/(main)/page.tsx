@@ -12,6 +12,7 @@ export const metadata = {
 
 export default async function Page({ params }: { params: { channel: string } }) {
 	console.log("params", params);
+
 	return (
 		<section className="min-h-screen w-screen overflow-y-auto overflow-x-hidden  after:relative ">
 			<HeroPage />

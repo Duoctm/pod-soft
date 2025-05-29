@@ -25,6 +25,8 @@ export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> =
 		const colorValues = sortedValues.filter(value => value.match(/#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/));
 		const sortedColorValues = groupAndSortColors(colorValues);
 		sortedValues.splice(0, sortedValues.length, ...nonColorValues, ...sortedColorValues);
+
+		console.log("checkk", values);
 	}
 
 	if (loading) {

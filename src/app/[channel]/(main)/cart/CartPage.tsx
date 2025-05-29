@@ -41,6 +41,7 @@ export function CartPage({ params }: CartPageProps) {
 
 
 	const fetchCheckout = useCallback(async () => {
+		//await checkTokenServerAction();
 		setLoading(true);
 		try {
 			const checkoutData = await getCheckoutList(params.channel);

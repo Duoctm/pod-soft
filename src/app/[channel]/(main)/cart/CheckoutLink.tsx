@@ -1,11 +1,14 @@
 "use client";
 import { toast } from "react-toastify";
 import { checkout } from "./updateDefaultAddressServerFunc";
+import { callRefreshToken } from "../../../callRefreshToken"
+import { GetItemToServerCookie } from "../../../actions"
 
 type Props = {
 	disabled?: boolean;
 	checkoutId?: string;
 	className?: string;
+
 };
 
 export const CheckoutLink = ({ disabled, checkoutId, className = "" }: Props) => {
@@ -15,6 +18,10 @@ export const CheckoutLink = ({ disabled, checkoutId, className = "" }: Props) =>
 			aria-disabled={disabled}
 			onClick={async (e) => {
 				e.preventDefault();
+				const refreshTokenKey = `${process.env.NEXT_PUBLIC_SALEOR_API_URL}+saleor_auth_module_refresh_token`;
+				const refreshToken = await GetItemToServerCookie(refreshTokenKey);
+				await callRefreshToken(refreshTokenKey, refreshToken || "");
+				//await checkTokenServerAction();
 				if (!disabled) {
 					if (!checkoutId) {
 						toast.error("Checkout not found");

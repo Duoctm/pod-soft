@@ -327,7 +327,7 @@ export const Checkout = () => {
 			update();
 			handleOpenAddressEditDialog();
 		}
-		
+
 		setSubmitting(false);
 	};
 
@@ -356,6 +356,8 @@ export const Checkout = () => {
 			const completeCheckoutErrors: readonly CheckoutError[] | null | undefined =
 				completeResult.checkoutComplete?.errors;
 			if (completeCheckoutErrors && completeCheckoutErrors.length > 0) {
+				console.log(completeCheckoutErrors)
+
 				completeCheckoutErrors.forEach((error: CheckoutError) => {
 					toast.error(error.message);
 					setIsLoadingPlaceOrder(false);
@@ -397,9 +399,9 @@ export const Checkout = () => {
 							<div className="mt-2">
 								{checkout?.shippingAddress ? (
 									<>
-										<CustomerAddressInfo shippingAddress={checkout.shippingAddress} openDialog={handleOpenAddressEditDialog}  />
-										<DeliveryMethods  checkout={checkout} update={update}/>
-										
+										<CustomerAddressInfo shippingAddress={checkout.shippingAddress} openDialog={handleOpenAddressEditDialog} />
+										<DeliveryMethods checkout={checkout} update={update} />
+
 									</>
 								) : (
 									<>
@@ -418,11 +420,12 @@ export const Checkout = () => {
 
 						<div className="order-1 bg-gray-50 px-4 py-10 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 lg:py-16">
 							<Suspense fallback={<SummarySkeleton />}>
-								{checkout && <Summary {...checkout} update={update} onPlaceOrder={handlePlaceOrder} show={Boolean(checkout.shippingAddress)} loading={isLoadingPlaceOrder}/>}
+								{checkout && <Summary {...checkout} update={update} onPlaceOrder={handlePlaceOrder} show={Boolean(checkout.shippingAddress)} loading={isLoadingPlaceOrder} />}
 							</Suspense>
 						</div>
 					</div>
 				)}
+
 			</div>
 
 			<AddressEditDialogForm onClose={handleOpenAddressEditDialog} open={isOpenAddressEditDialog}>

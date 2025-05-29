@@ -175,6 +175,7 @@ export default function Page({ params }: PageProps) {
 					seachKey: searchKey,
 				});
 
+
 				let defaultVariant: ProductVariant | null = null;
 				if (data.product?.defaultVariant) {
 					defaultVariant = data.product.defaultVariant as ProductVariant;
@@ -307,11 +308,13 @@ export default function Page({ params }: PageProps) {
 	};
 
 	const optionList = useMemo(() => {
+
 		const attributes = extractAttributes(productData?.product?.variants || []);
 		return [...attributes];
 	}, [productData?.product?.variants]);
 
 	useEffect(() => {
+
 		const searchKeyList: string[] = [];
 		optionList.forEach((option) => {
 			if (option.name == "COLOR" || option.name == "SIZE") {
@@ -405,7 +408,7 @@ export default function Page({ params }: PageProps) {
 								if (!isColorOrSize) {
 									return null; // Không render ProductAttributeSelector nếu không phải 'COLOR' hoặc 'SIZE'
 								}
-
+								console.log('optin', option)
 								return (
 									<ProductAttributeSelector
 										loading={loading}

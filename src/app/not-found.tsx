@@ -1,19 +1,14 @@
-import { type FallbackProps } from "react-error-boundary";
-//import { SaleorLogo } from "@/checkout/assets/images/SaleorLogo";
-import { Button } from "@/checkout/components/Button";
-import { ErrorContentWrapper } from "@/checkout/components/ErrorContentWrapper";
-export const PageNotFound = ({ error }: Partial<FallbackProps>) => {
-	console.error(error);
+import { Logo } from "@/ui/components/Logo";
+import { HomeIcon } from "lucide-react";
+import Link from "next/link";
+import React from "react";
 
-	// eslint-disable-next-line no-restricted-globals
-	const goBack = () => history.back();
-
+const NotFound = () => {
 	return (
-		<ErrorContentWrapper>
-			{/* <div className="mb-4 flex w-28 flex-col">
-				<SaleorLogo />
-			</div> */}
-
+		<main className="flex min-h-screen flex-col items-center justify-center">
+			<div className="fixed top-0 flex flex-1 py-2 left-4">
+				<Logo />
+			</div>
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="400" height="225">
 				<title>404</title>
 				<g id="Layer_12 yellow-back-fig" data-name="Layer 12">
@@ -415,8 +410,16 @@ export const PageNotFound = ({ error }: Partial<FallbackProps>) => {
 				Sorry, we couldn’t find the page you’re looking for.
 			</p>
 			<div className="mt-2 flex items-center justify-center md:mt-10">
-				<Button ariaLabel="Go back to store" onClick={goBack} variant="secondary" label="Go back to store" />
+				<Link
+					href="/"
+					className="flex items-center  gap-x-2 rounded-md bg-[#8C3859] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#8C3859]/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+				>
+                    <HomeIcon/>
+					Go back home
+				</Link>
 			</div>
-		</ErrorContentWrapper>
+		</main>
 	);
 };
+
+export default NotFound;

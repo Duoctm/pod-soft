@@ -1,0 +1,9 @@
+mutation checkoutValidate($checkoutId: ID!) {
+  checkoutValidate(id: $checkoutId) {
+    errors {
+      message
+      field
+      code
+    }
+  }
+}

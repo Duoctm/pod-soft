@@ -19,6 +19,7 @@
 		"@adyen/adyen-web": "5.53.3",
 		"@adyen/api-library": "15.0.0-beta",
 		"@apollo/client": "3.13.8",
+		"@ducanh2912/next-pwa": "10.2.9",
 		"@emotion/react": "11.14.0",
 		"@emotion/styled": "11.14.0",
 		"@fortawesome/fontawesome-free": "6.7.2",

@@ -1,7 +1,11 @@
+
+
+
 import { invariant } from "ts-invariant";
 import Image from "next/image";
 import { RootWrapper } from "./pageWrapper";
 import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
+//import { RefreshTokenCaller } from "./refreshTokenCaller";
 
 export const metadata = {
 	title: "Checkout · ZoomPrints",
@@ -17,6 +21,11 @@ export default function CheckoutPage({
 	if (!searchParams.checkout && !searchParams.order) {
 		return null;
 	}
+
+
+
+
+
 
 	return (
 		<div className="min-h-dvh bg-white">

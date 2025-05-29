@@ -7,10 +7,35 @@ import { toast, ToastContainer } from "react-toastify";
 import clsx from "clsx";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, LogIn } from "lucide-react";
 import { signInAction } from "@/actions/login";
 import "react-toastify/dist/ReactToastify.css";
 import { getCheckoutDetail } from "@/app/[channel]/(main)/login/checkoutdata";
+
+// Define types for the GraphQL response
+interface ErrorDetail {
+	field?: string | null;
+	message?: string | null;
+	code?: string | null;
+	[key: string]: any;
+}
+
+interface ExternalAuthUrlData {
+	authenticationData?: string | null;
+	errors?: ErrorDetail[] | null;
+}
+
+interface ExternalAuthUrlResponse {
+	data?: {
+		externalAuthenticationUrl?: ExternalAuthUrlData | null;
+	} | null;
+	errors?: Array<{ message: string;[key: string]: any }> | null;
+}
+
+interface ParsedAuthData {
+	authorizationUrl?: string;
+	[key: string]: any;
+}
 
 const validationSchema = Yup.object({
 	email: Yup.string().email("Invalid email").required("Email is required"),
@@ -20,6 +45,7 @@ const validationSchema = Yup.object({
 function LoginFormContent({ params }: { params?: { channel: string } }) {
 	const router = useRouter();
 	const [showPassword, setShowPassword] = useState(false);
+	const [isRedirectingToKeycloak, setIsRedirectingToKeycloak] = useState(false);
 	const searchParams = useSearchParams();
 	const email = searchParams.get("email") || "";
 
@@ -29,14 +55,12 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 			password: "",
 		},
 		validationSchema,
-		onSubmit: async (values, { setSubmitting, setErrors }) => {
-			setErrors({})
+		onSubmit: async (values, { setSubmitting }) => {
 			try {
 				const result = await signInAction(values);
 
 				if (result.success) {
 					toast.success("Login successful!");
-
 					if (params?.channel) {
 						await getCheckoutDetail(params?.channel);
 					}
@@ -44,8 +68,6 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 					router.push(redirectUrl);
 				} else {
 					toast.error("Email or password is incorrect");
-					// resetForm();
-					formik.setFieldValue("password", "");
 				}
 			} catch (error) {
 				console.error("Login error:", error);
@@ -54,6 +76,78 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 			}
 		},
 	});
+
+	const handleKeycloakLogin = async () => {
+		setIsRedirectingToKeycloak(true);
+		localStorage.setItem("channel", params?.channel || "default-channel");
+		try {
+			// 1. Xác định URL callback trên Storefront
+			const storefrontBaseUrl = process.env.NEXT_PUBLIC_STOREFRONT_URL || "http://localhost:3001";
+			const channelFromParams = params?.channel || "default-channel";
+			const storefrontCallbackUrl = `${storefrontBaseUrl}/${channelFromParams}/auth/keycloak-callback`;
+
+			console.log("Storefront callback URL for Keycloak redirect:", storefrontCallbackUrl);
+
+			const saleorApiGraphqlEndpoint = process.env.NEXT_PUBLIC_SALEOR_API_URL;
+			if (!saleorApiGraphqlEndpoint) {
+				toast.error("Saleor API URL is not configured. Please set NEXT_PUBLIC_SALEOR_API_URL.");
+				setIsRedirectingToKeycloak(false);
+				console.error("Error: NEXT_PUBLIC_SALEOR_API_URL is not set.");
+				return;
+			}
+
+			// 2. Gọi externalAuthenticationUrl với redirectUri là storefrontCallbackUrl
+			const response = await fetch(saleorApiGraphqlEndpoint, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					query: `
+						mutation ExternalAuthenticationUrl($pluginId: String!, $input: JSONString!) {
+							externalAuthenticationUrl(pluginId: $pluginId, input: $input) {
+								authenticationData
+								errors {
+									field
+									message
+									code
+								}
+							}
+						}
+					`,
+					variables: {
+						pluginId: "mirumee.authentication.openidconnect",
+						input: JSON.stringify({ redirectUri: storefrontCallbackUrl })
+					}
+				}),
+			});
+
+			const result = await response.json() as ExternalAuthUrlResponse;
+
+			if (result.data?.externalAuthenticationUrl?.authenticationData) {
+				const authData = JSON.parse(result.data.externalAuthenticationUrl.authenticationData) as ParsedAuthData;
+				if (authData.authorizationUrl) {
+					window.location.href = authData.authorizationUrl;
+				} else {
+					toast.error("Could not get authorization URL from Keycloak.");
+					setIsRedirectingToKeycloak(false);
+				}
+			} else {
+				let errorMessages = "Failed to initiate Keycloak login.";
+				if (result.data?.externalAuthenticationUrl?.errors && result.data.externalAuthenticationUrl.errors.length > 0) {
+					errorMessages = result.data.externalAuthenticationUrl.errors.map((e: ErrorDetail) => e.message || 'Unknown error').join(", ");
+				} else if (result.errors && result.errors.length > 0) {
+					errorMessages = result.errors.map((e: { message: string }) => e.message).join(", ");
+				}
+				toast.error(`Error: ${errorMessages}`);
+				setIsRedirectingToKeycloak(false);
+			}
+		} catch (error) {
+			console.error("Keycloak login initiation error:", error);
+			toast.error("An unexpected error occurred while trying to log in with Keycloak.");
+			setIsRedirectingToKeycloak(false);
+		}
+	};
 
 	return (
 		<div className="mx-auto mt-16 flex h-[60vh] w-full max-w-lg flex-col items-center justify-center">
@@ -131,6 +225,25 @@ function LoginFormContent({ params }: { params?: { channel: string } }) {
 						</>
 					) : (
 						"Log In"
+					)}
+				</button>
+
+				<button
+					type="button"
+					onClick={handleKeycloakLogin}
+					disabled={isRedirectingToKeycloak}
+					className="mt-4 flex w-full items-center justify-center rounded bg-blue-600 px-4 py-2 text-neutral-200 hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70"
+				>
+					{isRedirectingToKeycloak ? (
+						<>
+							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+							Redirecting to Keycloak...
+						</>
+					) : (
+						<>
+							<LogIn className="mr-2 h-4 w-4" />
+							Login With Keycloak
+						</>
 					)}
 				</button>
 
