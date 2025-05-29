@@ -183,7 +183,7 @@ function KeycloakCallbackContent() {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
             <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
             <p style={{ marginTop: '20px', fontSize: '18px', color: '#333' }}>
-                Authenticating with Saleor via Keycloak...
+                Loading...
             </p>
             <ToastContainer
                 position="top-right"
