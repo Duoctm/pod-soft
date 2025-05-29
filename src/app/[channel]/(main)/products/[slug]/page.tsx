@@ -86,8 +86,8 @@ function getVariantsToAdd(
 
 export default function Page({ params }: PageProps) {
 
-	const router = useRouter();
-	const pathname = usePathname()
+	// const router = useRouter();
+	// const pathname = usePathname()
 	const { slug, channel } = params;
 	const [productData, setProductData] = useState<ProductDetailsState | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
