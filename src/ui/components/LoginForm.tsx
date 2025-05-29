@@ -13,26 +13,26 @@ import "react-toastify/dist/ReactToastify.css";
 import { getCheckoutDetail } from "@/app/[channel]/(main)/login/checkoutdata";
 
 // Define types for the GraphQL response
-interface ErrorDetail {
+export interface ErrorDetail {
 	field?: string | null;
 	message?: string | null;
 	code?: string | null;
 	[key: string]: any;
 }
 
-interface ExternalAuthUrlData {
+export interface ExternalAuthUrlData {
 	authenticationData?: string | null;
 	errors?: ErrorDetail[] | null;
 }
 
-interface ExternalAuthUrlResponse {
+export interface ExternalAuthUrlResponse {
 	data?: {
 		externalAuthenticationUrl?: ExternalAuthUrlData | null;
 	} | null;
 	errors?: Array<{ message: string;[key: string]: any }> | null;
 }
 
-interface ParsedAuthData {
+export interface ParsedAuthData {
 	authorizationUrl?: string;
 	[key: string]: any;
 }
