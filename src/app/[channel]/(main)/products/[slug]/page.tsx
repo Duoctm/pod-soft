@@ -2,7 +2,7 @@
 
 import edjsHTML from "editorjs-html";
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { notFound, usePathname, useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 import xss from "xss";
 import { toast, ToastContainer } from "react-toastify";
 import Link from "next/link";
@@ -86,8 +86,6 @@ function getVariantsToAdd(
 
 export default function Page({ params }: PageProps) {
 
-	// const router = useRouter();
-	// const pathname = usePathname()
 	const { slug, channel } = params;
 	const [productData, setProductData] = useState<ProductDetailsState | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
