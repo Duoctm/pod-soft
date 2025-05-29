@@ -1,27 +1,28 @@
 import React from "react";
-import { Printer, 
-	FileText, 
-	User, 
+import {
+	Printer,
+	FileText,
+	User,
 	// Image, 
 	// Layout, 
 	// Package
- } from "lucide-react";
+} from "lucide-react";
 import Link from "next/link";
 import Wrapper from "../wrapper";
 
 const SERVICES = [
 	{
-		icon: <Printer />,
-		title: "Direct-To-Garment",
-		description:
-			"Top of the line Brother DL DTG machines. No pretreatment stains. Leading digital printing innovation.",
-		link: "/default-channel/service",
-	},
-	{
 		icon: <User />,
 		title: "Silk Screening",
 		description:
 			"Facility for any sized order. High-end M&R 8 and 12 head machines. Specialized in 500+ piece orders.",
+		link: "/default-channel/service",
+	},
+	{
+		icon: <Printer />,
+		title: "Direct-To-Garment",
+		description:
+			"Top of the line Brother DL DTG machines. No pretreatment stains. Leading digital printing innovation.",
 		link: "/default-channel/service",
 	},
 	{
