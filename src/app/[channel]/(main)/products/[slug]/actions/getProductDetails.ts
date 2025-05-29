@@ -4,7 +4,7 @@ import { GetProductDetailsDocument } from "@/gql/graphql";
 
 export const getProductDetails = async (slug: string, channel: string) => {
 	"user server";
-	const  data = await executeGraphQL(GetProductDetailsDocument, {
+	const data = await executeGraphQL(GetProductDetailsDocument, {
 		variables: {
 			channel: channel,
 			slug: slug,

@@ -138,9 +138,8 @@ export default function Page({ params }: PageProps) {
 			setError(null);
 			try {
 				const data = await getProductDetails(slug, channel);
-				console.log(data)
-				if (!data.product == null) {
-					return notFound();
+				if (data.product == null) {
+					notFound()
 				}
 
 				if (data.product && data.product.variants != null) {
@@ -218,8 +217,10 @@ export default function Page({ params }: PageProps) {
 					//atrrubuteValueIds.current.set(value, attr.values[0].id)
 				});
 				setOptions(() => optionValue);
+
 			} catch (err: any) {
 				setError(err instanceof Error ? err : new Error("An unknown error occurred fetching product data"));
+
 			} finally {
 				setLoading(false);
 			}
@@ -228,7 +229,8 @@ export default function Page({ params }: PageProps) {
 	}, [channel, slug]);
 
 	if (error) {
-		console.error("Error fetching product data:", error);
+		// throw new Error("Error fetching product data:", error);
+		notFound()
 	}
 
 	const descriptionHtml = useMemo(() => {
@@ -341,10 +343,6 @@ export default function Page({ params }: PageProps) {
 		});
 	}, [opstions, optionList, productData?.seachKey]);
 
-
-	if (!productData) {
-		return notFound();
-	}
 
 	return (
 		<div className="flex min-h-screen flex-col items-center py-8 font-sans">
