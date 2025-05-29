@@ -28,6 +28,7 @@ export function UserMenuContainer({ params }: { params?: { channel: string } }) 
 
 
 	const handleLogin = async () => {
+		let errorMessages = "Failed to initiate Keycloak login.";
 		localStorage.setItem("channel", params?.channel || "default-channel");
 		try {
 
@@ -79,7 +80,6 @@ export function UserMenuContainer({ params }: { params?: { channel: string } }) 
 					return;
 				}
 			} else {
-				let errorMessages = "Failed to initiate Keycloak login.";
 				if (result.data?.externalAuthenticationUrl?.errors && result.data.externalAuthenticationUrl.errors.length > 0) {
 					errorMessages = result.data.externalAuthenticationUrl.errors.map((e: ErrorDetail) => e.message || 'Unknown error').join(", ");
 				} else if (result.errors && result.errors.length > 0) {
@@ -89,7 +89,7 @@ export function UserMenuContainer({ params }: { params?: { channel: string } }) 
 
 
 		} catch (error) {
-			throw new Error("Some thing wrong")
+			throw new Error(errorMessages)
 		}
 	}
 
