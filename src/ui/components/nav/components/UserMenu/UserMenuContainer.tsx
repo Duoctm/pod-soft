@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { UserIcon } from "lucide-react";
 import { UserMenu } from "./UserMenu";
-import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
 import { getUser } from "@/actions/user";
 import { UserDetailsFragment } from "@/gql/graphql";
 import { ErrorDetail, ExternalAuthUrlResponse, ParsedAuthData } from "@/ui/components/LoginForm";
