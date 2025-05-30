@@ -65,30 +65,25 @@ const LeftSideHero = () => {
 const RightSideHero = () => {
 	return (
 		<div className="mt-4 flex flex-1 flex-row gap-4 md:mt-0 md:gap-5 justify-end">
-			<div
-				className="relative w-full aspect-[476/401] rounded-xl overflow-hidden md:min-h-[401px] lg:min-h-[500px] aspect-square"
-			>
+			<div className="relative w-full rounded-xl overflow-hidden">
 				<Image
-					src="/images/dtg.webp"
+					src="/images/dtg.jpg"
 					alt="DTG machine image"
-					width={600}
-					height={400}
+					width={588} // Đồng bộ với kích thước thực
+					height={431} // Đồng bộ với kích thước thực
 					priority
-					// sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
 					className="object-cover rounded-xl"
 					quality={75}
 				/>
-
 			</div>
 		</div>
 	);
 };
 
-
 const HeroPage = () => {
 	return (
 		<Wrapper className="flex flex-1 flex-col md:py-10 min-h-[calc(100vh-142px)] py-6">
-			<div className="flex w-full flex-col lg:flex-row">
+			<div className="flex w-full flex-col lg:flex-row items-stretch h-full">
 				<LeftSideHero />
 				<RightSideHero />
 			</div>

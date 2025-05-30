@@ -43,8 +43,7 @@ const OurProcess = () => {
 						width={800}
 						height={400}
 						loading="lazy"
-						className="object-contain md:object-cover rounded-md  aspect-[9/16] md:aspect-square"
-						sizes="(min-width: 768px) 100vw, 488px"
+						className="object-contain md:object-cover rounded-md "
 					/>
 				</div>
 

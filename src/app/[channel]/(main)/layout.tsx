@@ -14,7 +14,7 @@ export default function RootLayout(props: { children: ReactNode; params: { chann
 		<>
 			<Header channel={props.params.channel} />
 			<BreadcrumbProvider channel={props.params.channel}>
-				<div className="max-w-[100vw] w-full mx-auto">
+				<div className="max-w-[100vw] w-full mx-auto min-h-screen">
 					{props.children}
 					<Footer channel={props.params.channel} />
 				</div>
