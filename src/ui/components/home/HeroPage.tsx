@@ -13,7 +13,7 @@ const LeftSideHero = () => {
 				Digital printing for the promotional product industry.
 			</span>
 			{/* <p className="mt-4 w-full max-w-[546px] text-base font-normal leading-[1.6] md:mt-7 md:text-[20px]">
-				Bring Your Ideas to Life with High-Quality Prints
+				Bring Your Ideas to Life with High-Quality PPrints
 			</p> */}
 
 			{/* <div className="mt-6 flex flex-row items-center gap-4">
@@ -64,18 +64,16 @@ const LeftSideHero = () => {
 
 const RightSideHero = () => {
 	return (
-		<div className="mt-4 flex flex-1 flex-row gap-4 md:mt-0 md:gap-5 justify-end">
-			<div className="relative w-full rounded-xl overflow-hidden">
-				<Image
-					src="/images/dtg.jpg"
-					alt="DTG machine image"
-					width={588} // Đồng bộ với kích thước thực
-					height={431} // Đồng bộ với kích thước thực
-					priority
-					className="object-cover rounded-xl"
-					quality={75}
-				/>
-			</div>
+		<div className="relative w-full max-w-[588px] aspect-[588/431] rounded-xl overflow-hidden">
+			<Image
+				src="/images/dtg.jpg"
+				alt="DTG machine image"
+				fill
+				priority
+				className="object-cover rounded-xl"
+				quality={75}
+				sizes="(max-width: 768px) 100vw, 588px"
+			/>
 		</div>
 	);
 };
@@ -84,8 +82,12 @@ const HeroPage = () => {
 	return (
 		<Wrapper className="flex flex-1 flex-col md:py-10 min-h-[calc(100vh-142px)] py-6">
 			<div className="flex w-full flex-col lg:flex-row items-stretch h-full">
-				<LeftSideHero />
-				<RightSideHero />
+				<div className="flex-[1_1_50%]">
+					<LeftSideHero />
+				</div>
+				<div className="flex-[1_1_50%] flex justify-end">
+					<RightSideHero />
+				</div>
 			</div>
 			<HeroFeature />
 		</Wrapper>

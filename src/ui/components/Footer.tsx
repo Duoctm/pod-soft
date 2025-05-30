@@ -2,6 +2,7 @@ import Image from "next/image";
 import Wrapper from "./wrapper";
 import Link from "next/link";
 
+
 // Common styles for text elements
 const textStyles = {
 	base: "text-white text-[14px] md:text-[16px] font-[400] leading-[24px] md:leading-[26px]",
@@ -57,7 +58,18 @@ export async function Footer({ channel }: FooterProps) {
 			<div className="flex flex-col bg-[#1C1C1C] py-6 md:pt-16">
 				<Wrapper className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-end md:gap-0 md:pb-4 lg:gap-32">
 					<div className="flex w-full flex-1 flex-col gap-y-5 md:w-auto">
-						<Image src="/images/main-logo.png" alt="Logo" className="object-cover" width={150} height={100} />
+
+						<div className="relative w-[150px] h-[100px]">
+							<Image
+								src="/images/main-logo.png"
+								alt="Logo"
+								fill
+								sizes="150px"
+								className="object-contain"
+								priority
+							/>
+						</div>
+
 						<p className="max-w-full text-[14px] font-[400] leading-[24px] tracking-[0%] text-white  md:text-[16px] md:leading-[26px]">
 							Digital printing for the promotional product industry.
 						</p>
@@ -71,7 +83,7 @@ export async function Footer({ channel }: FooterProps) {
 					</div>
 				</Wrapper>
 			</div>
-				<hr className="border-t border-[#424255]" />
+			<hr className="border-t border-[#424255]" />
 			<div className="py-6 text-center text-xs text-[#F3F3FF] md:text-sm bg-[#1C1C1C]">
 				© 2025 ZoomPrints. All rights reserved.
 			</div>
