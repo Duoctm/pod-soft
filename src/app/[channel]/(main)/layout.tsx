@@ -1,7 +1,6 @@
 import { type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { BreadcrumbProvider } from "@/ui/components/BreadcrumbProvider";
-
 const Footer = dynamic(() => import("@/ui/components/Footer").then(mod => mod.Footer));
 const Header = dynamic(() => import("@/ui/components/Header").then(mod => mod.Header));
 
@@ -15,7 +14,7 @@ export default function RootLayout(props: { children: ReactNode; params: { chann
 		<>
 			<Header channel={props.params.channel} />
 			<BreadcrumbProvider channel={props.params.channel}>
-				<div className="w-full">
+				<div className="max-w-[100vw] w-full mx-auto">
 					{props.children}
 					<Footer channel={props.params.channel} />
 				</div>
