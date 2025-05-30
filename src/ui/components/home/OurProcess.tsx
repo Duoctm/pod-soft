@@ -35,16 +35,16 @@ const OurProcess = () => {
 					</div>
 				</div>
 				<div
-					className="relative w-full max-w-[488px] mt-8 md:mt-0 rounded-md overflow-hidden"
-					style={{ aspectRatio: '488 / 562' }}
+					className="relative w-full max-w-[500px] mt-8 md:mt-0 rounded-md overflow-hidden"
 				>
 					<Image
 						src="/images/image-box.jpg"
 						alt="Our Process"
-						fill
+						width={800}
+						height={400}
 						loading="lazy"
-						className="object-cover rounded-md"
-						sizes="(max-width: 768px) 100vw, 488px"
+						className="object-contain md:object-cover rounded-md  aspect-[9/16] md:aspect-square"
+						sizes="(min-width: 768px) 100vw, 488px"
 					/>
 				</div>
 

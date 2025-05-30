@@ -66,15 +66,15 @@ const RightSideHero = () => {
 	return (
 		<div className="mt-4 flex flex-1 flex-row gap-4 md:mt-0 md:gap-5 justify-end">
 			<div
-				className="relative w-full aspect-[476/401] rounded-xl overflow-hidden md:min-h-[401px] lg:min-h-[500px]"
+				className="relative w-full aspect-[476/401] rounded-xl overflow-hidden md:min-h-[401px] lg:min-h-[500px] aspect-square"
 			>
 				<Image
 					src="/images/dtg.webp"
 					alt="DTG machine image"
-					width={800}
-					height={673}
+					width={600}
+					height={400}
 					priority
-					sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+					// sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
 					className="object-cover rounded-xl"
 					quality={75}
 				/>
