@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { BreadcrumbProvider } from "@/ui/components/BreadcrumbProvider";
+import Wrapper from "@/ui/components/wrapper";
 
 const Footer = dynamic(() => import("@/ui/components/Footer").then(mod => mod.Footer));
 const Header = dynamic(() => import("@/ui/components/Header").then(mod => mod.Header));
@@ -15,10 +16,10 @@ export default function RootLayout(props: { children: ReactNode; params: { chann
 		<>
 			<Header channel={props.params.channel} />
 			<BreadcrumbProvider channel={props.params.channel}>
-				<div className="flex flex-col">
-					<main className="flex-1">{props.children}</main>
+				<Wrapper>
+					{props.children}
 					<Footer channel={props.params.channel} />
-				</div>
+				</Wrapper>
 			</BreadcrumbProvider>
 		</>
 	);

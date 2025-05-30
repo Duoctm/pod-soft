@@ -64,6 +64,11 @@ const LeftSideHero = () => {
 
 const RightSideHero = () => {
 	// Define image dimensions as constants to avoid recalculation
+	// const IMAGE_WIDTH = 476;
+	// const IMAGE_HEIGHT = 401;
+	// const IMAGE_PATH = "/images/dtg.webp";
+	// const IMAGE_ALT = "DTG machine image";
+
 	return (
 		<div className="mt-4 flex flex-1 flex-row gap-4 md:mt-0 md:gap-5">
 			{/* use in mobile */}

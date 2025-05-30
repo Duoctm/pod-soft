@@ -16,7 +16,7 @@ const Process = ({ number, name }: { number: number | string; name: string }) =>
 const OurProcess = () => {
 	return (
 		<div className="bg-[#FFEDE9] py-6 lg:py-24">
-			<Wrapper className="flex flex-col lg:flex-row lg:items-center ">
+			<Wrapper className="flex flex-col flex-1 lg:flex-row lg:items-center ">
 				<div className="flex flex-1 flex-col ">
 					<span className="space-x-[16%] text-xs md:text-[18px] font-semibold uppercase text-[#EF816B]">
 						OUR PROCESS
@@ -34,16 +34,20 @@ const OurProcess = () => {
 						<Process number="3" name="Let's us do the rest!" />
 					</div>
 				</div>
-				<div className="flex flex-1 lg:items-center lg:justify-end mt-8 md:mt-0">
+				<div
+					className="relative w-full max-w-[488px] mt-8 md:mt-0 rounded-md overflow-hidden"
+					style={{ aspectRatio: '488 / 562' }}
+				>
 					<Image
 						src="/images/image-box.jpg"
-						width={488}
-						height={562}
 						alt="Our Process"
+						fill
 						loading="lazy"
-						className="rounded-md"
+						className="object-cover rounded-md"
+						sizes="(max-width: 768px) 100vw, 488px"
 					/>
 				</div>
+
 			</Wrapper>
 		</div>
 	);
