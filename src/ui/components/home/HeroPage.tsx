@@ -5,7 +5,7 @@ import HeroFeature from "../HeroFeature";
 
 const LeftSideHero = () => {
 	return (
-		<div className="flex flex-1 flex-col text-[#424255] md:px-4 lg:px-0">
+		<div className="flex flex-1 flex-col text-[#424255] md:px-4 lg:px-0 items-stretch h-full">
 			<h1 className="max-w-[582px] text-4xl font-bold leading-[110%] md:mt-6 md:text-6xl lg:text-7xl">
 				Welcome to ZoomPrints
 			</h1>
@@ -63,31 +63,27 @@ const LeftSideHero = () => {
 // };
 
 const RightSideHero = () => {
-	// Define image dimensions as constants to avoid recalculation
-	// const IMAGE_WIDTH = 476;
-	// const IMAGE_HEIGHT = 401;
-	// const IMAGE_PATH = "/images/dtg.webp";
-	// const IMAGE_ALT = "DTG machine image";
-
 	return (
-		<div className="mt-4 flex flex-1 flex-row gap-4 md:mt-0 md:gap-5">
-			{/* use in mobile */}
+		<div className="mt-4 flex flex-1 flex-row gap-4 md:mt-0 md:gap-5 justify-end">
 			<div
-				className="relative w-full mt-2 rounded-xl overflow-hidden"
-				style={{ aspectRatio: '476 / 401' }}
+				className="relative w-full aspect-[476/401] rounded-xl overflow-hidden md:min-h-[401px] lg:min-h-[500px]"
 			>
 				<Image
 					src="/images/dtg.webp"
 					alt="DTG machine image"
-					fill
+					width={800}
+					height={673}
 					priority
-					sizes="(max-width: 768px) 100vw, 476px"
-					className="object-cover z-10"
+					sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+					className="object-cover rounded-xl"
+					quality={75}
 				/>
+
 			</div>
 		</div>
 	);
 };
+
 
 const HeroPage = () => {
 	return (
