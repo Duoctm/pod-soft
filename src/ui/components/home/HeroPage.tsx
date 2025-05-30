@@ -63,20 +63,22 @@ const LeftSideHero = () => {
 // };
 
 const RightSideHero = () => {
+	// Define image dimensions as constants to avoid recalculation
 	return (
 		<div className="mt-4 flex flex-1 flex-row gap-4 md:mt-0 md:gap-5">
-			<div className="relative flex-1 flex-col">
-				{/* <Label /> */}
+			{/* use in mobile */}
+			<div
+				className="relative w-full mt-2 rounded-xl overflow-hidden"
+				style={{ aspectRatio: '476 / 401' }}
+			>
 				<Image
 					src="/images/dtg.webp"
-					width={476}
-					height={401}
-					priority
 					alt="DTG machine image"
-					className="z-10 mt-2 w-full object-cover rounded-xl"
+					fill
+					priority
+					sizes="(max-width: 768px) 100vw, 476px"
+					className="object-cover z-10"
 				/>
-
-				{/* <FuncFact /> */}
 			</div>
 		</div>
 	);
