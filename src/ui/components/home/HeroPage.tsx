@@ -5,11 +5,11 @@ import HeroFeature from "../HeroFeature";
 
 const LeftSideHero = () => {
 	return (
-		<div className="flex flex-1 flex-col text-[#424255] md:px-4 lg:px-0 items-stretch h-full">
+		<div className="flex flex-1 flex-col text-[#424255] md:px-4 lg:px-0 items-stretch h-full min-h-[180px]">
 			<h1 className="max-w-[582px] text-4xl font-bold leading-[110%] md:mt-6 md:text-6xl lg:text-7xl">
 				Welcome to ZoomPrints
 			</h1>
-			<span className="mt-4 text-lg w-full font-bold leading-[140%] md:mt-6 md:text-[32px]">
+			<span className="min-h-[80px] mt-4 text-lg w-full font-bold leading-[140%] md:mt-6 md:text-[32px]">
 				Digital printing for the promotional product industry.
 			</span>
 			{/* <p className="mt-4 w-full max-w-[546px] text-base font-normal leading-[1.6] md:mt-7 md:text-[20px]">
