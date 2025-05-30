@@ -12,7 +12,7 @@ const config = {
 				hostname: "res.cloudinary.com",
 				port: "",
 				pathname: "/dzzqvl1b2/image/**",
-			}
+			},
 		],
 		unoptimized: process.env.NEXT_IMAGE_UNOPTIMIZED === "true",
 	},
@@ -40,26 +40,25 @@ const config = {
 	},
 	webpack: (config, { webpack }) => {
 		config.experiments = {
-		...config.experiments,
-		topLevelAwait: true,
-	}
-	config.externals.push({
-		sharp: "commonjs sharp",
-		canvas: "commonjs canvas",
-	})
-	config.plugins.push(
-		new webpack.ProvidePlugin({
-		Buffer: ["buffer", "Buffer"],
-		//process: "process/browser",
-	})
-	)
-	return config
+			...config.experiments,
+			topLevelAwait: true,
+		};
+		config.externals.push({
+			sharp: "commonjs sharp",
+			canvas: "commonjs canvas",
+		});
+		config.plugins.push(
+			new webpack.ProvidePlugin({
+				Buffer: ["buffer", "Buffer"],
+				//process: "process/browser",
+			}),
+		);
+		return config;
 	},
 };
 
-
 const withPWA = nextPWA({
-  dest: "public",
+	dest: "public",
 });
 
 export default withPWA(config);

@@ -12,6 +12,7 @@ import Wrapper from "../wrapper";
 
 const SERVICES = [
 	{
+		id: "ss",
 		icon: <User />,
 		title: "Silk Screening",
 		description:
@@ -19,6 +20,7 @@ const SERVICES = [
 		link: "/default-channel/service",
 	},
 	{
+		id: "dtg",
 		icon: <Printer />,
 		title: "Direct-To-Garment",
 		description:
@@ -26,6 +28,7 @@ const SERVICES = [
 		link: "/default-channel/service",
 	},
 	{
+		id: 'cb',
 		icon: <FileText />,
 		title: "Custom Boxes",
 		description: "Eye-catching designs. Perfect for executive kits. Premium packaging solutions.",
@@ -57,17 +60,22 @@ interface ServiceCardProps {
 	title: string;
 	description: string;
 	link: string;
+	id: string;
 }
 
-function ServiceCard({ icon, title, description, link }: ServiceCardProps) {
+function ServiceCard({ id, icon, title, description, link }: ServiceCardProps) {
+	const navigateLink = link + "?query=" + id
+
 	return (
-		<div className="rounded-xl bg-[#F9F8FC] p-4 md:p-6 shadow-sm transition-all hover:shadow-md">
+		<div
+			id={id}
+			className="rounded-xl bg-[#F9F8FC] p-4 md:p-6 shadow-sm transition-all hover:shadow-md">
 			<div className="mb-3 md:mb-4 flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-md bg-white text-[#8B3958]">
 				{icon}
 			</div>
 			<h3 className="mb-2 text-base md:text-lg font-semibold text-gray-900">{title}</h3>
 			<p className="mb-3 md:mb-4 text-xs md:text-sm text-gray-500">{description}</p>
-			<Link href={link} className="group flex items-center gap-1 text-xs md:text-sm font-semibold text-[#FD8C6F]">
+			<Link href={navigateLink} className="group flex items-center gap-1 text-xs md:text-sm font-semibold text-[#FD8C6F]">
 				Learn More
 				<span className="transform transition-transform group-hover:translate-x-1">→</span>
 			</Link>
@@ -90,7 +98,7 @@ const OurService = () => {
 			</div>
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-x-28 md:gap-y-[65px] mt-2">
 				{SERVICES.map((s, i) => (
-					<ServiceCard key={i} icon={s.icon} title={s.title} description={s.description} link={s.link} />
+					<ServiceCard key={i} icon={s.icon} title={s.title} description={s.description} link={s.link} id={s.id} />
 				))}
 			</div>
 		</Wrapper>

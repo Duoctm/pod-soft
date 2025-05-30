@@ -26,7 +26,7 @@ const OurProcess = () => {
 						Our Process
 					</h3>
 					<p className="max-w-[487px] md:py-4 text-sm md:text-base font-normal leading-6 text-[#909098]">
-					A step-by-step guide to help you move from idea to finished product with ease and confidence.
+						A step-by-step guide to help you move from idea to finished product with ease and confidence.
 					</p>
 					<div className="flex flex-col gap-y-4 md:gap-y-11 pt-6 md:pt-12">
 						<Process number="1" name="Pick your product" />
@@ -40,7 +40,8 @@ const OurProcess = () => {
 						width={488}
 						height={562}
 						alt="Our Process"
-						className="w-full lg:max-w-[488px] rounded-md"
+						loading="lazy"
+						className="rounded-md"
 					/>
 				</div>
 			</Wrapper>

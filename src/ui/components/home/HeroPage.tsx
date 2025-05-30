@@ -68,13 +68,14 @@ const RightSideHero = () => {
 			<div className="relative flex-1 flex-col">
 				{/* <Label /> */}
 				<Image
-					src={"/images/dtg.webp"}
-					height={274}
-					width={274}
+					src="/images/dtg.webp"
+					width={476}
+					height={401}
 					priority
-					alt=""
-					className="z-10 mt-2 w-full bg-cover bg-center bg-no-repeat rounded-xl"
+					alt="DTG machine image"
+					className="z-10 mt-2 w-full object-cover rounded-xl"
 				/>
+
 				{/* <FuncFact /> */}
 			</div>
 		</div>
