@@ -2,7 +2,6 @@
 
 import { Fragment, type ReactNode } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { Logo } from "../../Logo";
 import { useMobileMenu } from "./useMobileMenu";
 import { OpenButton } from "./OpenButton";
 import { CloseButton } from "./CloseButton";
@@ -29,7 +28,6 @@ export const MobileMenu = ({ children }: Props) => {
 							leaveFrom="bg-neutral-100"
 							leaveTo="bg-transparent"
 						>
-							<Logo />
 							<CloseButton onClick={closeMenu} aria-controls="mobile-menu" />
 						</Transition.Child>
 						<Transition.Child
