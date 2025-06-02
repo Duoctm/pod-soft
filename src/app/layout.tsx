@@ -34,9 +34,8 @@ export const metadata: Metadata = {
 			{ url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
 		],
 		apple: [
-			{ url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
-			{ url: "/icons/icon-384x384.png", sizes: "384x384", type: "image/png" },
-			{ url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+			{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+
 		]
 	},
 };
@@ -46,9 +45,6 @@ export default function RootLayout(props: { children: ReactNode }) {
 
 	return (
 		<html lang="en" className="min-h-dvh">
-			<head>
-				<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" sizes="180x180" />
-			</head>
 			<body className={`${workSands.className} min-h-dvh`}>
 				<AppLifecycleEvents />
 				<ScrollToTop />
