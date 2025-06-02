@@ -17,11 +17,11 @@ export const metadata: Metadata = {
 		? new URL(process.env.NEXT_PUBLIC_STOREFRONT_URL)
 		: undefined,
 	themeColor: "#FFFFFF",
-	appleWebApp: {
-		capable: true,
-		statusBarStyle: "default",
-		title: "ZoomPrints App",
-	},
+	// appleWebApp: {
+	// 	capable: true,
+	// 	statusBarStyle: "default",
+	// 	title: "ZoomPrints App",
+	// },
 	viewport: {
 		width: "device-width",
 		initialScale: 1,
@@ -33,11 +33,11 @@ export const metadata: Metadata = {
 			{ url: "/icons/icon-384x384.png", sizes: "384x384", type: "image/png" },
 			{ url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
 		],
-		apple: [
-			{ url: "/icons/apple-icon-152.png", sizes: "152x152", type: "image/png" },
-			{ url: "/icons/apple-icon-167.png", sizes: "167x167", type: "image/png" },
-			{ url: "/icons/apple-icon-180.png", sizes: "180x180", type: "image/png" }
-		]
+		// apple: [
+		// 	{ url: "/icons/apple-icon-152.png", sizes: "152x152", type: "image/png" },
+		// 	{ url: "/icons/apple-icon-167.png", sizes: "167x167", type: "image/png" },
+		// 	{ url: "/icons/apple-icon-180.png", sizes: "180x180", type: "image/png" }
+		// ]
 	},
 };
 
