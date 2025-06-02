@@ -30,7 +30,7 @@ export default async function Page({ params }: { params: { channel: string } }) 
 			<OurProcess />
 			<OurService />
 			{/* <Statistics/> */}
-			<Popular />
+			<Popular channel={params.channel} />
 			{/* <Subscribe /> */}
 		</section>
 	);

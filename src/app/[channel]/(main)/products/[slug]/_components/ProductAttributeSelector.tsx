@@ -66,13 +66,14 @@ export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> =
 										}`}
 									style={{ backgroundColor: colorCode || "#f9fafb" }}
 									onClick={() => onSelect(value)}
-									title={colorName} // Add native HTML tooltip
+									title={colorName.replace("-", "")} // Add native HTML tooltip
 								>
 									<span className="sr-only">{colorName}</span>
 								</button>
 							</div>
 						);
 					}
+
 
 					return value && (
 						<button
@@ -84,7 +85,7 @@ export const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> =
 									: 'border border-slate-200 hover:border-gray-300'
 								}`}
 							onClick={() => onSelect(value)}
-							title={value}
+							title={value.replace("-", "")}
 						>
 							{value}
 						</button>

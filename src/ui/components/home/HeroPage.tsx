@@ -9,7 +9,7 @@ const LeftSideHero = () => {
 			<h1 className="max-w-[582px] text-4xl font-bold leading-[110%] md:mt-6 md:text-6xl lg:text-7xl">
 				Welcome to ZoomPrints
 			</h1>
-			<span className="min-h-[40px] mt-4 text-lg w-full font-bold leading-[140%] md:mt-6 md:text-[32px]">
+			<span className="min-h-[40px] mt-4 text-[14px] w-full font-bold leading-[140%] md:mt-6 md:text-[32px]">
 				Digital printing for the promotional product industry.
 			</span>
 			{/* <p className="mt-4 w-full max-w-[546px] text-base font-normal leading-[1.6] md:mt-7 md:text-[20px]">
@@ -64,13 +64,23 @@ const LeftSideHero = () => {
 
 const RightSideHero = () => {
 	return (
-		<div className="relative w-full max-w-[588px] aspect-[588/431] rounded-xl overflow-hidden mt-6 lg:mt-0">
+		<div className="relative w-full max-w-[588px] aspect-[2/3] md:aspect-[588/431] rounded-xl overflow-hidden lg:mt-0">
 			<Image
 				src="/images/promotion.jpg"
 				alt="DTG machine image"
 				fill
 				priority
-				className="object-cover rounded-xl"
+				className="object-cover rounded-xl hidden md:block"
+				quality={75}
+				sizes="(max-width: 768px) 100vw, 588px"
+			/>
+
+			<Image
+				src="/images/promotion-mobile.jpg"
+				alt="DTG machine image"
+				fill
+				priority
+				className="object-cover rounded-xl md:hidden "
 				quality={75}
 				sizes="(max-width: 768px) 100vw, 588px"
 			/>

@@ -1,8 +1,10 @@
 import Image from "next/image";
+import Link from "next/link";
 interface PopularyType {
 	off: number;
 	image: string;
 	name: string;
+	link: string
 }
 
 const populars: PopularyType[] = [
@@ -10,25 +12,33 @@ const populars: PopularyType[] = [
 		off: 0,
 		name: "T-shirts",
 		image: "/images/unrecognizable-person-working-iron-sublimation-printing-concept-graphic-design.png",
+		link: "/products"
+
 	},
 	{
 		off: 0,
 		name: "Mugs",
 		image: "/images/mugs.webp",
+		link: "/products"
 	},
 	{
 		off: 0,
 		name: "Fleece",
 		image: "/images/fleece.webp",
+		link: "/products"
 	},
 	{
 		off: 0,
 		name: "Stickers",
 		image: "/images/image.png",
+		link: "/products"
 	},
 ];
 
-const Popular = () => {
+const Popular = ({ channel }: {
+	channel: string
+
+}) => {
 	return (
 		<div className="w-full bg-[#FFFFFF] px-4 py-6 md:mt-0 lg:py-20">
 			<div className="relative mx-auto w-full max-w-[1200px] flex flex-col gap-6 lg:gap-10">
@@ -63,7 +73,9 @@ const Popular = () => {
 
 							{/* Text + Arrow */}
 							<div className="flex items-center gap-[12.2px]">
-								<div className="text-[16px] font-bold leading-[100%] text-[#FD8C6F]">{item.name}</div>
+								<Link
+									href={`/${channel}/${item.link}`}
+									className="text-[16px] font-bold leading-[100%] text-[#FD8C6F]">{item.name}</Link>
 
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
