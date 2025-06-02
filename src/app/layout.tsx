@@ -46,6 +46,9 @@ export default function RootLayout(props: { children: ReactNode }) {
 
 	return (
 		<html lang="en" className="min-h-dvh">
+			<head>
+				<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" sizes="180x180" />
+			</head>
 			<body className={`${workSands.className} min-h-dvh`}>
 				<AppLifecycleEvents />
 				<ScrollToTop />
