@@ -1,8 +1,9 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { getUser } from "@/actions/user";
 import { useNavigateLogin } from "@/hooks/useNavigateLogin";
+import { useRouter } from "next/navigation";
 
 // Define types for the GraphQL response
 export interface ErrorDetail {
@@ -256,19 +257,45 @@ export interface ParsedAuthData {
 // }
 
 export function LoginForm({ params }: { params?: { channel: string } }) {
+	const [loading, setLoading] = useState(true);
+	const router = useRouter();
+
 
 	useEffect(() => {
 		const fetchUser = async () => {
+
 			const user = await getUser();
 			if (!user) {
 				useNavigateLogin(params?.channel as string);
+				setLoading(false);
 			} else {
+				router.push(`/`);
+				setLoading(false);
 				return;
 			}
 
 		};
 		void fetchUser();
+
+
+		return () => {
+			setLoading(false);
+		};
+
 	}, []);
+	if (loading) {
+		return (
+			<div className="fixed top-0 left-0 bg-black/20 right-0 bottom-0
+			 z-50 pointer-events-none">
+				<div className="absolute top-1/2 left-1/2 -translate-y-1/2">
+					<div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+				</div>
+			</div>
+		);
+	}
+
+
+
 
 
 	return (

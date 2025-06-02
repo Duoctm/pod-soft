@@ -5,7 +5,7 @@ import { LoginForm } from "@/ui/components/LoginForm";
 export default function LoginPage({ params }: { params: { channel: string } }) {
 	return (
 		<Suspense fallback={<Loader />}>
-			<section className="mx-auto max-w-7xl p-8">
+			<section className="mx-auto max-w-7xl p-8 min-h-screen">
 				<LoginForm params={params} />
 			</section>
 		</Suspense>
