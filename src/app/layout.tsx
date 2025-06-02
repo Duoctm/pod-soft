@@ -5,6 +5,7 @@ import { type Metadata } from "next";
 import { DraftModeNotification } from "@/ui/components/DraftModeNotification";
 import { UrqlProvider } from "@/components/UrqlProvider";
 import ScrollToTop from "@/ui/components/ScrollToTop";
+import { AppLifecycleEvents } from "./AppLifecycleEvents"
 
 const workSands = Work_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"] });
 
@@ -32,7 +33,11 @@ export const metadata: Metadata = {
 			{ url: "/icons/icon-384x384.png", sizes: "384x384", type: "image/png" },
 			{ url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
 		],
-		apple: [{ url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" }],
+		apple: [
+			{ url: "/icons/apple-icon-152.png", sizes: "152x152", type: "image/png" },
+			{ url: "/icons/apple-icon-167.png", sizes: "167x167", type: "image/png" },
+			{ url: "/icons/apple-icon-180.png", sizes: "180x180", type: "image/png" }
+		]
 	},
 };
 
@@ -42,6 +47,7 @@ export default function RootLayout(props: { children: ReactNode }) {
 	return (
 		<html lang="en" className="min-h-dvh">
 			<body className={`${workSands.className} min-h-dvh`}>
+				<AppLifecycleEvents />
 				<ScrollToTop />
 				<UrqlProvider>
 					{children}

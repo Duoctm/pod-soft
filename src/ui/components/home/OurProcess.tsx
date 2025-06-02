@@ -21,21 +21,21 @@ const OurProcess = () => {
 					<span className="space-x-[16%] text-xs md:text-[18px] font-semibold uppercase text-[#EF816B]">
 						OUR PROCESS
 					</span>
-					<h3 className="w-full max-w-[720px] py-2 md:py-4 text-[42px] md:text-[50px] font-bold leading-[120%]">
+					<h3 className="w-full max-w-[720px] pt-2 md:pt-4 text-[42px] md:text-[50px] font-bold leading-[120%]">
 						Your Guide to <br />
 						Our Process
 					</h3>
-					<p className="max-w-[487px] md:py-4 text-sm md:text-base font-normal leading-6 text-[#909098]">
+					<p className="max-w-[487px] lg:pt-4 text-sm md:text-base font-normal leading-6 text-[#909098]">
 						A step-by-step guide to help you move from idea to finished product with ease and confidence.
 					</p>
-					<div className="flex flex-col gap-y-4 md:gap-y-11 pt-6 md:pt-12">
+					<div className="flex flex-col gap-y-4 lg:gap-y-11 pt-6 lg:pt-12">
 						<Process number="1" name="Pick your product" />
 						<Process number="2" name="Design" />
 						<Process number="3" name="Let's us do the rest!" />
 					</div>
 				</div>
 				<div
-					className="relative w-full max-w-[500px] mt-8 md:mt-0 rounded-md overflow-hidden"
+					className="relative w-full max-w-[500px] mt-6 lg:mt-0 rounded-md overflow-hidden aspect-square"
 				>
 					<Image
 						src="/images/image-box.jpg"

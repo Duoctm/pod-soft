@@ -30,8 +30,8 @@ const populars: PopularyType[] = [
 
 const Popular = () => {
 	return (
-		<div className="w-full bg-[#FFFFFF] px-4 py-6 md:mt-0 md:py-20">
-			<div className="relative mx-auto w-full max-w-[1200px] flex flex-col gap-6 md:gap-10">
+		<div className="w-full bg-[#FFFFFF] px-4 py-6 md:mt-0 lg:py-20">
+			<div className="relative mx-auto w-full max-w-[1200px] flex flex-col gap-6 lg:gap-10">
 				{/* Heading and Button */}
 				<div className="flex flex-col gap-[16px] md:flex-row md:items-center md:justify-between">
 					<div className="flex flex-col gap-2 md:gap-[16px]">
@@ -46,7 +46,7 @@ const Popular = () => {
 				</div>
 
 				{/* Popular Items */}
-				<div className="grid grid-cols-1 gap-[20px] sm:grid-cols-2 md:grid-cols-4 mb-4">
+				<div className="grid grid-cols-1 gap-[20px] sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 mb-4">
 					{populars.map((item, index) => (
 						<div key={index} className="flex w-full flex-col gap-[24.4px]">
 							{/* Image + Tag */}

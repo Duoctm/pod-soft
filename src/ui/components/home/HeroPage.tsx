@@ -64,9 +64,9 @@ const LeftSideHero = () => {
 
 const RightSideHero = () => {
 	return (
-		<div className="relative w-full max-w-[588px] aspect-[588/431] rounded-xl overflow-hidden">
+		<div className="relative w-full max-w-[588px] aspect-[588/431] rounded-xl overflow-hidden mt-6 lg:mt-0">
 			<Image
-				src="/images/dtg.jpg"
+				src="/images/promotion.jpg"
 				alt="DTG machine image"
 				fill
 				priority
@@ -80,12 +80,12 @@ const RightSideHero = () => {
 
 const HeroPage = () => {
 	return (
-		<Wrapper className="flex flex-1 flex-col md:py-10 min-h-[calc(100vh-142px)] py-6">
+		<Wrapper className="flex flex-1 flex-col lg:py-10 min-h-[calc(100vh-142px)] py-6 justify-center">
 			<div className="flex w-full flex-col lg:flex-row items-stretch h-full">
 				<div className="flex-[1_1_50%]">
 					<LeftSideHero />
 				</div>
-				<div className="flex-[1_1_50%] flex justify-end mt-4 md:mt-0">
+				<div className="flex-[1_1_50%] flex justify-start lg:justify-end mt-4 md:mt-0">
 					<RightSideHero />
 				</div>
 			</div>

@@ -2,10 +2,6 @@
 import HeroPage from "@/ui/components/home/HeroPage";
 import dynamic from "next/dynamic";
 
-const SpecialOffer = dynamic(() => import("@/ui/components/home/SpecialOffer"), {
-	loading: () => <p>Loading...</p>
-});
-
 const OurProcess = dynamic(() => import("@/ui/components/home/OurProcess"), {
 	loading: () => <p>Loading...</p>
 });
@@ -29,7 +25,7 @@ export default async function Page({ params }: { params: { channel: string } }) 
 	return (
 		<section className="min-h-screen w-screen overflow-y-auto overflow-x-hidden  after:relative ">
 			<HeroPage />
-			<SpecialOffer />
+			{/* <SpecialOffer /> */}
 			{/* <AboutUs /> */}
 			<OurProcess />
 			<OurService />

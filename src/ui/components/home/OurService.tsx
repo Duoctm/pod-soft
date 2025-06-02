@@ -85,8 +85,8 @@ function ServiceCard({ id, icon, title, description, link }: ServiceCardProps) {
 
 const OurService = () => {
 	return (
-		<Wrapper className="flex flex-col items-center justify-center py-6 md:pt-20 md:mb-16">
-			<div className="flex w-full max-w-[544px] flex-col text-left md:text-center">
+		<Wrapper className="flex flex-col items-start lg:items-center justify-center py-6 lg:pt-20 lg:mb-16">
+			<div className="flex w-full max-w-[544px] flex-col text-left lg:text-center">
 				<span className="space-x-[16%] text-xs md:text-[18px] font-semibold uppercase text-[#EF816B]">Our Services</span>
 				<h3 className=" w-full max-w-[720px] md:py-4 text-[40px] md:text-[50px] font-bold leading-[110%] md:leading-[120%]">
 					Printing Solutions for All Your Needs
@@ -96,7 +96,7 @@ const OurService = () => {
 					quis convallis.
 				</p> */}
 			</div>
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-x-28 md:gap-y-[65px] mt-2">
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-x-28 lg:gap-y-[65px] mt-2">
 				{SERVICES.map((s, i) => (
 					<ServiceCard key={i} icon={s.icon} title={s.title} description={s.description} link={s.link} id={s.id} />
 				))}
