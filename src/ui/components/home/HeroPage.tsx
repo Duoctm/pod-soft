@@ -64,7 +64,7 @@ const LeftSideHero = () => {
 
 const RightSideHero = () => {
 	return (
-		<div className="relative w-full max-w-[402px] md:max-w-[588px] aspect-[2/3] md:aspect-[588/431] rounded-xl overflow-hidden lg:mt-0">
+		<div className="relative w-full max-w-[588px] aspect-[2/3] md:aspect-[588/431] rounded-xl overflow-hidden lg:mt-0">
 			<Image
 				src="/images/promotion.jpg"
 				alt="DTG machine image"
@@ -80,9 +80,9 @@ const RightSideHero = () => {
 				alt="DTG machine image"
 				fill
 				priority
-				className="object-cover rounded-xl md:hidden"
+				className="object-cover rounded-xl md:hidden "
 				quality={75}
-				sizes="(max-width: 768px) 100vw, 402px"
+				sizes="(max-width: 768px) 100vw, 588px"
 			/>
 		</div>
 	);

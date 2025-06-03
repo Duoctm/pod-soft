@@ -5,7 +5,7 @@ import { TriangleAlert } from "lucide-react";
 
 interface ErrorDialogPlaceOrder {
 	message: string;
-    channel: string;
+	channel: string;
 	onClose?: () => void;
 	open: boolean;
 	onConfirm?: () => void;
@@ -14,9 +14,10 @@ interface ErrorDialogPlaceOrder {
 const ErrorDialogPlaceOrder: React.FC<ErrorDialogPlaceOrder> = ({ message, onClose, open, onConfirm, channel }) => {
 	const router = useRouter();
 
+
 	return (
 		<Transition appear show={open} as={Fragment}>
-			<Dialog as="div" className="relative z-50" onClose={onClose || (() => {})}>
+			<Dialog as="div" className="relative z-50" onClose={onClose || (() => { })}>
 				<Transition.Child
 					as={Fragment}
 					enter="ease-out duration-300"
@@ -65,10 +66,10 @@ const ErrorDialogPlaceOrder: React.FC<ErrorDialogPlaceOrder> = ({ message, onClo
 										<button
 											type="button"
 											className="w-full justify-center rounded-md border border-transparent bg-[#8C3859] px-6 py-2 text-sm font-medium text-white hover:bg-[#8C3859]/80"
-											onClick={()=>{
-                                                onConfirm()
-                                                router.push(`/${channel}/support`)
-                                            }}
+											onClick={() => {
+												onConfirm()
+												router.push(`/${channel}/support?request=order-limit`)
+											}}
 										>
 											Contact Support
 										</button>
@@ -83,4 +84,4 @@ const ErrorDialogPlaceOrder: React.FC<ErrorDialogPlaceOrder> = ({ message, onClo
 	);
 };
 
-export default ErrorDialogPlaceOrder;
+export { ErrorDialogPlaceOrder };

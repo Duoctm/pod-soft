@@ -31,6 +31,10 @@ import { type Address, type FormValues } from "@/checkout/lib/utils/type";
 import AddressEditDialogForm from "@/checkout/sections/AddressEditForm/AddressEditDialogForm";
 import CustomerAddressInfo from "@/checkout/sections/CustomerAddressInfo/CustomerAddressInfo";
 import { DeliveryMethods } from "@/checkout/sections/CheckoutForm/DeliveryMethodsSection";
+import { checkoutValidate } from "../../../app/checkoutValidate";
+import { ErrorDialogPlaceOrder } from "../../../app/ErrorDialogPlaceOrder";
+import { GetItemToServerCookie } from "../../../app/actions";
+import { callRefreshToken } from "../../../app/callRefreshToken";
 // import { DeliveryMethods } from "@/checkout/sections/DeliveryMethods";
 // Define the shape for the entire checkout form
 const CheckoutSchema = Yup.object().shape({
@@ -110,6 +114,7 @@ export const Checkout = () => {
 	const checkoutId = useMemo(() => extractCheckoutIdFromUrl(), []);
 	const [date, setDate] = useState(() => new Date().toLocaleString());
 	const [isLoadingPlaceOrder, setIsLoadingPlaceOrder] = useState(false);
+	const [channel, setChannel] = useState("");
 
 
 	const [isOpenAddressEditDialog, setIsOpenAddressEditDialog] = useState(false);
@@ -123,6 +128,16 @@ export const Checkout = () => {
 	const isEmptyCart = checkout && checkout.lines && checkout.lines.length === 0;
 
 	const [countries, setCountries] = useState<{ code: string; country: string }[]>([]);
+
+
+	const [errorDialogOpenLimit, setErrorDialogOpenLimit] = useState(false);
+	const [errorMessageLimit, setErrorMessageLimit] = useState("");
+
+	useEffect(() => {
+		if (channel != undefined) {
+			setChannel(checkout?.channel.slug || "");
+		}
+	}, [checkout]);
 
 	useEffect(() => {
 		let isMounted = true;
@@ -332,6 +347,26 @@ export const Checkout = () => {
 	};
 
 	const handlePlaceOrder = async () => {
+
+		const refreshTokenKey = `${process.env.NEXT_PUBLIC_SALEOR_API_URL}+saleor_auth_module_refresh_token`;
+		const refreshToken = await GetItemToServerCookie(refreshTokenKey);
+		await callRefreshToken(refreshTokenKey, refreshToken || "");
+
+
+		const response = await checkoutValidate(checkoutId || "");
+
+		const invalidError = Array.isArray(response.checkoutValidate?.errors)
+			? response.checkoutValidate.errors.find((error) => error.code === "INVALID")
+			: undefined;
+
+		if (invalidError) {
+			setErrorMessageLimit(invalidError.message || "");
+			setErrorDialogOpenLimit(true);
+		}
+
+
+
+
 		setIsLoadingPlaceOrder(true);
 		const dataCheckout = await getCheckoutServer({ id: checkoutId, languageCode: LanguageCodeEnum.EnUs });
 
@@ -358,10 +393,10 @@ export const Checkout = () => {
 			if (completeCheckoutErrors && completeCheckoutErrors.length > 0) {
 				console.log(completeCheckoutErrors)
 
-				completeCheckoutErrors.forEach((error: CheckoutError) => {
-					toast.error(error.message);
-					setIsLoadingPlaceOrder(false);
-				});
+				// completeCheckoutErrors.forEach((error: CheckoutError) => {
+				// 	toast.error(error.message);
+				// 	setIsLoadingPlaceOrder(false);
+				// });
 			} else {
 				const notification = (message: string) => {
 					toast.success(message, {
@@ -435,6 +470,16 @@ export const Checkout = () => {
 					</div>
 				</Formik>
 			</AddressEditDialogForm>
+			<ErrorDialogPlaceOrder
+				message={errorMessageLimit}
+				open={errorDialogOpenLimit}
+				channel={channel}
+				onClose={() => setErrorDialogOpenLimit(false)}
+				onConfirm={() => {
+					setErrorDialogOpenLimit(false);
+				}}
+			/>
 		</ErrorBoundary>
+
 	);
 };

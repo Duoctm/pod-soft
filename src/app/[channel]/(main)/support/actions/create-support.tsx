@@ -2,11 +2,11 @@
 
 import { SupportCreateDocument } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
-import { SupportFormData } from "../page";
+import { SupportFormData } from "../SupportPage";
 
 export async function createSupport(input: SupportFormData) {
 	try {
-		const {createSupport} = await executeGraphQL(SupportCreateDocument, {
+		const { createSupport } = await executeGraphQL(SupportCreateDocument, {
 			variables: {
 				input: {
 					...input,

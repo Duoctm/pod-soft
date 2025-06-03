@@ -19,3 +19,4 @@ services:
 networks:
   storefront-network:
     driver: bridge
+

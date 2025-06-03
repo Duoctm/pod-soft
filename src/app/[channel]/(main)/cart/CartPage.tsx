@@ -257,7 +257,7 @@ export function CartPage({ params }: CartPageProps) {
 							</div>
 						</div>
 						<div className="mt-2 text-center">
-							<CheckoutLink checkoutId={checkoutId} disabled={!checkout.lines.length} className="w-full" />
+							<CheckoutLink checkoutId={checkoutId} disabled={!checkout.lines.length} channel={params.channel} className="w-full" />
 						</div>
 					</div>
 				</form>
