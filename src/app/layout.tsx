@@ -13,6 +13,17 @@ export const metadata: Metadata = {
 	manifest: "/manifest.json",
 	title: "ZoomPrints",
 	description: "ZoomPrints is your gateway to rapid fast fulfillment minus the steep investment.",
+	openGraph: {
+		siteName: "ZoomPrints",
+		images: [
+			{
+				url: "/images/opengraph-image.png",
+				width: 1200,
+				height: 630,
+			},
+		],
+		type: "website",
+	},
 	metadataBase: process.env.NEXT_PUBLIC_STOREFRONT_URL
 		? new URL(process.env.NEXT_PUBLIC_STOREFRONT_URL)
 		: undefined,
