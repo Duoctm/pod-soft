@@ -53,7 +53,6 @@ const SupportPage = () => {
 			};
 
 			const res = await createSupport(input);
-			console.log(res)
 			if (res?.success) {
 				resetForm();
 				toast.success(res.message);
@@ -70,7 +69,7 @@ const SupportPage = () => {
 
 	return (
 		<div className="mx-auto max-w-7xl p-8 pb-16">
-			<ToastContainer/>
+			<ToastContainer />
 			<div className="flex flex-col items-center justify-center">
 				<h2 className="mb-8 text-balance text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
 					Support
