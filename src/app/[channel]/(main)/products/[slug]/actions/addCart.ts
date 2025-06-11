@@ -3,7 +3,6 @@ import { revalidatePath } from "next/cache";
 import { invariant } from "ts-invariant";
 import { checkoutLinesAddMultipleItems } from "../utils/checkoutLinesAddMultipleItems";
 import * as Checkout from "@/lib/checkout";
-import { getUserServer } from "@/checkout/hooks/useUserServer";
 import { type CheckoutLineInput } from "@/gql/graphql";
 
 export type ErrorResponse = {
@@ -27,14 +26,6 @@ export async function addCart(
 ) {
 	"use server";
 	try {
-		const check = await getUserServer();
-		if (check.status == false) {
-			return {
-				success: false,
-				error: { error: 1, type: "User", messages: [{ field: "user", message: "" }] }
-			};
-		}
-
 		const checkout = await Checkout.findOrCreate({
 			checkoutId: await Checkout.getIdFromCookies(params.channel),
 			channel: params.channel,

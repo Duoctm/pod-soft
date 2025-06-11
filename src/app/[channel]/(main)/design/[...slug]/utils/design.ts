@@ -1557,7 +1557,7 @@ class TShirtDesigner {
   }
 
 
-  public async exportDesignToJson(): Promise<string> {
+  public async exportDesignToJson(): Promise<object> {
     const getStageInfo = async (stageConfig: StageConfig) => {
       const design: any[] = [];
       let priorityIndex = 0;
@@ -1571,7 +1571,7 @@ class TShirtDesigner {
 
 
             try {
-              let cloudinary_url = "";
+              let file_url = "";
               if (/^data:image\/[a-zA-Z]+;base64,/.test(imageElement.src)) {
 
                 const file = this.base64ToFile(imageElement.src, 'image.png');
@@ -1582,20 +1582,20 @@ class TShirtDesigner {
 
 
                   const response = await uploadImageRaw(formData);
-                  cloudinary_url = (response as { file?: { cloudinary_url?: string } }).file?.cloudinary_url ?? "";
+                  file_url = (response as { file?: { file_url?: string } }).file?.file_url ?? "";
                 }
                 catch (error) {
                   console.log(error);
                 }
               }
               else {
-                cloudinary_url = imageElement.src;
+                file_url = imageElement.src;
               }
               //console.log('cloudinary_url', cloudinary_url);
               design.push({
                 id: node.id(),
                 type: 'image',
-                src: cloudinary_url,
+                src: file_url,
                 x: node.x(),
                 y: node.y(),
                 offset_x: node.offsetX(),
@@ -1608,7 +1608,7 @@ class TShirtDesigner {
                 width: node.width(),
                 height: node.height(),
                 priority_index: priorityIndex,
-                cloud_url: cloudinary_url, // Optional: add uploaded URL
+                cloud_url: file_url, // Optional: add uploaded URL
               });
             } catch (error) {
               console.log("Upload failed:", error);
@@ -1647,6 +1647,7 @@ class TShirtDesigner {
         const designOfStage = {
           final_image_url: "",
           designs: [] as any[],
+          face_code: this.data[item].code
         };
         const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
         imageDom.crossOrigin = 'anonymous';
@@ -1660,7 +1661,7 @@ class TShirtDesigner {
           const formData = new FormData();
           formData.append('file', file);
           const response = await uploadImageRaw(formData);
-          designOfStage.final_image_url = (response as { file?: { cloudinary_url?: string } }).file?.cloudinary_url ?? "";
+          designOfStage.final_image_url = (response as { file?: { file_url?: string } }).file?.file_url ?? "";
           // }
           // else {
           //   designOfStage.final_image_url = this.data[item].image;
@@ -1674,7 +1675,7 @@ class TShirtDesigner {
             const formData = new FormData();
             formData.append('file', file);
             const response = await uploadImageRaw(formData);
-            designOfStage.final_image_url = (response as { file?: { cloudinary_url?: string } }).file?.cloudinary_url ?? "";
+            designOfStage.final_image_url = (response as { file?: { file_url?: string } }).file?.file_url ?? "";
           }
           else {
             designOfStage.final_image_url = this.data[item].image;
@@ -1711,11 +1712,12 @@ class TShirtDesigner {
       designs: designs,
     };
 
-    return JSON.stringify(designInfo, null, 2);
+    return designInfo; //JSON.stringify(designInfo, null, 2);
   }
   public exportStage = async (stageConfig: StageConfig, image: HTMLImageElement): Promise<string> => {
     if (!stageConfig.stage || !stageConfig.layer) return '';
     const tempCanvas = document.createElement('canvas');
+    //tempCanvas.cors = "anonymous";
     const ctx = tempCanvas.getContext('2d');
     if (!ctx) return '';
 
@@ -1815,10 +1817,8 @@ class TShirtDesigner {
             width,
             height
           );
-
           stageCtx.restore();
         }
-
       }
     }
 

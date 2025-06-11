@@ -1,6 +1,6 @@
 "use client";
 import { OrderDirection, ProductCountableConnection, ProductOrderField } from "@/gql/graphql";
-import { ProductList } from "@/ui/components/ProductList";
+import ProductList from "@/ui/components/ProductList";
 import React, { useCallback, useEffect, useState } from "react";
 import { useIntersectionObserver } from "usehooks-ts";
 import { searchProduct } from "../actions/search";
@@ -57,9 +57,9 @@ const ProductSearchResult = ({ channel, search, after }: ProductSearchResultProp
 
 	// Thêm effect này để load dữ liệu ban đầu
 	useEffect(() => {
-	  setProducts(null); // Reset products khi search thay đổi
-	  setCursor(after); // Set cursor ban đầu từ prop after
-	  fetchData();
+		setProducts(null); // Reset products khi search thay đổi
+		setCursor(after); // Set cursor ban đầu từ prop after
+		fetchData();
 	}, [search, channel]); // Chỉ chạy khi search hoặc channel thay đổi
 	return (
 		<div className="min-h-screen w-full">

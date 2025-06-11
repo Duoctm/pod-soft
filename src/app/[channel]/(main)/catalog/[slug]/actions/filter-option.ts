@@ -3,13 +3,18 @@
 import { FilterOptionsDocument } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
 
+interface FilterAttribute {
+	slug: string;
+	values: string[];
+}
+
 export const filterOptions = async ({
 	filterAttributes,
 	channel,
 	first,
 	after
 }: {
-	filterAttributes: [] | any;
+	filterAttributes: FilterAttribute[];
 	channel: string;
 	first: number;
 	after: string | null | undefined;
@@ -18,15 +23,19 @@ export const filterOptions = async ({
 		variables: {
 			channel,
 			first: first,
-			after:after,
+			after: after,
 			filter: {
-				attributes: filterAttributes,
+				attributes: filterAttributes.map(attr => ({
+					slug: attr.slug,
+					values: attr.values
+				})),
 			},
 		},
 		revalidate: 60,
 	});
+
 	if (!products) {
-		throw new Error(`Failed to fetch products for search value `);
+		throw new Error(`Failed to fetch products for search value`);
 	}
 
 	return products;

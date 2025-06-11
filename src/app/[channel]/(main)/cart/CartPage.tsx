@@ -91,7 +91,7 @@ export function CartPage({ params }: CartPageProps) {
 				<div className="relative aspect-square h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border bg-neutral-50 sm:h-32 sm:w-32">
 					{item.variant?.media && (
 						<Image
-							src={item.variant.media[0].url}
+							src={item.variant.media[0].url || ""}
 							alt={item.variant.media[0].alt ?? ""}
 							fill
 							loading="lazy"

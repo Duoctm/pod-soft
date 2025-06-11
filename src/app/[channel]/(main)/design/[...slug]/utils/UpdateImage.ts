@@ -21,7 +21,7 @@ const uploadImageRaw = async (data: FormData) => {
     });
 
     //const json = await res.json();
-    const json = await res.json() as { data?: { uploadFile?: { message: string, result: boolean, file: { cloudinary_url: string } } } };
+    const json = await res.json() as { data?: { uploadFile?: { message: string, result: boolean, file: { file_url: string } } } };
     console.log("json", json);
     return json.data?.uploadFile;
 }

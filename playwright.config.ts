@@ -16,7 +16,7 @@ export default defineConfig({
 
 	use: {
 		baseURL,
-		trace: "on-first-retry",
+		trace: "retain-on-failure",
 		screenshot: process.env.CI ? "only-on-failure" : "off",
 		video: process.env.CI ? "retain-on-failure" : "off",
 	},
@@ -27,10 +27,10 @@ export default defineConfig({
 			use: { ...devices["Desktop Chrome"] },
 		},
 
-		// {
-		// 	name: "Desktop Safari",
-		// 	use: { ...devices["Desktop Safari"] },
-		// },
+		{
+			name: "Desktop Safari",
+			use: { ...devices["Desktop Safari"] },
+		},
 
 		// {
 		// 	name: "Mobile Chrome",
@@ -52,5 +52,5 @@ export default defineConfig({
 				command: "pnpm run start",
 				url: baseURL,
 				reuseExistingServer: !process.env.CI,
-		  },
+			},
 });

@@ -17,7 +17,7 @@ export async function addItem(
   params: { slug: string; channel: string },
   selectedVariantID: string | null,
   quantity: number,
-  metadata: string | null
+  metadata: string | null,
 ) {
   "use server";
 

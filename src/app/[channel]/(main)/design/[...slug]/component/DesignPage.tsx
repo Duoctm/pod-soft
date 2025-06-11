@@ -42,6 +42,7 @@ interface DesignPageProps {
   channel: string;
 }
 
+
 function DesignPage(param: DesignPageProps) {
   const [variantSizeColor, setVariantSizeColor] = useState<Map<string, object> | null>(new Map());
   const [sizeIdDefault, setSizeIdDefault] = useState<string>();
@@ -1955,6 +1956,7 @@ function DesignPage(param: DesignPageProps) {
 
                   if (designerRef.current != null) {
                     let metaData = null;
+                    const printFace: { data: string[] } = { data: [] };
                     let hasObjectInStage = false;
                     if (designerRef.current.stages != null) {
                     }
@@ -1965,8 +1967,17 @@ function DesignPage(param: DesignPageProps) {
                       }
                     }
                     if (hasObjectInStage == true) {
-                      metaData = await designerRef.current.exportDesignToJson();
-                      //console.log("metaData", metaData);
+                      metaData = await designerRef.current.exportDesignToJson() as any;
+
+
+                      for (const item of metaData.designs) {
+                        if (item.designs.length > 0) {
+                          printFace.data.push(item.face_code)
+                        }
+                      }
+                      if (printFace.data.length > 0) {
+                        metaData.face_code = printFace;
+                      }
                     }
                     var result = false;
                     if (param.typeDesign == 1) {
@@ -1975,10 +1986,10 @@ function DesignPage(param: DesignPageProps) {
                         cartItem.params,
                         variantId,
                         cartItem.quantity,
-                        metaData,
+                        JSON.stringify(metaData, null, 2),
                       )) as boolean;
                     } else {
-                      result = (await addItem(cartItem.params, variantId, 1, metaData)) as boolean;
+                      result = (await addItem(cartItem.params, variantId, 1, JSON.stringify(metaData, null, 2))) as boolean;
                     }
                     if (result === true) {
                       toast.success("Design added to cart successfully");
@@ -2013,7 +2024,7 @@ function DesignPage(param: DesignPageProps) {
                   if (designerRef.current != null) {
                     const metaData = await designerRef.current.exportDesignToJson();
 
-                    const result = await UpdateDesign(cartId, metaData);
+                    const result = await UpdateDesign(cartId, JSON.stringify(metaData, null, 2));
                     if (result == true) {
                       toast.success("Design updated successfully");
                     } else {
@@ -3489,6 +3500,7 @@ function DesignPage(param: DesignPageProps) {
 
                 if (designerRef.current != null) {
                   let metaData = null;
+                  const printFace: { data: string[] } = { data: [] };
                   let hasObjectInStage = false;
                   if (designerRef.current.stages != null) {
                   }
@@ -3499,7 +3511,15 @@ function DesignPage(param: DesignPageProps) {
                     }
                   }
                   if (hasObjectInStage == true) {
-                    metaData = await designerRef.current.exportDesignToJson();
+                    metaData = await designerRef.current.exportDesignToJson() as any;
+                    for (const item of metaData.designs) {
+                      if (item.designs.length > 0) {
+                        printFace.data.push(item.face_code)
+                      }
+                    }
+                    if (printFace.data.length > 0) {
+                      metaData.face_code = printFace;
+                    }
                   }
                   var result = false;
                   // console.log(cartItem.params,
@@ -3510,10 +3530,10 @@ function DesignPage(param: DesignPageProps) {
                       cartItem.params,
                       variantId,
                       cartItem.quantity,
-                      metaData,
+                      JSON.stringify(metaData, null, 2),
                     )) as boolean;
                   } else {
-                    result = (await addItem(cartItem.params, variantId, 1, metaData)) as boolean;
+                    result = (await addItem(cartItem.params, variantId, 1, JSON.stringify(metaData, null, 2))) as boolean;
                   }
                   if (result === true) {
                     toast.success("Design added to cart successfully");
@@ -3543,7 +3563,7 @@ function DesignPage(param: DesignPageProps) {
                 if (designerRef.current != null) {
                   const metaData = await designerRef.current.exportDesignToJson();
 
-                  const result = await UpdateDesign(cartId, metaData);
+                  const result = await UpdateDesign(cartId, JSON.stringify(metaData, null, 2));
                   if (result == true) {
                     toast.success("Design updated successfully");
                   } else {

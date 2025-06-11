@@ -11,6 +11,7 @@ const GET_CHECKOUT_METADATA = gql`
       lines {
         id
         metadata {
+          key
           value
         }
       }
@@ -47,8 +48,11 @@ const fetchCheckoutLineMetadata = async (checkoutId: string, checkoutLineId: str
 
     // Nếu tìm thấy line, parse metadata, nếu không trả về null
     if (checkoutLine && checkoutLine.metadata && checkoutLine.metadata.length > 0) {
-      const metadata = checkoutLine.metadata[0].value;
-      return metadata ? JSON.parse(metadata) : null;
+      const metadata = checkoutLine.metadata as { key: string; value: string }[];
+      // const a = metadata.find(item => item.key === "print_face");
+      // console.log("print_face", a);
+      const designMeta = metadata.find(item => item.key === "design");
+      return designMeta?.value ? JSON.parse(designMeta.value) : null;
     }
 
   } catch (error) {

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 // Import Swiper styles
@@ -7,29 +7,33 @@ import "swiper/css";
 import "swiper/css/free-mode";
 import "swiper/css/navigation";
 import "swiper/css/thumbs";
+import "swiper/css/pagination";
 
 // import required modules
-import { FreeMode, Navigation, Thumbs } from "swiper/modules";
+import { FreeMode, Navigation, Thumbs, Pagination } from "swiper/modules";
 import Image from "next/image";
 
 interface Props {
 	images: string[];
 	loading?: boolean;
+	onImagesLoaded?: () => void;
 }
 
-const Swipper = ({ images, loading = false }: Props) => {
-	const [thumbsSwiper, setThumbsSwiper] = useState(null);
+const Swipper: React.FC<Props> = ({ images, loading, onImagesLoaded }) => {
 
-	if (loading) {
+
+	const [thumbsSwiper, setThumbsSwiper] = useState(null);
+	const [loadedImages, setLoadedImages] = useState<number>(0);
+
+	useEffect(() => {
+		if (images && loadedImages === images.length && images.length > 0) {
+			onImagesLoaded?.();
+		}
+	}, [loadedImages, images.length, onImagesLoaded]);
+
+	if (loading && images.length < 0) {
 		return (
-			<div className="flex flex-col gap-y-2 animate-pulse">
-				<div className="w-full h-[420px] bg-gray-200 rounded"></div>
-				<div className="flex gap-x-2">
-					{[...Array(4)].map((_, index) => (
-						<div key={index} className="w-1/4 h-[70px] bg-gray-200 rounded"></div>
-					))}
-				</div>
-			</div>
+			<div className="aspect-square w-full animate-pulse rounded-lg bg-gray-200" />
 		);
 	}
 
@@ -44,14 +48,22 @@ const Swipper = ({ images, loading = false }: Props) => {
 				spaceBetween={10}
 				navigation={true}
 				thumbs={{ swiper: thumbsSwiper }}
-				modules={[FreeMode, Navigation, Thumbs]}
+				modules={[FreeMode, Navigation, Thumbs, Pagination]}
 				className="mySwiper2"
+				pagination={{ clickable: true }}
 			>
 				{images.map((image, index) => (
 					<SwiperSlide key={index} className="relative">
-						<Image src={image} alt="" fill 
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="bg-cover bg-center object-contain w-full h-full" priority />
+						<div className="relative aspect-square w-full">
+							<Image
+								src={image}
+								alt={`Product image ${index + 1}`}
+								fill
+								className="bg-cover object-contain bg-center"
+								onLoad={() => setLoadedImages(prev => prev + 1)}
+								priority={index === 0}
+							/>
+						</div>
 					</SwiperSlide>
 				))}
 			</Swiper>
@@ -71,7 +83,7 @@ const Swipper = ({ images, loading = false }: Props) => {
 			>
 				{images.map((image, index) => (
 					<SwiperSlide key={index} className="relative">
-						<Image  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"  src={image} alt="" fill className="bg-cover object-contain"/>
+						<Image sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" src={image} alt="" fill className="bg-cover object-contain" />
 					</SwiperSlide>
 				))}
 			</Swiper>

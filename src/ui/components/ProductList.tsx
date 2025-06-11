@@ -1,7 +1,8 @@
+import React from "react";
 import ProductElement from "./ProductElement";
 import { type ProductListItemFragment } from "@/gql/graphql";
 
-export const ProductList = ({ products }: { products: readonly ProductListItemFragment[] }) => {
+const ProductList = React.memo(function ProductList({ products }: { products: readonly ProductListItemFragment[] }) {
 	if (!products || products.length === 0) {
 		return (
 			<div className="w-full text-center py-8">
@@ -15,7 +16,7 @@ export const ProductList = ({ products }: { products: readonly ProductListItemFr
 		<ul
 			role="list"
 			data-testid="ProductList"
-			className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 w-full mx-auto"
+			className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 w-full mx-auto min-h-screen"
 		>
 			{products.map((product, index) => (
 				<ProductElement
@@ -27,4 +28,6 @@ export const ProductList = ({ products }: { products: readonly ProductListItemFr
 			))}
 		</ul>
 	);
-};
+});
+
+export default ProductList;

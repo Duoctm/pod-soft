@@ -6,8 +6,7 @@ export const useNavigateLogin = async (channel: string) => {
     try {
 
         // 1. Xác định URL callback trên Storefront
-        const storefrontBaseUrl = window.location
-            .origin || "http://localhost:3001";
+        const storefrontBaseUrl = process.env.NEXT_PUBLIC_STOREFRONT_URL || "http://localhost:3001";
         const channelFromParams = channel || "default-channel";
         const storefrontCallbackUrl = `${storefrontBaseUrl}/${channelFromParams}/auth/keycloak-callback`;
 

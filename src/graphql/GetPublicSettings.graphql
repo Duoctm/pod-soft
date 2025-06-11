@@ -1,0 +1,8 @@
+query GetPublicSettings($keys: [String!]!, $channel: String!) {
+	publicSettingsByKeys(keys: $keys, channel: $channel) {
+		id
+		key
+		value
+		isPublic
+	}
+}
