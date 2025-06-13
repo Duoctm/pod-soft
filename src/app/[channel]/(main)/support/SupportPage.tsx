@@ -2,14 +2,14 @@
 import React, { useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-import { createSupport } from "./actions/create-support";
 import { toast, ToastContainer } from "react-toastify";
+import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
+import { createSupport } from "./actions/create-support";
 import "react-toastify/dist/ReactToastify.css";
 import { useSearchParams } from "next/navigation";
 import { getUser } from "../../../../actions/userFullInfo"
 import { getFAQ } from "./actions/get-faq";
-import { GetPublicSettingsQuery } from "@/gql/graphql";
-import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
+import { type GetPublicSettingsQuery } from "@/gql/graphql";
 export interface SupportFormData {
     firstName: string;
     lastName: string;
@@ -75,7 +75,7 @@ enum RequestType {
     REQUEST_REGISTER = "request-register",
 }
 
-const SupportPage = () => {
+const SupportPage = ({ channel }: { channel: string }) => {
     const searchParams = useSearchParams();
     const requestType = searchParams.get("request");
 
@@ -105,7 +105,7 @@ const SupportPage = () => {
         // Implement the logic to fetch FAQ if needed
         const res = await getFAQ({
             keys: ["REQUEST_REGISTER"],
-            channel: "default-channel",
+            channel: channel,
         });
         console.log(res)
         setFaq(res as GetPublicSettingsQuery["publicSettingsByKeys"]);
