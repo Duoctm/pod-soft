@@ -1,42 +1,49 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { usePathname, useParams } from 'next/navigation';
 import { getUserServer } from '../checkout/hooks/useUserServer';
 import { getCheckoutDetail } from './[channel]/auth/keycloak-callback/checkoutdata';
 
-async function getCheckout(channel: any) {
-    const user = await getUserServer();
-    if (user.status == true) {
-        getCheckoutDetail(channel);
+async function getCheckout(channel: string) {
+    try {
+        const user = await getUserServer();
+        if (user.status === true) {
+            await getCheckoutDetail(channel);
+        }
+    } catch (error) {
+        console.error('Error in getCheckout:', error);
     }
 }
 
 export function AppLifecycleEvents() {
     const pathname = usePathname();
     const params = useParams();
-    const channel = params.channel;
+    const channel = params.channel as string;
+    const timeoutRef = useRef<NodeJS.Timeout>();
 
+    const debouncedGetCheckout = useCallback((channel: string) => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
 
-    // 1. Bắt sự kiện reload hoặc đóng tab
-    useEffect(() => {
-        const handleBeforeUnload = () => {
-
-            getCheckout(channel);
-        };
-
-        window.addEventListener('beforeunload', handleBeforeUnload);
-
-        return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-        };
+        timeoutRef.current = setTimeout(() => {
+            void getCheckout(channel);
+        }, 200);
     }, []);
 
-    // 2. Theo dõi chuyển route (pathname thay đổi)
+    // Only track route changes
     useEffect(() => {
-        getCheckout(channel);
-        // Thêm logic nếu cần, ví dụ gửi analytics, reset scroll, v.v.
-    }, [pathname]);
+        if (channel) {
+            debouncedGetCheckout(channel);
+        }
 
-    return null; // Không cần render gì cả
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, [pathname, channel, debouncedGetCheckout]);
+
+    return null;
 }
