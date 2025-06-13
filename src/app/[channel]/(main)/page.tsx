@@ -19,7 +19,7 @@ export default async function Page({ params }: { params: { channel: string } }) 
 			{/* <SpecialOffer /> */}
 			{/* <AboutUs /> */}
 			<OurProcess />
-			<OurService />
+			<OurService channel={params.channel} />
 			{/* <Statistics/> */}
 			<Popular />
 			{/* <Subscribe /> */}
