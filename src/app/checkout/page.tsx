@@ -32,7 +32,7 @@ export default function CheckoutPage({
 			<div className="mx-auto flex max-w-7xl flex-col px-8 py-8">
 				<div className="flex items-center font-bold">
 					<LinkWithChannel aria-label="homepage" href="/" className="flex items-center">
-						<Image src="/images/main-logo.png" alt="ZoomPrints" width={150} height={70} />
+						<Image src="/images/main-logo.webp" alt="ZoomPrints" width={150} height={70} />
 					</LinkWithChannel>
 				</div>
 			</div>
