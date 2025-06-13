@@ -1,18 +1,9 @@
 // import AboutUs from "@/ui/components/home/AboutUs";
 import HeroPage from "@/ui/components/home/HeroPage";
-import dynamic from "next/dynamic";
+import OurProcess from "@/ui/components/home/OurProcess";
+import OurService from "@/ui/components/home/OurService";
+import Popular from "@/ui/components/home/Popular";
 
-const OurProcess = dynamic(() => import("@/ui/components/home/OurProcess"), {
-	loading: () => <p>Loading...</p>
-});
-
-const OurService = dynamic(() => import("@/ui/components/home/OurService"), {
-	loading: () => <p>Loading...</p>
-});
-
-const Popular = dynamic(() => import("@/ui/components/home/Popular"), {
-	loading: () => <p>Loading...</p>
-});
 
 export const metadata = {
 	title: "ZoomPrints",

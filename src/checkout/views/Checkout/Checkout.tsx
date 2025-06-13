@@ -33,8 +33,8 @@ import CustomerAddressInfo from "@/checkout/sections/CustomerAddressInfo/Custome
 import { DeliveryMethods } from "@/checkout/sections/CheckoutForm/DeliveryMethodsSection";
 import { checkoutValidate } from "../../../app/checkoutValidate";
 import { ErrorDialogPlaceOrder } from "../../../app/ErrorDialogPlaceOrder";
-import { GetItemToServerCookie } from "../../../app/actions";
-import { callRefreshToken } from "../../../app/callRefreshToken";
+//import { GetItemToServerCookie } from "../../../app/actions";
+//import { callRefreshToken } from "../../../app/callRefreshToken";
 // import { DeliveryMethods } from "@/checkout/sections/DeliveryMethods";
 // Define the shape for the entire checkout form
 const CheckoutSchema = Yup.object().shape({
@@ -348,9 +348,9 @@ export const Checkout = () => {
 
 	const handlePlaceOrder = async () => {
 
-		const refreshTokenKey = `${process.env.NEXT_PUBLIC_SALEOR_API_URL}+saleor_auth_module_refresh_token`;
-		const refreshToken = await GetItemToServerCookie(refreshTokenKey);
-		await callRefreshToken(refreshTokenKey, refreshToken || "");
+		//const refreshTokenKey = `${process.env.NEXT_PUBLIC_SALEOR_API_URL}+saleor_auth_module_refresh_token`;
+		//const refreshToken = await GetItemToServerCookie(refreshTokenKey);
+		//await callRefreshToken(refreshTokenKey, refreshToken || "");
 
 
 		const response = await checkoutValidate(checkoutId || "");

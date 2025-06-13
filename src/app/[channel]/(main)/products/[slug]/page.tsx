@@ -1,26 +1,27 @@
 'use client'
 
-import { Product, ProductVariant } from '@/gql/graphql'
-import Wrapper from '@/ui/components/wrapper'
+// eslint-disable-next-line import/order
+import { type Product, type ProductVariant } from '@/gql/graphql'
 import React, { useCallback, useEffect, useState, useMemo } from 'react'
-import { getProductDetails } from './actions/getProductDetails';
-import { ProductTitle } from './_components/ProductTitle';
-import { ProductDescription } from './_components/ProductDescription';
 import edjsHTML from "editorjs-html";
 import xss from 'xss';
-import { cn, formatMoney } from '@/lib/utils';
 import { Loader2, Pen, Ruler, ShoppingCart } from 'lucide-react';
-import SizeGuideModal from './guide';
-import Swipper from './_components/Swipper';
-import ProductColorSizeSelector from './_components/ProductColorSizeSelector';
-import ProductSizeQuantityInputs from './_components/ProductSizeQuantityInputs';
 import { useRouter, useSearchParams } from 'next/navigation';
-import AddToCardLoading from './_components/AddToCardLoading';
-import { getUser } from '@/actions/user';
-import { useNavigateLogin } from '@/hooks/useNavigateLogin';
 import { toast, ToastContainer } from 'react-toastify';
+import AddToCardLoading from './_components/AddToCardLoading';
+import ProductSizeQuantityInputs from './_components/ProductSizeQuantityInputs';
+import ProductColorSizeSelector from './_components/ProductColorSizeSelector';
+import Swipper from './_components/Swipper';
+import SizeGuideModal from './guide';
+import { ProductDescription } from './_components/ProductDescription';
+import { ProductTitle } from './_components/ProductTitle';
+import { getProductDetails } from './actions/getProductDetails';
 import "react-toastify/dist/ReactToastify.css";
 import { addCart } from './actions/addCart';
+import Wrapper from '@/ui/components/wrapper'
+import { getUser } from '@/actions/user';
+import { cn, formatMoney } from '@/lib/utils';
+import { useNavigateLogin } from '@/hooks/useNavigateLogin';
 
 interface PageProps {
     params: {
@@ -88,21 +89,26 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         try {
 
             const { product } = await getProductDetails(slug, channel);
-            setProductDetail(product as Product);
             // Set default variant ban đầu
-            if (product?.defaultVariant) {
-                setSelectedVariant(product.defaultVariant as ProductVariant);
+            console.log(product)
+            if (product) {
+                if (product?.defaultVariant) {
+                    setSelectedVariant(product.defaultVariant as ProductVariant);
+                    setProductDetail(product as Product);
+                }
             }
         } catch (error) {
             throw new Error("Error when fetching data");
         } finally {
+
             setLoading(false);
         }
     }, [slug, channel, variantParam]);
 
     useEffect(() => {
         void getProductDetail();
-    }, [getProductDetail]);
+    }, [slug, channel]);
+
 
     // Xử lý chọn color/size
     const handleColorSizeChange = useCallback(
@@ -113,10 +119,10 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             colorAttributeValueId?: string,
             variant?: ProductVariant | null
         ) => {
-            setSelectedVariant(variant ?? null);
-            setSelectedSize(selected.size ?? null);
-            setColorAttributeValueId(colorAttributeValueId);
-            setSizeList(sizeList);
+            setSelectedVariant(prev => (prev?.id !== variant?.id ? variant ?? null : prev));
+            setSelectedSize(prev => (prev !== selected.size ? selected.size ?? null : prev));
+            setColorAttributeValueId(prev => (prev !== colorAttributeValueId ? colorAttributeValueId : prev));
+            setSizeList(prev => (JSON.stringify(prev) !== JSON.stringify(sizeList) ? sizeList : prev));
         },
         []
     );
@@ -140,7 +146,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         setAddToCartLoading(true);
         const user = await getUser();
         if (!user) {
-            useNavigateLogin(channel);
+            void useNavigateLogin(channel);
             setAddToCartLoading(false);
             return;
         }
@@ -172,7 +178,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
 
         const user = await getUser();
         if (!user) {
-            //alert('okokokokok');
+
             useNavigateLogin(channel);
             setAddToCartLoading(false);
             return;
@@ -197,13 +203,17 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             <ProductTitle name={productDetail?.name} isLoading={loading} className="mb-7 px-4 md:hidden" />
             <div className="relative flex w-full max-w-7xl flex-col gap-2 rounded-lg px-4 md:flex-row md:gap-8">
                 <div className="w-full md:w-1/2 lg:w-[35%]">
-                    {selectedVariant ?
-                        <Swipper
-                            images={selectedVariant?.media?.map(i => i.url) as string[]}
-                            loading={loading || imagesLoading}
-                            onImagesLoaded={() => setImagesLoading(false)}
-                        /> : null
-                    }
+                    {selectedVariant ? (
+                        (loading || imagesLoading) ? (
+                            <div className="w-full aspect-square bg-gray-200 animate-pulse rounded-md" style={{ minHeight: 300 }} />
+                        ) : (
+                            <Swipper
+                                images={selectedVariant?.media?.map(i => i.url) as string[]}
+                                loading={loading || imagesLoading}
+                                onImagesLoaded={() => setImagesLoading(false)}
+                            />
+                        )
+                    ) : <div className="w-full aspect-square bg-gray-200 animate-pulse rounded-md" style={{ minHeight: 300 }} />}
                     <div className="hidden w-full md:block">
                         <ProductDescription descriptionHtml={parseDescription(productDetail?.description as string)} title="Descriptions" />
                     </div>
@@ -244,7 +254,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                             max={9999}
                         />
                         <div className="flex flex-col gap-2 sm:flex-row sm:justify-start mt-4">
-                            {loading || addtoCartLoading ? (
+                            {loading ? (
                                 <>
                                     <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 md:w-48"></div>
                                     <div className="flex w-full flex-row  gap-4">
@@ -270,22 +280,29 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                                     )}
                                     <p>Add to Cart</p>
                                 </button>
-                                {selectedVariant && selectedVariant.media && selectedVariant?.metadata.find(i => i.key === "custom_json") ? <div
-                                    onClick={handleNavigateTodesign}
-                                    className="w-full sm:w-auto"
-                                >
-                                    <button
-                                        className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-5 
+                                {
+
+                                    selectedVariant?.metadata ? selectedVariant?.metadata.find(i => i.key === "custom_json") && <div
+                                        onClick={handleNavigateTodesign}
+                                        className="w-full sm:w-auto"
+                                    >
+                                        <button
+                                            className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-5 
                                     py-2 text-sm font-semibold text-white shadow-lg 
                                     transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
                                     focus:outline-none focus:ring-2
                                     focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                                    >
-                                        <Pen className='w-4 h-4' />
-                                        Design
-                                    </button>
-                                </div> : <div className="h-6 w-24 animate-pulse rounded bg-gray-200 sm:h-7 sm:w-28 md:h-8 md:w-32"></div>}
+                                        >
+                                            <Pen className='w-4 h-4' />
+                                            Design
+                                        </button>
+                                    </div> :
+                                        <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 md:w-48"></div>
+
+                                }
                             </div>
+
+
                             }
                         </div>
                         <ProductDescription descriptionHtml={features} isLoading={loading} />

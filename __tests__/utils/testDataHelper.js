@@ -1,5 +1,3 @@
-// Generate unique email addresses for testing purposes
-// This function creates a unique email address based on the current timestamp.
 export const generateUniqueEmail = (domain = "mailinator.com") => {
 	const now = new Date();
 	const pad = (n, len = 2) => n.toString().padStart(len, "0");

@@ -1,98 +1,102 @@
 query GetProductDetails($channel: String!, $slug: String!) {
-		product(channel: $channel, slug: $slug) {
+	product(channel: $channel, slug: $slug) {
+		id
+		slug
+		name
+		description
+		category {
 			id
-			slug
 			name
-			description
-			category {
+			slug
+		}
+		defaultVariant {
+			id
+			sku
+			name
+			media {
 				id
-				name
-				slug
-			}
-			defaultVariant {
-				id
-				sku
-				name
-				media {
-					id
-					alt
-					url(format: WEBP, size: 1080)
-				}
-				quantityAvailable
-				pricing {
-					price {
-						gross {
-							currency
-							amount
-						}
-					}
-				}
-				attributes {
-					attribute {
-						id
-						name
-					}
-					values {
-						id
-						name
-					}
-				}
-			}
-			seoTitle
-			seoDescription
-			variants {
-				id
-				sku
-				name
-				media {
-					id
-					alt
-					url(format: WEBP, size: 1080)
-				}
-				quantityAvailable
-				pricing {
-					price {
-						gross {
-							currency
-							amount
-						}
-					}
-				}
-				attributes {
-					attribute {
-						id
-						name
-					}
-					values {
-						id
-						name
-					}
-				}
-				quantityLimitPerCustomer
-				metadata{
-					key
-					value
-				}
-			}
-			thumbnail(size: 1024, format: WEBP) {
-				url
 				alt
+				url(format: WEBP, size: 1080)
 			}
+			metadata {
+				key
+				value
+			}
+			quantityAvailable
 			pricing {
-				priceRange {
-					start {
-						gross {
-							amount
-							currency
-						}
+				price {
+					gross {
+						currency
+						amount
 					}
-					stop {
-						gross {
-							amount
-							currency
-						}
+				}
+			}
+			attributes {
+				attribute {
+					id
+					name
+				}
+				values {
+					id
+					name
+				}
+			}
+		}
+		seoTitle
+		seoDescription
+		variants {
+			id
+			sku
+			name
+			media {
+				id
+				alt
+				url(format: WEBP, size: 1080)
+			}
+			quantityAvailable
+			pricing {
+				price {
+					gross {
+						currency
+						amount
+					}
+				}
+			}
+			attributes {
+				attribute {
+					id
+					name
+				}
+				values {
+					id
+					name
+				}
+			}
+			quantityLimitPerCustomer
+			metadata {
+				key
+				value
+			}
+		}
+		thumbnail(size: 1024, format: WEBP) {
+			url
+			alt
+		}
+		pricing {
+			priceRange {
+				start {
+					gross {
+						amount
+						currency
+					}
+				}
+				stop {
+					gross {
+						amount
+						currency
 					}
 				}
 			}
 		}
 	}
+}

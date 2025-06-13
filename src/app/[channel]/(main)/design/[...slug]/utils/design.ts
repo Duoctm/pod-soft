@@ -6,12 +6,42 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import { type PrintFaceData, type DesignInfo/*, UploadDataType*/ } from '../utils/type';
 import { uploadImageRaw } from './UpdateImage';
 import { v4 as uuidv4 } from 'uuid';
+import { StackHistory, addStackHistory, NodeHistory, undoStackHistory } from './designHistory'
 interface StageConfig {
   stage: Konva.Stage | null;
   layer: Konva.Layer | null;
   selectedNode: Konva.Node | null;
   borderDiv: HTMLDivElement | null;
+  StackHistories: StackHistory
   //lastPositionNode: { x: number; y: number } | null;
+}
+
+interface CroptParam {
+  LeftScale: number,
+  TopScale: number,
+  WidthScale: number,
+  HeightScale: number
+}
+
+interface HistoryParams {
+  node: Konva.Node;
+  id?: string;
+  action?: string;
+  type?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  fontStyle?: string;
+  fontWeight?: string;
+  text?: string;
+  heightSize?: number;
+  widthSize?: number;
+  rotationAngle?: number;
+  positionX?: number;
+  positionY?: number;
+  indexImg?: string;
+  indexLayer?: string;
+  CroptParam?: CroptParam
+
 }
 
 class TShirtDesigner {
@@ -235,6 +265,10 @@ class TShirtDesigner {
         layer: null,
         selectedNode: null,
         borderDiv: null,
+        StackHistories: {
+          index: -1,
+          nodeHistory: []
+        }
         //lastPositionNode: null
       };
     }
@@ -487,6 +521,9 @@ class TShirtDesigner {
     }
 
 
+    clone.id(uuidv4());
+
+
 
 
 
@@ -521,6 +558,10 @@ class TShirtDesigner {
       return { x: newX, y: newY };
     });
 
+    this.handleAddHistory({ node: clone, heightSize: clone.getHeight(), widthSize: clone.getWidth(), rotationAngle: clone.rotation(), positionX: clone.x(), positionY: clone.y(), indexImg: clone.id(), action: "create" });
+    clone.on('dragend', () => {
+      this.handleAddHistory({ node: clone, positionX: clone.x(), positionY: clone.y(), rotationAngle: clone.rotation(), indexImg: clone.id(), action: "update" })
+    });
 
     //this.showBorderNode(clone, stageConfig);
     if (node instanceof Konva.Image) {
@@ -735,6 +776,12 @@ class TShirtDesigner {
       e.stopPropagation();
       e.preventDefault();
 
+      if (node instanceof Konva.Image) {
+        this.handleAddHistory({ node: node, heightSize: node.getHeight(), widthSize: node.getWidth(), positionX: node.x(), positionY: node.y(), rotationAngle: node.rotation(), action: "update" })
+      } else if (node instanceof Konva.Text) {
+        this.handleAddHistory({ node: node, fontSize: node.fontSize(), positionX: node.x(), positionY: node.y(), rotationAngle: node.rotation(), action: "update" })
+      }
+
       rotateIcon.style.display = 'none';
       const stage = stageConfig.stage!;
       const layer = stageConfig.layer!;
@@ -828,9 +875,10 @@ class TShirtDesigner {
 
         if (node instanceof Konva.Image) {
           this.setMenuWithNodeAndStage(node, this.currentStage, 5);
+          this.handleAddHistory({ node: node, heightSize: node.getHeight(), widthSize: node.getWidth(), rotationAngle: node.rotation(), action: "update" })
         } else if (node instanceof Konva.Text) {
           this.setMenuWithNodeAndStage(node, this.currentStage, 6);
-          //console.log('resizeIcon', node.fontSize(), node.width(), node.height());
+          this.handleAddHistory({ node: node, fontSize: node.fontSize(), rotationAngle: node.rotation(), action: "update" })
         }
       };
 
@@ -1014,6 +1062,12 @@ class TShirtDesigner {
       e.stopPropagation();
       e.preventDefault();
 
+      if (node instanceof Konva.Image) {
+        this.handleAddHistory({ node: node, heightSize: node.getHeight(), widthSize: node.getWidth(), positionX: node.x(), positionY: node.y(), rotationAngle: node.rotation(), action: "update" })
+      } else if (node instanceof Konva.Text) {
+        this.handleAddHistory({ node: node, fontSize: node.fontSize(), positionX: node.x(), positionY: node.y(), rotationAngle: node.rotation(), action: "update" })
+      }
+
       const stage = stageConfig.stage!;
       const rect = stage.container().getBoundingClientRect();
 
@@ -1106,11 +1160,7 @@ class TShirtDesigner {
         node.setAttr('rotationOfLastWidth', node.width());
         node.setAttr('rotationOfLastHeight', node.height());
 
-        if (node instanceof Konva.Image) {
-          this.setMenuWithNodeAndStage(node, this.currentStage, 5);
-        } else if (node instanceof Konva.Text) {
-          this.setMenuWithNodeAndStage(node, this.currentStage, 6);
-        }
+        this.handleAddHistory({ node: node, rotationAngle: node.rotation(), action: "update" });
       };
 
       window.addEventListener('mousemove', handleRotateMove);
@@ -1118,7 +1168,6 @@ class TShirtDesigner {
       window.addEventListener('touchmove', handleRotateMove, { passive: false });
       window.addEventListener('touchend', handleRotateEnd);
     };
-
     // Gắn sự kiện cho chuột và cảm ứng
     rotateIcon.addEventListener('mousedown', handleRotateStart);
     rotateIcon.addEventListener('touchstart', handleRotateStart, { passive: false });
@@ -1267,6 +1316,14 @@ class TShirtDesigner {
   public deleteSelectedNode(/*stageConfig: StageConfig*/) {
     const stageConfig = this.currentStage;
     if (stageConfig.selectedNode) {
+      // if (stageConfig.selectedNode instanceof Konva.Image) {
+      //   this.handleAddHistory({ node: stageConfig.selectedNode, action: "delete" })
+      // }
+      if (stageConfig.selectedNode instanceof Konva.Image) {
+        this.handleAddHistory({ node: stageConfig.selectedNode, heightSize: stageConfig.selectedNode.getHeight(), widthSize: stageConfig.selectedNode.getWidth(), positionX: stageConfig.selectedNode.x(), positionY: stageConfig.selectedNode.y(), rotationAngle: stageConfig.selectedNode.rotation(), action: "delete" })
+      } else if (stageConfig.selectedNode instanceof Konva.Text) {
+        this.handleAddHistory({ node: stageConfig.selectedNode, fontSize: stageConfig.selectedNode.fontSize(), fontStyle: stageConfig.selectedNode.fontStyle(), fontFamily: stageConfig.selectedNode.fontFamily(), positionX: stageConfig.selectedNode.x(), positionY: stageConfig.selectedNode.y(), rotationAngle: stageConfig.selectedNode.rotation(), text: stageConfig.selectedNode.text(), action: "delete" })
+      }
       stageConfig.selectedNode.destroy();
       this.clearBorderNode(stageConfig);
       if (this.currentStage.borderDiv) {
@@ -1276,6 +1333,7 @@ class TShirtDesigner {
       stageConfig.layer!.batchDraw();
 
       this.clearBorderNode(this.currentStage);
+
       this.menuIndexSetter(0);
 
     }
@@ -1294,7 +1352,7 @@ class TShirtDesigner {
       return;
     }
     this.clearBorderNode(this.currentStage);
-    // Cập nhật kích thước stage trước khi thêm hình ảnh
+
     let image = null;
     let indexItem = -1.0;
     for (const item in this.data) {
@@ -1392,6 +1450,13 @@ class TShirtDesigner {
         //this.menuIndexSetter(5);
         this.setMenuWithNodeAndStage(imgNode, this.currentStage, 5);
         this.getWHROfNode();
+        this.handleAddHistory({ node: imgNode, heightSize: imgNode.getHeight(), widthSize: imgNode.getWidth(), rotationAngle: imgNode.rotation(), positionX: imgNode.x(), positionY: imgNode.y(), indexImg: imgNode.id(), action: "create" })
+
+
+
+        imgNode.on('dragend', () => {
+          this.handleAddHistory({ node: imgNode, positionX: imgNode.x(), positionY: imgNode.y(), rotationAngle: imgNode.rotation(), action: "update" })
+        });
 
         //console.log('currentStage', this.currentStage.borderDiv?.style.x, this.currentStage.borderDiv?.style.y);
       };
@@ -1484,6 +1549,13 @@ class TShirtDesigner {
     this.setMenuWithNodeAndStage(textNode, this.currentStage, 6);
     this.getRSOfNode();
     //console.log('currentStage', textNode.fontSize(), textNode.width(), textNode.height());
+    this.handleAddHistory({ node: textNode, fontFamily: textNode.fontFamily(), fontSize: textNode.fontSize(), fontStyle: textNode.fontStyle(), text: textNode.text(), rotationAngle: textNode.rotation(), positionX: textNode.x(), positionY: textNode.y(), action: "create" })
+
+
+    textNode.on('dragend', () => {
+      this.handleAddHistory({ node: textNode, fontFamily: textNode.fontFamily(), fontSize: textNode.fontSize(), fontStyle: textNode.fontStyle(), positionX: textNode.x(), positionY: textNode.y(), rotationAngle: textNode.rotation(), action: "update" })
+    });
+
   }
 
   public changeTextColor(color: string) {
@@ -1647,7 +1719,6 @@ class TShirtDesigner {
         const designOfStage = {
           final_image_url: "",
           designs: [] as any[],
-          face_code: this.data[item].code
         };
         const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
         imageDom.crossOrigin = 'anonymous';
@@ -1712,7 +1783,7 @@ class TShirtDesigner {
       designs: designs,
     };
 
-    return designInfo; //JSON.stringify(designInfo, null, 2);
+    return designInfo;
   }
   public exportStage = async (stageConfig: StageConfig, image: HTMLImageElement): Promise<string> => {
     if (!stageConfig.stage || !stageConfig.layer) return '';
@@ -2195,8 +2266,11 @@ class TShirtDesigner {
         node.x(this.currentStage.stage.width() / 2);
       }
       this.showBorderNode(this.currentStage.selectedNode, this.currentStage);
+
+      this.handleAddHistory({ node: node, positionX: node.x(), rotationAngle: node.rotation(), action: "update" })
     }
   }
+
   public setHeightCenterPosition() {
     if (this.currentStage.selectedNode != null) {
       const node = this.currentStage.selectedNode;
@@ -2204,6 +2278,7 @@ class TShirtDesigner {
         node.y(this.currentStage.stage.height() / 2);
       }
       this.showBorderNode(this.currentStage.selectedNode, this.currentStage);
+      this.handleAddHistory({ node: node, positionY: node.y(), rotationAngle: node.rotation(), action: "update" })
     }
   }
 
@@ -2232,6 +2307,8 @@ class TShirtDesigner {
 
         this.currentStage.layer.removeChildren();
         nodeChildrend.forEach(newNode => this.currentStage.layer?.add(newNode));
+
+        this.handleAddHistory({ node: node, indexLayer: "top", rotationAngle: node.rotation(), action: "update" })
       }
     }
   }
@@ -2260,6 +2337,8 @@ class TShirtDesigner {
 
         this.currentStage.layer.removeChildren();
         nodeChildrend.forEach(newNode => this.currentStage.layer?.add(newNode));
+
+        this.handleAddHistory({ node: node, indexLayer: "back", rotationAngle: node.rotation(), action: "update" })
       }
     }
   }
@@ -2268,6 +2347,12 @@ class TShirtDesigner {
     if (this.currentStage.selectedNode != null) {
 
       const node = this.currentStage.selectedNode;
+      if (node instanceof Konva.Image) {
+        this.handleAddHistory({ node: node, heightSize: node.getHeight(), widthSize: node.getWidth(), positionX: node.x(), positionY: node.y(), rotationAngle: node.rotation(), action: "update" })
+      } else if (node instanceof Konva.Text) {
+        this.handleAddHistory({ node: node, fontSize: node.fontSize(), positionX: node.x(), positionY: node.y(), rotationAngle: node.rotation(), action: "update" })
+      }
+
       const noRotated = Math.abs(node.rotation()) <= 1 || Math.abs(node.rotation()) >= 359;
 
       if (noRotated) {
@@ -2289,9 +2374,6 @@ class TShirtDesigner {
           node.width(clone.width());
           node.height(clone.height());
         }
-        // if (cloneBounds.y >= this.currentStage.stage!.y() && cloneBounds.y + cloneBounds.height <= this.currentStage.stage!.height()) {
-        //   node.height(clone.height());
-        // }
       }
       if (noRotated) {
         node.x(node.x() + node.width() / 2);
@@ -2304,15 +2386,20 @@ class TShirtDesigner {
       node.setAttr('rotationOfLastWidth', node.width());
       node.setAttr('rotationOfLastHeight', node.height());
       //this.setNodeBoder(node, this.currentStage);
+
       this.setMenuWithNodeAndStage(node, this.currentStage, 5);
       this.currentStage.layer!.draw();
+
+      // const nodeChild = node as Konva.Image;
+
+      this.handleAddHistory({ node: node, heightSize: node.height(), widthSize: node.width(), rotationAngle: node.rotation(), action: "update" })
     }
   }
 
   public setRSOfNode(instance: number | null) {
 
     if (this.currentStage.selectedNode != null) {
-      const node = this.currentStage.selectedNode;
+      var node = this.currentStage.selectedNode;
       node.offsetX(0);
       node.offsetY(0);
       node.x(node.x() - node.width() / 2);
@@ -2327,6 +2414,8 @@ class TShirtDesigner {
           node.fontSize(instance);
         }
       }
+
+
 
       node.x(node.x() + node.width() / 2);
       node.y(node.y() + node.height() / 2);
@@ -2343,6 +2432,9 @@ class TShirtDesigner {
       this.currentStage.layer!.draw();
       //this.resetRSOfNode();
       this.getRSOfNode();
+
+      const nodeChild = node as Konva.Text
+      this.handleAddHistory({ node: nodeChild, fontSize: nodeChild.fontSize(), rotationAngle: node.rotation(), action: "update" })
     }
   }
 
@@ -2418,7 +2510,1323 @@ class TShirtDesigner {
       //this.setNodeBoder(node, this.currentStage);
       this.currentStage.layer!.draw();
 
+      this.handleAddHistory({ node: node, rotationAngle: node.rotation(), action: "update" })
+
       //rotateIcon.style.transform = `rotate(${newRotation}deg)`;
+    }
+  }
+
+  public handleAddHistory(param: HistoryParams) {
+    let typeOfNode = "";
+    if (param.node instanceof Konva.Image) {
+      typeOfNode = 'image';
+    }
+    else if (param.node instanceof Konva.Text) {
+      typeOfNode = 'text';
+    }
+    let nodeParam: NodeHistory = {
+      Id: param.node.id(),
+      Action: null,
+      Type: typeOfNode,
+      FontFamily: null,
+      FontSize: null,
+      FontStyle: null,
+      FontWeight: null,
+      Text: null,
+      HeightSize: null,
+      WidthSize: null,
+      RotationAngle: null,
+      PositionX: null,
+      PositionY: null,
+      indexImg: null,
+      indexLayer: null,
+      dependency: null,
+      CroptParam: null,
+    };
+    if (param.action != null) {
+      nodeParam.Action = param.action;
+    }
+    if (param.fontFamily != null) {
+      nodeParam.FontFamily = param.fontFamily;
+    }
+    if (param.fontSize != null) {
+      nodeParam.FontSize = param.fontSize;
+    }
+    if (param.fontStyle != null) {
+      nodeParam.FontStyle = param.fontStyle;
+    }
+    if (param.fontWeight != null) {
+      nodeParam.FontWeight = param.fontWeight;
+    }
+    if (param.text != null) {
+      nodeParam.Text = param.text;
+    }
+    if (param.heightSize != null) {
+      nodeParam.HeightSize = param.heightSize;
+    }
+    if (param.widthSize != null) {
+      nodeParam.WidthSize = param.widthSize;
+    }
+    if (param.rotationAngle != null) {
+      nodeParam.RotationAngle = param.rotationAngle;
+    }
+    if (param.positionX != null) {
+      nodeParam.PositionX = param.positionX;
+    }
+    if (param.positionY != null) {
+      nodeParam.PositionY = param.positionY;
+    }
+    if (param.indexImg != null) {
+      nodeParam.indexImg = param.indexImg;
+    }
+    if (param.indexLayer != null) {
+      nodeParam.indexLayer = param.indexLayer;
+    }
+
+    addStackHistory(nodeParam, this.currentStage.StackHistories);
+  }
+
+  /*public updateHistoryStatus(type: string, id: string, node: NodeHistory) {
+    if (this.currentStage == null || this.currentStage.layer == null)
+      return;
+    const stages = this.currentStage.layer.getChildren();
+    //if (!Array.isArray(stages)) return; // hoặc xử lý fallback
+
+
+    let targetNode: Konva.Node | undefined;
+    for (const childNode of stages) {
+      if (childNode.id() === id) {
+        targetNode = childNode;
+        break;
+      }
+    }
+    if (targetNode) {
+      if (node.RotationAngle != null)
+        targetNode.rotation(node.RotationAngle);
+      if (node.PositionX != null)
+        targetNode.x(node.PositionX);
+      if (node.PositionY != null)
+        targetNode.y(node.PositionY);
+
+      if (node.indexLayer == "top") {
+        const nodeChildrend = this.currentStage.layer.getChildren();
+        if (nodeChildrend.length <= 1) {
+          return;
+        }
+        const node = this.currentStage.selectedNode;
+        let index = -1;
+        for (const item in nodeChildrend) {
+          if (nodeChildrend[item] == node) {
+            index = Number(item);
+            break;
+          }
+        }
+        if (index == nodeChildrend.length - 1) {
+          return;
+        }
+        if (index > -1 && index < nodeChildrend.length) {
+          const temp = nodeChildrend[index + 1];
+          nodeChildrend[index + 1] = nodeChildrend[index];
+          nodeChildrend[index] = temp;
+
+          this.currentStage.layer.removeChildren();
+          nodeChildrend.forEach(newNode => this.currentStage.layer?.add(newNode));
+        }
+      }
+      else if (node.indexLayer == 'back') {
+        const nodeChildrend = this.currentStage.layer.getChildren();
+        if (nodeChildrend.length <= 1) {
+          return;
+        }
+        const node = this.currentStage.selectedNode;
+        let index = -1;
+        for (const item in nodeChildrend) {
+          if (nodeChildrend[item] == node) {
+            index = Number(item);
+            break;
+          }
+        }
+        if (index == 0) {
+          return;
+        }
+        if (index > -1 && index < nodeChildrend.length) {
+          const temp = nodeChildrend[index - 1];
+          nodeChildrend[index - 1] = nodeChildrend[index];
+          nodeChildrend[index] = temp;
+
+          this.currentStage.layer.removeChildren();
+          nodeChildrend.forEach(newNode => this.currentStage.layer?.add(newNode));
+        }
+      }
+
+      if (type == "image") {
+        const imgNode = targetNode as Konva.Image;
+        if (node.HeightSize != null)
+          imgNode.height(node.HeightSize);
+        if (node.WidthSize != null)
+          imgNode.width(node.WidthSize);
+      }
+      else if (type == "text") {
+        const textNode = targetNode as Konva.Text;
+        if (node.Text != null)
+          textNode.text(node.Text);
+        if (node.FontFamily != null)
+          textNode.fontFamily(node.FontFamily);
+        if (node.FontSize != null)
+          textNode.fontSize(node.FontSize);
+        if (node.FontStyle != null)
+          textNode.fontStyle(node.FontStyle);
+      }
+      this.showBorderNode(targetNode, this.currentStage);
+    }
+    else {
+      if (type == "image") {
+        // Đảm bảo stage có kích thước hợp lệ
+        const img = new Image();
+        img.src = this.originImageOfStage[id];
+        const stageWidth = this.currentStage.stage!.width();
+        const stageHeight = this.currentStage.stage!.height();
+
+        if (stageWidth <= 0 || stageHeight <= 0) {
+          console.error('Invalid stage dimensions:', stageWidth, stageHeight);
+          return;
+        }
+
+        const maxWidth = stageWidth * 0.8;
+        const maxHeight = stageHeight * 0.8;
+
+        let scale = 1;
+        if (img.width > maxWidth || img.height > maxHeight) {
+          scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+        }
+
+        const x = stageWidth / 2;
+        const y = stageHeight / 2;
+
+        const imgNode = new Konva.Image({
+          id: id,
+          image: img,
+          x: x,
+          y: y,
+          width: img.width * scale,
+          height: img.height * scale,
+          draggable: true,
+
+        });
+
+        imgNode.offsetX(imgNode.width() / 2);
+        imgNode.offsetY(imgNode.height() / 2);
+
+        imgNode.setAttr('rotationOfLastWidth', imgNode.width());
+        imgNode.setAttr('rotationOfLastHeight', imgNode.height());//lastPositionNode
+
+        imgNode.setAttr('lastPositionX', imgNode.x());
+        imgNode.setAttr('lastPositionY', imgNode.y());
+
+        imgNode.dragBoundFunc(function (pos) {
+          const stage = imgNode.getStage();
+          //console.log('stage', stage);
+          const stageWidth = stage!.width();
+          const stageHeight = stage!.height();
+
+          const tempNode = imgNode.clone();
+          tempNode.position(pos);
+          const bounds = tempNode.getClientRect();
+
+          let newX = pos.x;
+          let newY = pos.y;
+
+          if (bounds.x < 0) {
+            newX = pos.x - bounds.x;
+          }
+          if (bounds.x + bounds.width > stageWidth) {
+            newX = pos.x - (bounds.x + bounds.width - stageWidth);
+          }
+          if (bounds.y < 0) {
+            newY = pos.y - bounds.y;
+          }
+          if (bounds.y + bounds.height > stageHeight) {
+            newY = pos.y - (bounds.y + bounds.height - stageHeight);
+          }
+
+
+
+          return { x: newX, y: newY };
+        });
+
+
+
+        this.currentStage.layer!.add(imgNode);
+        this.currentStage.layer!.draw();
+        this.setMenuWithNodeAndStage(imgNode, this.currentStage, 5);
+        this.getWHROfNode();
+
+        imgNode.on('dragend', () => {
+          this.handleAddHistory({ node: imgNode, positionX: imgNode.x(), positionY: imgNode.y(), action: "update" })
+        });
+
+        //console.log('currentStage', this.currentStage.borderDiv?.style.x, this.currentStage.borderDiv?.style.y);
+      }
+      else if (type == 'text') {
+        if (this.currentStage.stage == null) {
+          return;
+        }
+        const textNode = new Konva.Text({
+          id: id,
+          text: node.Text || "",
+          x: this.currentStage.stage.width() / 2,
+          y: this.currentStage.stage.height() / 2,
+          fontSize: 20,
+          draggable: true,
+          fill: this.textColor,
+          fontFamily: this.fontFamily,
+          fontWeight: this.fontWeight,
+          fontStyle: node.FontStyle || "normal", //+ this.fontWeight === 'bold' ? " 700" : "",//this.fontStyle,,//'700 italic',
+          align: 'center',
+          padding: 5,
+        });
+
+        this.trimTextToFitStageWidth(textNode, this.currentStage.stage);
+
+        // Căn giữa text node
+        textNode.offsetX(textNode.width() / 2);
+        textNode.offsetY(textNode.height() / 2);
+
+        textNode.setAttr('rotationOfLastWidth', textNode.width());
+        textNode.setAttr('rotationOfLastHeight', textNode.height());
+
+        textNode.setAttr('lastPositionX', textNode.x());
+        textNode.setAttr('lastPositionY', textNode.y());
+
+        textNode.dragBoundFunc(function (pos) {
+          const stage = textNode.getStage();
+          const stageWidth = stage!.width();
+          const stageHeight = stage!.height();
+
+          const tempNode = textNode.clone();
+          tempNode.position(pos);
+          const bounds = tempNode.getClientRect();
+
+          let newX = pos.x;
+          let newY = pos.y;
+
+          if (bounds.x < 0) {
+            newX = pos.x - bounds.x;
+          }
+          if (bounds.x + bounds.width > stageWidth) {
+            newX = pos.x - (bounds.x + bounds.width - stageWidth);
+          }
+          if (bounds.y < 0) {
+            newY = pos.y - bounds.y;
+          }
+          if (bounds.y + bounds.height > stageHeight) {
+            newY = pos.y - (bounds.y + bounds.height - stageHeight);
+          }
+
+          return { x: newX, y: newY };
+        });
+
+        this.currentStage.layer.add(textNode);
+        this.currentStage.layer.draw();
+        //this.showBorderNode(textNode, this.currentStage);
+        //this.menuIndexSetter(6);
+        this.setMenuWithNodeAndStage(textNode, this.currentStage, 6);
+        this.getRSOfNode();
+
+
+        textNode.on('dragend', () => {
+          // Cập nhật history sau khi node được di chuyển và nhả chuột
+          this.handleAddHistory({ node: textNode, positionX: textNode.x(), positionY: textNode.y(), fontFamily: textNode.fontFamily(), fontSize: textNode.fontSize(), fontStyle: textNode.fontStyle(), action: "update" })
+        });
+      }
+
+    }
+  }*/
+
+  /*public updateHistoryStatus(node: NodeHistory, status: string) {
+    const addObjectToStage = (node: NodeHistory) => {
+      if (node.Type == "image") {
+        // Đảm bảo stage có kích thước hợp lệ
+        const img = new Image();
+        img.src = this.originImageOfStage[node.Id || ""];
+        const stageWidth = this.currentStage.stage!.width();
+        const stageHeight = this.currentStage.stage!.height();
+
+        if (stageWidth <= 0 || stageHeight <= 0) {
+          console.error('Invalid stage dimensions:', stageWidth, stageHeight);
+          return;
+        }
+
+        const maxWidth = stageWidth * 0.8;
+        const maxHeight = stageHeight * 0.8;
+
+        let scale = 1;
+        if (img.width > maxWidth || img.height > maxHeight) {
+          scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+        }
+
+        const x = stageWidth / 2;
+        const y = stageHeight / 2;
+
+        const imgNode = new Konva.Image({
+          id: node.Id || "",
+          image: img,
+          x: x,
+          y: y,
+          width: img.width * scale,
+          height: img.height * scale,
+          draggable: true,
+
+        });
+
+        imgNode.offsetX(imgNode.width() / 2);
+        imgNode.offsetY(imgNode.height() / 2);
+
+        imgNode.setAttr('rotationOfLastWidth', imgNode.width());
+        imgNode.setAttr('rotationOfLastHeight', imgNode.height());//lastPositionNode
+
+        imgNode.setAttr('lastPositionX', imgNode.x());
+        imgNode.setAttr('lastPositionY', imgNode.y());
+
+        imgNode.dragBoundFunc(function (pos) {
+          const stage = imgNode.getStage();
+          //console.log('stage', stage);
+          const stageWidth = stage!.width();
+          const stageHeight = stage!.height();
+
+          const tempNode = imgNode.clone();
+          tempNode.position(pos);
+          const bounds = tempNode.getClientRect();
+
+          let newX = pos.x;
+          let newY = pos.y;
+
+          if (bounds.x < 0) {
+            newX = pos.x - bounds.x;
+          }
+          if (bounds.x + bounds.width > stageWidth) {
+            newX = pos.x - (bounds.x + bounds.width - stageWidth);
+          }
+          if (bounds.y < 0) {
+            newY = pos.y - bounds.y;
+          }
+          if (bounds.y + bounds.height > stageHeight) {
+            newY = pos.y - (bounds.y + bounds.height - stageHeight);
+          }
+
+
+
+          return { x: newX, y: newY };
+        });
+
+
+
+        this.currentStage.layer!.add(imgNode);
+        this.currentStage.layer!.draw();
+        this.setMenuWithNodeAndStage(imgNode, this.currentStage, 5);
+        this.getWHROfNode();
+
+        imgNode.on('dragend', () => {
+          this.handleAddHistory({ node: imgNode, positionX: imgNode.x(), positionY: imgNode.y(), action: "update" });
+        });
+        //console.log('currentStage', this.currentStage.borderDiv?.style.x, this.currentStage.borderDiv?.style.y);
+      }
+      else if (node.Type == 'text') {
+        if (this.currentStage.stage == null) {
+          return;
+        }
+        const textNode = new Konva.Text({
+          id: node.Id || "",
+          text: node.Text || "",
+          x: this.currentStage.stage.width() / 2,
+          y: this.currentStage.stage.height() / 2,
+          fontSize: 20,
+          draggable: true,
+          fill: this.textColor,
+          fontFamily: this.fontFamily,
+          fontWeight: this.fontWeight,
+          fontStyle: node.FontStyle || "normal", //+ this.fontWeight === 'bold' ? " 700" : "",//this.fontStyle,,//'700 italic',
+          align: 'center',
+          padding: 5,
+        });
+
+        this.trimTextToFitStageWidth(textNode, this.currentStage.stage);
+
+        // Căn giữa text node
+        textNode.offsetX(textNode.width() / 2);
+        textNode.offsetY(textNode.height() / 2);
+
+        textNode.setAttr('rotationOfLastWidth', textNode.width());
+        textNode.setAttr('rotationOfLastHeight', textNode.height());
+
+        textNode.setAttr('lastPositionX', textNode.x());
+        textNode.setAttr('lastPositionY', textNode.y());
+
+        textNode.dragBoundFunc(function (pos) {
+          const stage = textNode.getStage();
+          const stageWidth = stage!.width();
+          const stageHeight = stage!.height();
+
+          const tempNode = textNode.clone();
+          tempNode.position(pos);
+          const bounds = tempNode.getClientRect();
+
+          let newX = pos.x;
+          let newY = pos.y;
+
+          if (bounds.x < 0) {
+            newX = pos.x - bounds.x;
+          }
+          if (bounds.x + bounds.width > stageWidth) {
+            newX = pos.x - (bounds.x + bounds.width - stageWidth);
+          }
+          if (bounds.y < 0) {
+            newY = pos.y - bounds.y;
+          }
+          if (bounds.y + bounds.height > stageHeight) {
+            newY = pos.y - (bounds.y + bounds.height - stageHeight);
+          }
+
+          return { x: newX, y: newY };
+        });
+        if (this.currentStage.layer == null)
+          return;
+        this.currentStage.layer.add(textNode);
+        this.currentStage.layer.draw();
+        //this.showBorderNode(textNode, this.currentStage);
+        //this.menuIndexSetter(6);
+        this.setMenuWithNodeAndStage(textNode, this.currentStage, 6);
+        this.getRSOfNode();
+
+
+        textNode.on('dragend', () => {
+          // Cập nhật history sau khi node được di chuyển và nhả chuột
+          this.handleAddHistory({ node: textNode, positionX: textNode.x(), positionY: textNode.y(), fontFamily: textNode.fontFamily(), fontSize: textNode.fontSize(), fontStyle: textNode.fontStyle(), action: "update" })
+        });
+      }
+    }
+    if (node.Action == "update") {
+      if (this.currentStage == null || this.currentStage.layer == null)
+        return;
+      const stages = this.currentStage.layer.getChildren();
+
+      let targetNode: Konva.Node | undefined;
+      for (const childNode of stages) {
+        if (childNode.id() === node.Id) {
+          targetNode = childNode;
+          break;
+        }
+      }
+      if (targetNode) {
+        if (node.RotationAngle != null)
+          targetNode.rotation(node.RotationAngle);
+        if (node.PositionX != null)
+          targetNode.x(node.PositionX);
+        if (node.PositionY != null)
+          targetNode.y(node.PositionY);
+
+        if (node.indexLayer == "top") {
+          const nodeChildrend = this.currentStage.layer.getChildren();
+          if (nodeChildrend.length <= 1) {
+            return;
+          }
+          const node = this.currentStage.selectedNode;
+          let index = -1;
+          for (const item in nodeChildrend) {
+            if (nodeChildrend[item] == node) {
+              index = Number(item);
+              break;
+            }
+          }
+          if (index == nodeChildrend.length - 1) {
+            return;
+          }
+          if (index > -1 && index < nodeChildrend.length) {
+            const temp = nodeChildrend[index + 1];
+            nodeChildrend[index + 1] = nodeChildrend[index];
+            nodeChildrend[index] = temp;
+
+            this.currentStage.layer.removeChildren();
+            nodeChildrend.forEach(newNode => this.currentStage.layer?.add(newNode));
+          }
+        }
+        else if (node.indexLayer == 'back') {
+          const nodeChildrend = this.currentStage.layer.getChildren();
+          if (nodeChildrend.length <= 1) {
+            return;
+          }
+          const node = this.currentStage.selectedNode;
+          let index = -1;
+          for (const item in nodeChildrend) {
+            if (nodeChildrend[item] == node) {
+              index = Number(item);
+              break;
+            }
+          }
+          if (index == 0) {
+            return;
+          }
+          if (index > -1 && index < nodeChildrend.length) {
+            const temp = nodeChildrend[index - 1];
+            nodeChildrend[index - 1] = nodeChildrend[index];
+            nodeChildrend[index] = temp;
+
+            this.currentStage.layer.removeChildren();
+            nodeChildrend.forEach(newNode => this.currentStage.layer?.add(newNode));
+          }
+        }
+
+        if (node.Type == "image") {
+          const imgNode = targetNode as Konva.Image;
+          if (node.HeightSize != null)
+            imgNode.height(node.HeightSize);
+          if (node.WidthSize != null)
+            imgNode.width(node.WidthSize);
+        }
+        else if (node.Type == "text") {
+          const textNode = targetNode as Konva.Text;
+          if (node.Text != null)
+            textNode.text(node.Text);
+          if (node.FontFamily != null)
+            textNode.fontFamily(node.FontFamily);
+          if (node.FontSize != null)
+            textNode.fontSize(node.FontSize);
+          if (node.FontStyle != null)
+            textNode.fontStyle(node.FontStyle);
+        }
+        this.showBorderNode(targetNode, this.currentStage);
+      }
+    }
+    else if (node.Action == "create") {
+
+      if (status == "undo") {
+        if (this.currentStage == null || this.currentStage.layer == null)
+          return;
+        const stages = this.currentStage.layer.getChildren();
+
+        let targetNode: Konva.Node | undefined;
+        for (const childNode of stages) {
+          if (childNode.id() === node.Id) {
+            targetNode = childNode;
+            break;
+          }
+        }
+        if (targetNode) {
+          targetNode.destroy();
+          this.clearBorderNode(this.currentStage);
+          // const node2 = undoStackHistory(this.currentStage.StackHistories);
+          // if (node2 != null)
+          //   this.updateHistoryStatus(node2, status)
+        }
+
+      }
+      else if (status == "redo") {
+        addObjectToStage(node);
+      }
+    }
+    else if (node.Action == "delete") {
+      if (status == "undo") {
+        addObjectToStage(node);
+      }
+    }
+  }*/
+
+  public updateHistoryStatus(node: NodeHistory, status: string) {
+    const addNodeToStage = () => {
+      if (this.currentStage == null || this.currentStage.layer == null)
+        return;
+      const stages = this.currentStage.layer.getChildren();
+      let targetNode: Konva.Node | undefined;
+      for (const childNode of stages) {
+        if (childNode.id() === node.Id) {
+          targetNode = childNode;
+          break;
+        }
+      }
+      if (targetNode) {
+        return;
+      }
+      if (node.Type == "image") {
+        // Đảm bảo stage có kích thước hợp lệ
+        const img = new Image();
+        img.src = this.originImageOfStage[node.Id || ""];
+        const stageWidth = this.currentStage.stage!.width();
+        const stageHeight = this.currentStage.stage!.height();
+
+        if (stageWidth <= 0 || stageHeight <= 0) {
+          console.error('Invalid stage dimensions:', stageWidth, stageHeight);
+          return;
+        }
+
+        const maxWidth = stageWidth * 0.8;
+        const maxHeight = stageHeight * 0.8;
+
+        let scale = 1;
+        if (img.width > maxWidth || img.height > maxHeight) {
+          scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+        }
+
+        const x = stageWidth / 2;
+        const y = stageHeight / 2;
+
+        const imgNode = new Konva.Image({
+          id: node.Id || "",
+          image: img,
+          x: x,
+          y: y,
+          width: img.width * scale,
+          height: img.height * scale,
+          draggable: true,
+
+        });
+
+        imgNode.offsetX(imgNode.width() / 2);
+        imgNode.offsetY(imgNode.height() / 2);
+
+        imgNode.setAttr('rotationOfLastWidth', imgNode.width());
+        imgNode.setAttr('rotationOfLastHeight', imgNode.height());//lastPositionNode
+
+        imgNode.setAttr('lastPositionX', imgNode.x());
+        imgNode.setAttr('lastPositionY', imgNode.y());
+
+        imgNode.dragBoundFunc(function (pos) {
+          const stage = imgNode.getStage();
+          //console.log('stage', stage);
+          const stageWidth = stage!.width();
+          const stageHeight = stage!.height();
+
+          const tempNode = imgNode.clone();
+          tempNode.position(pos);
+          const bounds = tempNode.getClientRect();
+
+          let newX = pos.x;
+          let newY = pos.y;
+
+          if (bounds.x < 0) {
+            newX = pos.x - bounds.x;
+          }
+          if (bounds.x + bounds.width > stageWidth) {
+            newX = pos.x - (bounds.x + bounds.width - stageWidth);
+          }
+          if (bounds.y < 0) {
+            newY = pos.y - bounds.y;
+          }
+          if (bounds.y + bounds.height > stageHeight) {
+            newY = pos.y - (bounds.y + bounds.height - stageHeight);
+          }
+
+
+
+          return { x: newX, y: newY };
+        });
+
+        //this.handleAddHistory({ node: imgNode, heightSize: imgNode.getHeight(), widthSize: imgNode.getWidth(), rotationAngle: imgNode.rotation(), positionX: imgNode.x(), positionY: imgNode.y(), indexImg: imgNode.id(), action: "create" })
+
+
+        this.currentStage.layer!.add(imgNode);
+        this.currentStage.layer!.draw();
+        this.setMenuWithNodeAndStage(imgNode, this.currentStage, 5);
+        this.getWHROfNode();
+
+        imgNode.on('dragend', () => {
+          this.handleAddHistory({ node: imgNode, rotationAngle: imgNode.rotation(), positionX: imgNode.x(), positionY: imgNode.y(), action: "update" });
+        });
+        //console.log('currentStage', this.currentStage.borderDiv?.style.x, this.currentStage.borderDiv?.style.y);
+      }
+      else if (node.Type == 'text') {
+        if (this.currentStage.stage == null) {
+          return;
+        }
+        const textNode = new Konva.Text({
+          id: node.Id || "",
+          text: node.Text || "",
+          x: this.currentStage.stage.width() / 2,
+          y: this.currentStage.stage.height() / 2,
+          fontSize: node.FontSize || 0,
+          draggable: true,
+          fill: this.textColor,
+          fontFamily: this.fontFamily,
+          fontWeight: this.fontWeight,
+          fontStyle: node.FontStyle || "normal", //+ this.fontWeight === 'bold' ? " 700" : "",//this.fontStyle,,//'700 italic',
+          align: 'center',
+          padding: 5,
+        });
+
+        this.trimTextToFitStageWidth(textNode, this.currentStage.stage);
+
+        // Căn giữa text node
+        textNode.offsetX(textNode.width() / 2);
+        textNode.offsetY(textNode.height() / 2);
+
+        textNode.setAttr('rotationOfLastWidth', textNode.width());
+        textNode.setAttr('rotationOfLastHeight', textNode.height());
+
+        textNode.setAttr('lastPositionX', textNode.x());
+        textNode.setAttr('lastPositionY', textNode.y());
+
+        textNode.dragBoundFunc(function (pos) {
+          const stage = textNode.getStage();
+          const stageWidth = stage!.width();
+          const stageHeight = stage!.height();
+
+          const tempNode = textNode.clone();
+          tempNode.position(pos);
+          const bounds = tempNode.getClientRect();
+
+          let newX = pos.x;
+          let newY = pos.y;
+
+          if (bounds.x < 0) {
+            newX = pos.x - bounds.x;
+          }
+          if (bounds.x + bounds.width > stageWidth) {
+            newX = pos.x - (bounds.x + bounds.width - stageWidth);
+          }
+          if (bounds.y < 0) {
+            newY = pos.y - bounds.y;
+          }
+          if (bounds.y + bounds.height > stageHeight) {
+            newY = pos.y - (bounds.y + bounds.height - stageHeight);
+          }
+
+          return { x: newX, y: newY };
+        });
+        if (this.currentStage.layer == null)
+          return;
+        this.currentStage.layer.add(textNode);
+        this.currentStage.layer.draw();
+        //this.showBorderNode(textNode, this.currentStage);
+        //this.menuIndexSetter(6);
+        this.setMenuWithNodeAndStage(textNode, this.currentStage, 6);
+        this.getRSOfNode();
+        //this.handleAddHistory({ node: textNode, fontFamily: textNode.fontFamily(), fontSize: textNode.fontSize(), fontStyle: textNode.fontStyle(), text: textNode.text(), rotationAngle: textNode.rotation(), positionX: textNode.x(), positionY: textNode.y(), action: "create" })
+        textNode.on('dragend', () => {
+          // Cập nhật history sau khi node được di chuyển và nhả chuột
+          this.handleAddHistory({ node: textNode, positionX: textNode.x(), rotationAngle: textNode.rotation(), positionY: textNode.y(), fontFamily: textNode.fontFamily(), fontSize: textNode.fontSize(), fontStyle: textNode.fontStyle(), action: "update" })
+        });
+      }
+    }
+    if (status == "redo") {
+      if (node.Action == "create") {
+        addNodeToStage();
+      }
+      else if (node.Action == "update") {
+        if (this.currentStage == null || this.currentStage.layer == null)
+          return;
+        const stages = this.currentStage.layer.getChildren();
+        let targetNode: Konva.Node | undefined;
+        for (const childNode of stages) {
+          if (childNode.id() === node.Id) {
+            targetNode = childNode;
+            break;
+          }
+        }
+        if (targetNode) {
+          if (node.RotationAngle != null)
+            targetNode.rotation(node.RotationAngle);
+          if (node.PositionX != null) {
+            targetNode.x(node.PositionX);
+            targetNode.offsetX(targetNode.width() / 2);
+            targetNode.offsetY(targetNode.height() / 2);
+          }
+
+          if (node.PositionY != null) {
+            targetNode.y(node.PositionY);
+            targetNode.offsetX(targetNode.width() / 2);
+            targetNode.offsetY(targetNode.height() / 2);
+          }
+
+          if (node.indexLayer == "top") {
+            const nodeChildrend = this.currentStage.layer.getChildren();
+            if (nodeChildrend.length <= 1) {
+              return;
+            }
+            const node = this.currentStage.selectedNode;
+            let index = -1;
+            for (const item in nodeChildrend) {
+              if (nodeChildrend[item] == node) {
+                index = Number(item);
+                break;
+              }
+            }
+            if (index == nodeChildrend.length - 1) {
+              return;
+            }
+            if (index > -1 && index < nodeChildrend.length) {
+              const temp = nodeChildrend[index + 1];
+              nodeChildrend[index + 1] = nodeChildrend[index];
+              nodeChildrend[index] = temp;
+
+              this.currentStage.layer.removeChildren();
+              nodeChildrend.forEach(newNode => this.currentStage.layer?.add(newNode));
+            }
+          }
+          else if (node.indexLayer == 'back') {
+            const nodeChildrend = this.currentStage.layer.getChildren();
+            if (nodeChildrend.length <= 1) {
+              return;
+            }
+            const node = this.currentStage.selectedNode;
+            let index = -1;
+            for (const item in nodeChildrend) {
+              if (nodeChildrend[item] == node) {
+                index = Number(item);
+                break;
+              }
+            }
+            if (index == 0) {
+              return;
+            }
+            if (index > -1 && index < nodeChildrend.length) {
+              const temp = nodeChildrend[index - 1];
+              nodeChildrend[index - 1] = nodeChildrend[index];
+              nodeChildrend[index] = temp;
+
+              this.currentStage.layer.removeChildren();
+              nodeChildrend.forEach(newNode => this.currentStage.layer?.add(newNode));
+            }
+          }
+
+          if (node.Type == "image") {
+            const imgNode = targetNode as Konva.Image;
+            if (node.HeightSize != null) {
+              imgNode.height(node.HeightSize);
+              targetNode.offsetX(targetNode.width() / 2);
+              targetNode.offsetY(targetNode.height() / 2);
+              imgNode.x(node.PositionX);
+              imgNode.y(node.PositionY);
+            }
+
+            if (node.WidthSize != null) {
+              imgNode.width(node.WidthSize);
+              targetNode.offsetX(targetNode.width() / 2);
+              targetNode.offsetY(targetNode.height() / 2);
+              imgNode.x(node.PositionX);
+              imgNode.y(node.PositionY);
+            }
+
+          }
+          else if (node.Type == "text") {
+            const textNode = targetNode as Konva.Text;
+            if (node.Text != null)
+              textNode.text(node.Text);
+            if (node.FontFamily != null)
+              textNode.fontFamily(node.FontFamily);
+            if (node.FontSize != null) {
+              textNode.fontSize(node.FontSize);
+              targetNode.offsetX(targetNode.width() / 2);
+              targetNode.offsetY(targetNode.height() / 2);
+            }
+
+            if (node.FontStyle != null)
+              textNode.fontStyle(node.FontStyle);
+          }
+          this.showBorderNode(targetNode, this.currentStage);
+
+        }
+      }
+      else if (node.Action == "delete") {
+        if (this.currentStage == null || this.currentStage.layer == null)
+          return;
+        const stages = this.currentStage.layer.getChildren();
+        let targetNode: Konva.Node | undefined;
+        for (const childNode of stages) {
+          if (childNode.id() === node.Id) {
+            targetNode = childNode;
+            break;
+          }
+        }
+        if (targetNode) {
+          targetNode.destroy();
+          this.clearBorderNode(this.currentStage);
+          this.menuIndexSetter(0);
+          if (this.currentStage && this.currentStage.borderDiv) {
+            this.currentStage.borderDiv.style.display = 'none';
+          }
+          const result = undoStackHistory(this.currentStage.StackHistories);
+          if (result != null) {
+            this.updateHistoryStatus(result, "undo");
+          }
+        }
+      }
+    }
+    else if (status == "undo") {
+      /*if (node.Action == "cropt") {
+
+        const image = new Image();
+        image.crossOrigin = "anonymous";
+        image.src = this.originImageOfStage[node.Id || ""];
+        image.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = image.width * (node.WidthSize || 1);
+          canvas.height = image.height * (node.HeightSize || 1);
+          const ctx = canvas.getContext("2d");
+
+          // Vẽ vùng được chọn từ ảnh gốc vào canvas
+          if (ctx != null) {
+            ctx.drawImage(
+              image,
+              image.width * (node.CroptParam?.LeftScale || 1),
+              image.height * (node.CroptParam?.TopScale || 1),
+              image.width * (node.CroptParam?.WidthScale || 1),
+              image.height * (node.CroptParam?.HeightScale || 1),
+              0,
+              0,
+              image.width * (node.CroptParam?.WidthScale || 1),
+              image.height * (node.CroptParam?.HeightScale || 1),
+            );
+
+            const croppedDataUrl = canvas.toDataURL();
+            if (this.currentStage == null || this.currentStage.layer == null)
+              return;
+            const stages = this.currentStage.layer.getChildren();
+            let targetNode: Konva.Node | undefined;
+            for (const childNode of stages) {
+              if (childNode.id() === node.Id) {
+                targetNode = childNode;
+                break;
+              }
+            }
+
+            const imageNode = targetNode;
+
+            if (!imageNode || !(imageNode instanceof Konva.Image)) {
+              console.warn("No image node selected or invalid node");
+              return;
+            }
+
+            const newImage = new Image();
+            newImage.src = croppedDataUrl;
+
+            newImage.onload = () => {
+              if (
+                this.currentStage &&
+                this.currentStage.stage
+              ) {
+                // const scale = designerRef.current?.currentStage.stage?.width() / newImage.width;
+                // imageNode.width(newImage.width * scale * 0.8);
+                //  imageNode.height(newImage.height * scale * 0.8);
+                imageNode.offsetX(imageNode.width() / 2);
+                imageNode.offsetY(imageNode.height() / 2);
+                imageNode.x(this.currentStage.stage?.width() / 2);
+                imageNode.y(this.currentStage.stage?.height() / 2);
+                // imageNode.rotation(0);
+                this.showBorderNode(imageNode, this.currentStage);
+
+                // imageNode.x(((designerRef.current?.currentStage.stage?.width() - imageNode.width()) / 2) * scale);
+                // imageNode.y(((designerRef.current?.currentStage.stage?.height() - imageNode.height()) / 2) * scale);
+                imageNode.image(newImage);
+                imageNode.getLayer()?.draw();
+                //imageNode.setAttr('rotationOfLastWidth', imageNode.width());
+                //imageNode.setAttr('rotationOfLastHeight', imageNode.height());
+              }
+            };
+          }
+        };
+      }
+      else*/ if (node.Action == "create") {
+        if (this.currentStage == null || this.currentStage.layer == null)
+          return;
+        const stages = this.currentStage.layer.getChildren();
+        let targetNode: Konva.Node | undefined;
+        for (const childNode of stages) {
+          if (childNode.id() === node.Id) {
+            targetNode = childNode;
+            break;
+          }
+        }
+        if (targetNode) {
+          targetNode.destroy();
+          this.clearBorderNode(this.currentStage);
+          this.menuIndexSetter(0);
+          if (this.currentStage && this.currentStage.borderDiv) {
+            this.currentStage.borderDiv.style.display = 'none';
+          }
+          const result = undoStackHistory(this.currentStage.StackHistories);
+          if (result != null) {
+            this.updateHistoryStatus(result, "undo");
+          }
+        }
+      }
+      else if (node.Action == "update") {
+        if (this.currentStage == null || this.currentStage.layer == null)
+          return;
+        const stages = this.currentStage.layer.getChildren();
+        let targetNode: Konva.Node | undefined;
+        for (const childNode of stages) {
+          if (childNode.id() === node.Id) {
+            targetNode = childNode;
+            break;
+          }
+        }
+        if (targetNode) {
+
+          if (node.RotationAngle != null)
+            targetNode.rotation(node.RotationAngle);
+          if (node.PositionX != null) {
+            targetNode.x(node.PositionX);
+            targetNode.offsetX(targetNode.width() / 2);
+            targetNode.offsetY(targetNode.height() / 2);
+          }
+
+          if (node.PositionY != null) {
+            targetNode.y(node.PositionY);
+            targetNode.offsetX(targetNode.width() / 2);
+            targetNode.offsetY(targetNode.height() / 2);
+          }
+
+          if (node.indexLayer == "top") {
+            const nodeChildrend = this.currentStage.layer.getChildren();
+            if (nodeChildrend.length <= 1) {
+              return;
+            }
+            const node = this.currentStage.selectedNode;
+            let index = -1;
+            for (const item in nodeChildrend) {
+              if (nodeChildrend[item] == node) {
+                index = Number(item);
+                break;
+              }
+            }
+            if (index == nodeChildrend.length - 1) {
+              return;
+            }
+            if (index > -1 && index < nodeChildrend.length) {
+              const temp = nodeChildrend[index + 1];
+              nodeChildrend[index + 1] = nodeChildrend[index];
+              nodeChildrend[index] = temp;
+
+              this.currentStage.layer.removeChildren();
+              nodeChildrend.forEach(newNode => this.currentStage.layer?.add(newNode));
+            }
+          }
+          else if (node.indexLayer == 'back') {
+            const nodeChildrend = this.currentStage.layer.getChildren();
+            if (nodeChildrend.length <= 1) {
+              return;
+            }
+            const node = this.currentStage.selectedNode;
+            let index = -1;
+            for (const item in nodeChildrend) {
+              if (nodeChildrend[item] == node) {
+                index = Number(item);
+                break;
+              }
+            }
+            if (index == 0) {
+              return;
+            }
+            if (index > -1 && index < nodeChildrend.length) {
+              const temp = nodeChildrend[index - 1];
+              nodeChildrend[index - 1] = nodeChildrend[index];
+              nodeChildrend[index] = temp;
+
+              this.currentStage.layer.removeChildren();
+              nodeChildrend.forEach(newNode => this.currentStage.layer?.add(newNode));
+            }
+          }
+
+          if (node.Type == "image") {
+            const imgNode = targetNode as Konva.Image;
+            if (node.HeightSize != null) {
+              imgNode.height(node.HeightSize);
+              targetNode.offsetX(targetNode.width() / 2);
+              targetNode.offsetY(targetNode.height() / 2);
+              imgNode.x(node.PositionX);
+              imgNode.y(node.PositionY);
+            }
+
+            if (node.WidthSize != null) {
+              imgNode.width(node.WidthSize);
+              targetNode.offsetX(targetNode.width() / 2);
+              targetNode.offsetY(targetNode.height() / 2);
+              imgNode.x(node.PositionX);
+              imgNode.y(node.PositionY);
+            }
+
+          }
+          else if (node.Type == "text") {
+            const textNode = targetNode as Konva.Text;
+            if (node.Text != null)
+              textNode.text(node.Text);
+            if (node.FontFamily != null)
+              textNode.fontFamily(node.FontFamily);
+            if (node.FontSize != null) {
+              textNode.fontSize(node.FontSize);
+              targetNode.offsetX(targetNode.width() / 2);
+              targetNode.offsetY(targetNode.height() / 2);
+            }
+
+            if (node.FontStyle != null)
+              textNode.fontStyle(node.FontStyle);
+          }
+          this.showBorderNode(targetNode, this.currentStage);
+
+        }
+      }
+      else if (node.Action == "delete") {
+        if (node.Type == "image") {
+          // Đảm bảo stage có kích thước hợp lệ
+          const img = new Image();
+          img.src = this.originImageOfStage[node.Id || ""];
+          const stageWidth = this.currentStage.stage!.width();
+          const stageHeight = this.currentStage.stage!.height();
+
+          if (stageWidth <= 0 || stageHeight <= 0) {
+            console.error('Invalid stage dimensions:', stageWidth, stageHeight);
+            return;
+          }
+
+          const maxWidth = stageWidth * 0.8;
+          const maxHeight = stageHeight * 0.8;
+
+          let scale = 1;
+          if (img.width > maxWidth || img.height > maxHeight) {
+            scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+          }
+
+          const x = stageWidth / 2;
+          const y = stageHeight / 2;
+
+          const imgNode = new Konva.Image({
+            id: node.Id || "",
+            image: img,
+            x: x,
+            y: y,
+            width: img.width * scale,
+            height: img.height * scale,
+            draggable: true,
+
+          });
+
+          imgNode.offsetX(imgNode.width() / 2);
+          imgNode.offsetY(imgNode.height() / 2);
+
+          imgNode.setAttr('rotationOfLastWidth', imgNode.width());
+          imgNode.setAttr('rotationOfLastHeight', imgNode.height());//lastPositionNode
+
+          imgNode.setAttr('lastPositionX', imgNode.x());
+          imgNode.setAttr('lastPositionY', imgNode.y());
+
+          imgNode.dragBoundFunc(function (pos) {
+            const stage = imgNode.getStage();
+            //console.log('stage', stage);
+            const stageWidth = stage!.width();
+            const stageHeight = stage!.height();
+
+            const tempNode = imgNode.clone();
+            tempNode.position(pos);
+            const bounds = tempNode.getClientRect();
+
+            let newX = pos.x;
+            let newY = pos.y;
+
+            if (bounds.x < 0) {
+              newX = pos.x - bounds.x;
+            }
+            if (bounds.x + bounds.width > stageWidth) {
+              newX = pos.x - (bounds.x + bounds.width - stageWidth);
+            }
+            if (bounds.y < 0) {
+              newY = pos.y - bounds.y;
+            }
+            if (bounds.y + bounds.height > stageHeight) {
+              newY = pos.y - (bounds.y + bounds.height - stageHeight);
+            }
+
+
+
+            return { x: newX, y: newY };
+          });
+
+          this.handleAddHistory({ node: imgNode, heightSize: imgNode.getHeight(), widthSize: imgNode.getWidth(), rotationAngle: imgNode.rotation(), positionX: imgNode.x(), positionY: imgNode.y(), indexImg: imgNode.id(), action: "create" })
+
+
+          this.currentStage.layer!.add(imgNode);
+          this.currentStage.layer!.draw();
+          this.setMenuWithNodeAndStage(imgNode, this.currentStage, 5);
+          this.getWHROfNode();
+
+          imgNode.on('dragend', () => {
+            this.handleAddHistory({ node: imgNode, rotationAngle: imgNode.rotation(), positionX: imgNode.x(), positionY: imgNode.y(), action: "update" });
+          });
+          //console.log('currentStage', this.currentStage.borderDiv?.style.x, this.currentStage.borderDiv?.style.y);
+        }
+        else if (node.Type == 'text') {
+          if (this.currentStage.stage == null) {
+            return;
+          }
+          const textNode = new Konva.Text({
+            id: node.Id || "",
+            text: node.Text || "",
+            x: this.currentStage.stage.width() / 2,
+            y: this.currentStage.stage.height() / 2,
+            fontSize: node.FontSize || 0,
+            draggable: true,
+            fill: this.textColor,
+            fontFamily: this.fontFamily,
+            fontWeight: this.fontWeight,
+            fontStyle: node.FontStyle || "normal", //+ this.fontWeight === 'bold' ? " 700" : "",//this.fontStyle,,//'700 italic',
+            align: 'center',
+            padding: 5,
+          });
+
+          this.trimTextToFitStageWidth(textNode, this.currentStage.stage);
+
+          // Căn giữa text node
+          textNode.offsetX(textNode.width() / 2);
+          textNode.offsetY(textNode.height() / 2);
+
+          textNode.setAttr('rotationOfLastWidth', textNode.width());
+          textNode.setAttr('rotationOfLastHeight', textNode.height());
+
+          textNode.setAttr('lastPositionX', textNode.x());
+          textNode.setAttr('lastPositionY', textNode.y());
+
+          textNode.dragBoundFunc(function (pos) {
+            const stage = textNode.getStage();
+            const stageWidth = stage!.width();
+            const stageHeight = stage!.height();
+
+            const tempNode = textNode.clone();
+            tempNode.position(pos);
+            const bounds = tempNode.getClientRect();
+
+            let newX = pos.x;
+            let newY = pos.y;
+
+            if (bounds.x < 0) {
+              newX = pos.x - bounds.x;
+            }
+            if (bounds.x + bounds.width > stageWidth) {
+              newX = pos.x - (bounds.x + bounds.width - stageWidth);
+            }
+            if (bounds.y < 0) {
+              newY = pos.y - bounds.y;
+            }
+            if (bounds.y + bounds.height > stageHeight) {
+              newY = pos.y - (bounds.y + bounds.height - stageHeight);
+            }
+
+            return { x: newX, y: newY };
+          });
+          if (this.currentStage.layer == null)
+            return;
+          this.currentStage.layer.add(textNode);
+          this.currentStage.layer.draw();
+          //this.showBorderNode(textNode, this.currentStage);
+          //this.menuIndexSetter(6);
+          this.setMenuWithNodeAndStage(textNode, this.currentStage, 6);
+          this.getRSOfNode();
+          this.handleAddHistory({ node: textNode, fontFamily: textNode.fontFamily(), fontSize: textNode.fontSize(), fontStyle: textNode.fontStyle(), text: textNode.text(), rotationAngle: textNode.rotation(), positionX: textNode.x(), positionY: textNode.y(), action: "create" })
+
+
+          textNode.on('dragend', () => {
+            // Cập nhật history sau khi node được di chuyển và nhả chuột
+            this.handleAddHistory({ node: textNode, positionX: textNode.x(), rotationAngle: textNode.rotation(), positionY: textNode.y(), fontFamily: textNode.fontFamily(), fontSize: textNode.fontSize(), fontStyle: textNode.fontStyle(), action: "update" })
+          });
+        }
+      }
     }
   }
 }

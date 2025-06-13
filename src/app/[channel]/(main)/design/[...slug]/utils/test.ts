@@ -96,18 +96,12 @@ const fetchProductDetail = async (productId: string, variantId: string) => {
         }
       }
 
-
-
-
-
     } else {
       console.error("Dữ liệu không hợp lệ: không tìm thấy trường 'product'");
     }
   } catch (error) {
     console.log("Lỗi khi truy vấn dữ liệu:", error);
   }
-
-
   return { listColorVariant: listColorVariant, listVariantSizeColor: listVariantSizeColor, sizeIdDefault: sizeIdDefault };
 }
 

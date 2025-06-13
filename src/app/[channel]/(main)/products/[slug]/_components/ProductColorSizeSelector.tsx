@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
-import { ProductVariant } from "@/gql/graphql";
 import ProductAttributeSelector from "./ProductAttributeSelector";
+import { type ProductVariant } from "@/gql/graphql";
 
 type Props = {
 	variants: ProductVariant[];
@@ -47,18 +47,26 @@ const ProductColorSizeSelector: React.FC<Props> = ({
 
 	// Chỉ set mặc định 1 lần khi mount hoặc khi defaultVariant thực sự thay đổi
 	const didSetDefault = useRef(false);
+	// Set giá trị mặc định từ defaultVariant
 	useEffect(() => {
 		if (defaultVariant && !didSetDefault.current) {
 			const color = defaultVariant.attributes.find((a) => a.attribute.name?.toUpperCase() === "COLOR")?.values[0]?.name;
 			const size = defaultVariant.attributes.find((a) => a.attribute.name?.toUpperCase() === "SIZE")?.values[0]?.name;
-			if (color && colorList.includes(color)) setSelectedColor(color);
+
+			if (color) setSelectedColor(color);
 			if (size) setSelectedSize(size);
+
 			didSetDefault.current = true;
-		} else if (colorList.length > 0 && !selectedColor) {
+		}
+	}, [defaultVariant]);
+
+	// Set giá trị mặc định nếu chưa chọn (không có defaultVariant)
+	useEffect(() => {
+		if (!selectedColor && colorList.length > 0) {
 			setSelectedColor(colorList[0]);
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [defaultVariant, colorList]);
+	}, [colorList, selectedColor]);
+
 
 	const sizeList = useMemo(() => {
 		if (!selectedColor) return [];

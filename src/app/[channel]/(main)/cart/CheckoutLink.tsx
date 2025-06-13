@@ -1,8 +1,8 @@
 "use client";
 import { toast } from "react-toastify";
 import { checkout } from "./updateDefaultAddressServerFunc";
-import { callRefreshToken } from "../../../callRefreshToken"
-import { GetItemToServerCookie } from "../../../actions"
+//import { callRefreshToken } from "../../../callRefreshToken"
+//import { GetItemToServerCookie } from "../../../actions"
 import { checkoutValidate } from "../../../checkoutValidate";
 //import { checkTokenServerAction } from "../../../actions"
 import { ErrorDialogPlaceOrder } from "../../../ErrorDialogPlaceOrder"
@@ -26,9 +26,9 @@ export const CheckoutLink = ({ disabled, checkoutId, className = "", channel }: 
 				aria-disabled={disabled}
 				onClick={async (e) => {
 					e.preventDefault();
-					const refreshTokenKey = `${process.env.NEXT_PUBLIC_SALEOR_API_URL}+saleor_auth_module_refresh_token`;
-					const refreshToken = await GetItemToServerCookie(refreshTokenKey);
-					await callRefreshToken(refreshTokenKey, refreshToken || "");
+					//const refreshTokenKey = `${process.env.NEXT_PUBLIC_SALEOR_API_URL}+saleor_auth_module_refresh_token`;
+					//const refreshToken = await GetItemToServerCookie(refreshTokenKey);
+					//await callRefreshToken(refreshTokenKey, refreshToken || "");
 
 					const response = await checkoutValidate(checkoutId || "");
 

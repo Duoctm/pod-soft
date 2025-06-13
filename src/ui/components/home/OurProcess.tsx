@@ -1,3 +1,4 @@
+/* eslint-disable import/no-default-export */
 import React from "react";
 import Image from "next/image";
 import Wrapper from "../wrapper";
@@ -38,11 +39,11 @@ const OurProcess = () => {
 					className="relative w-full max-w-[500px] mt-6 lg:mt-0 rounded-md overflow-hidden aspect-square"
 				>
 					<Image
-						src="/images/image-box.jpg"
+						src="/images/image-box.webp"
 						alt="Our Process"
-						width={800}
-						height={400}
-						loading="lazy"
+						width={380}
+						height={570}
+						sizes="(max-width: 600px) 100vw, 380px"
 						className="object-contain md:object-cover rounded-md "
 					/>
 				</div>

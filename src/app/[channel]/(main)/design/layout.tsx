@@ -1,11 +1,7 @@
-import React, { ReactNode } from 'react'
+import { ReactNode } from 'react'
 
-const DesignLayout = ({children}: {children: ReactNode}) => {
-  return (
-    <div className='min-h-screen'>
-      {children}
-    </div>
-  )
+const DesignLayout = ({ children }: { children: ReactNode }) => {
+  return children
 }
 
 export default DesignLayout

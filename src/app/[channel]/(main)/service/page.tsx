@@ -67,6 +67,7 @@ const ServicesPage = ({
 								<div className="w-full" key={service.title}>
 									{service.isActive ? (
 										<Link
+											key={service.id}
 											id={service.id}
 											href={`/${params.channel}/products`}
 											className="relative"
@@ -105,7 +106,7 @@ const ServicesPage = ({
 											</div>
 										</Link>
 									) : (
-										<div className="relative">
+										<div className="relative" key={service.title} id={service.id}>
 											<div className="absolute right-8 top-8 z-10 rounded-full bg-yellow-300 px-3 py-1 text-sm font-semibold uppercase text-black">
 												Coming Soon
 											</div>
@@ -174,7 +175,7 @@ const services = [
 			"No pretreatment stains",
 			"Leading digital printing innovation",
 		],
-		isActive: false,
+		isActive: true,
 	},
 	{
 		id: "embroidery",

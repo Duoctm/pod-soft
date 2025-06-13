@@ -1,8 +1,11 @@
-// This file contains constants used in the tests
-// export const BASE_URL = "https://mypod.io.vn/default-channel";
-// export const MAILINATOR_BASE_URL = "https://www.mailinator.com/v4/public/inboxes.jsp";
-// export const PRODUCTS_URL = "https://mypod.io.vn/default-channel/products";
-// export const CART_URL = "https://mypod.io.vn/default-channel/cart";
-// export const LOGIN_URL = "https://mypod.io.vn/default-channel/login";
-// export const ORDERS_URL = "https://mypod.io.vn/default-channel/orders";
-export const SUPPORT_URL = "https://storefront-dev.mypodsoftware.io.vn/default-channel/support";
+export const BASE_URL = process.env.BASE_URL;
+export const REGISTER_URL = process.env.REGISTER_URL;
+export const MAILINATOR_BASE_URL = process.env.MAILINATOR_BASE_URL;
+export const MAILINATOR_URL = process.env.MAILINATOR_URL || MAILINATOR_BASE_URL;
+export const PRODUCTS_URL = process.env.PRODUCTS_URL;
+export const CART_URL = process.env.CART_URL;
+export const LOGIN_URL = process.env.LOGIN_URL;
+export const ORDERS_URL = process.env.ORDERS_URL;
+export const SUPPORT_URL = process.env.SUPPORT_URL;
+export const SERVICE_URL = process.env.SERVICE_URL;
+export const FORGOTPASSWORD_URL = process.env.FORGOTPASSWORD_URL;

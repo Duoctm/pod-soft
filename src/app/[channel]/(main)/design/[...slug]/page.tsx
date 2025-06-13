@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import DesignPage from "./component/DesignPage";
+// import DesignPage from "./component/DesignPage";
 import { type DesignInfo } from "./utils/type";
+// import { useBreadcrumb } from "@/ui/components/BreadcrumbProvider";
+// import Design from "./component/Design";
 import { useBreadcrumb } from "@/ui/components/BreadcrumbProvider";
+import DesignPage from "./component/DesignPage";
 
 interface PageProps {
   params: {
@@ -48,6 +51,17 @@ function Page({ params }: PageProps) {
 
   return (
     <>
+
+      {/* <Design
+        variantId={variantId}
+        productId={productId}
+        colorId={colorId}
+        designInfor={colorDataMap}
+        channel={params.channel}
+        typeDesign={type}
+
+      /> */}
+
       <DesignPage
         variantId={variantId}
         productId={productId}

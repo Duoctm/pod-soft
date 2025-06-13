@@ -1,14 +1,30 @@
 "use server"
-import { UploadFileDocument } from "@/gql/graphql";
+//import { UploadFileDocument } from "@/gql/graphql";
 
 const uploadImageRaw = async (data: FormData) => {
     const file = data.get('file') as File;
+    console.log('file', file);
+
     const operations = JSON.stringify({
-        query: UploadFileDocument,
-        variables: { file: null },
+        query: `
+            mutation UploadFile($input: FileUploadInput!) {
+                uploadFile(input: $input) {
+                    message
+                    result
+                    file {
+                        file_url
+                    }
+                }
+            }
+        `,
+        variables: {
+            input: {
+                file: null
+            }
+        },
     });
 
-    const map = JSON.stringify({ "0": ["variables.file"] });
+    const map = JSON.stringify({ "0": ["variables.input.file"] });
 
     const formData = new FormData();
     formData.append("operations", operations);
@@ -20,9 +36,8 @@ const uploadImageRaw = async (data: FormData) => {
         body: formData,
     });
 
-    //const json = await res.json();
     const json = await res.json() as { data?: { uploadFile?: { message: string, result: boolean, file: { file_url: string } } } };
-    console.log("json", json);
+    //console.log("json", json);
     return json.data?.uploadFile;
 }
 

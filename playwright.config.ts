@@ -9,14 +9,14 @@ const baseURL = process.env.BASE_URL || `http://localhost:${PORT}`;
 export default defineConfig({
 	testDir: "./__tests__",
 	fullyParallel: true,
-	workers: process.env.CI ? 3 : undefined,
+	workers: process.env.CI ? 4 : undefined,
 	forbidOnly: !!process.env.CI,
 	retries: 0,
 	reporter: process.env.CI ? [["html"], ["github"], ["list"]] : [["html"], ["list"]],
 
 	use: {
 		baseURL,
-		trace: "retain-on-failure",
+		trace: "on-first-retry",
 		screenshot: process.env.CI ? "only-on-failure" : "off",
 		video: process.env.CI ? "retain-on-failure" : "off",
 	},
@@ -54,3 +54,5 @@ export default defineConfig({
 				reuseExistingServer: !process.env.CI,
 			},
 });
+
+// No changes needed for playwright.config.ts regarding the reported errors.
