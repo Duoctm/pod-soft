@@ -17,7 +17,7 @@ const SERVICES = [
 		title: "Silk Screening",
 		description:
 			"Facility for any sized order. High-end M&R 8 and 12 head machines. Specialized in 500+ piece orders.",
-		link: "/default-channel/service",
+		link: "/service",
 	},
 	{
 		id: "dtg",
@@ -25,33 +25,33 @@ const SERVICES = [
 		title: "Direct-To-Garment",
 		description:
 			"Top of the line Brother DL DTG machines. No pretreatment stains. Leading digital printing innovation.",
-		link: "/default-channel/service",
+		link: "/service",
 	},
 	{
 		id: 'cb',
 		icon: <FileText />,
 		title: "Custom Boxes",
 		description: "Eye-catching designs. Perfect for executive kits. Premium packaging solutions.",
-		link: "/default-channel/service",
+		link: "/service",
 	},
 	// {
 	// 	icon: <Image />,
 	// 	title: "Embroidery",
 	// 	description:
 	// 		"Single headed machines for custom orders. Dedicated quality embroidery staff. Tajima machines with 15 thread colors.",
-	// 	link: "/default-channel/service",
+	// 	link: "/service",
 	// },
 	// {
 	// 	icon: <Layout />,
 	// 	title: "Hard Goods",
 	// 	description: "Premium drinkware options. Mimaki and Grando machines. Professional finishing.",
-	// 	link: "/default-channel/service",
+	// 	link: "/service",
 	// },
 	// {
 	// 	icon: <Package />,
 	// 	title: "Canvas Print",
 	// 	description: "Latex HP printers. Vibrant colors. Durable materials.",
-	// 	link: "/default-channel/service",
+	// 	link: "/service",
 	// },
 ];
 
@@ -83,7 +83,7 @@ function ServiceCard({ id, icon, title, description, link }: ServiceCardProps) {
 	);
 }
 
-const OurService = () => {
+const OurService = ({ channel }: { channel: string }) => {
 	return (
 		<Wrapper className="flex flex-col items-start lg:items-center justify-center py-6 lg:pt-20 lg:mb-16">
 			<div className="flex w-full max-w-[544px] flex-col text-left lg:text-center">
@@ -98,7 +98,7 @@ const OurService = () => {
 			</div>
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-x-28 lg:gap-y-[65px] mt-2">
 				{SERVICES.map((s, i) => (
-					<ServiceCard key={i} icon={s.icon} title={s.title} description={s.description} link={s.link} id={s.id} />
+					<ServiceCard key={i} icon={s.icon} title={s.title} description={s.description} link={`/${channel}${s.link}`} id={s.id} />
 				))}
 			</div>
 		</Wrapper>
