@@ -28,13 +28,16 @@ const ProductSizeQuantityInputs: React.FC<Props> = ({
 				<div key={size} className="flex flex-col items-center">
 					<span className="mb-1 font-semibold">{size}</span>
 					<input
-						type="number"
-						min={min}
+						type="text"
 						max={max}
-						value={sizeQuantities[size]?.quantity ?? 0}
-						onChange={(e) => onChange(size, Math.max(min, Math.min(max, Number(e.target.value))))}
+						value={sizeQuantities[size]?.quantity ?? "0"}
+						onChange={(e) => {
+							const cleanedValue = e.target.value.trim();
+							const numberValue = Number(cleanedValue);
+							onChange(size, Math.max(min, Math.min(max, isNaN(numberValue) ? 0 : numberValue)));
+						}}
 						className={`w-12 rounded border px-2 py-1 text-center transition-all duration-150
-                        ${selectedSize === size
+        ${selectedSize === size
 								? "w-20 border-2 border-[#8B3958] bg-white shadow-lg ring-2 ring-[#8B3958]"
 								: "border-gray-300 bg-gray-50 opacity-60"
 							}`}
