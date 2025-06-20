@@ -19,7 +19,9 @@ export function UserMenu({ user, channel }: Props) {
 	const router = useRouter();
 
 	const logoutClient = async () => {
-		await logout({ channel });
+		if (channel) {
+			await logout({ channel });
+		}
 		router.push("/");
 	}
 
