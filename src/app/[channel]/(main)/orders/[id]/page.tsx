@@ -4,16 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { Dialog } from "@headlessui/react";
-import { CurrentUserOrderListQuery, type PaymentChargeStatusEnum } from "@/gql/graphql";
+import { useRouter } from "next/navigation";
+import { toast, ToastContainer } from "react-toastify";
+import { addCart } from "../../products/[slug]/actions/addCart";
+import { BreadcrumbClient } from "./BreadcrumbClient";
+import { getOrderUser } from "./actions";
+import { type CurrentUserOrderListQuery, type PaymentChargeStatusEnum } from "@/gql/graphql";
 
 // import { LoginForm } from "@/ui/components/LoginForm";
 import { cn, formatDate, formatMoney } from "@/lib/utils";
 import { PaymentStatus } from "@/ui/components/PaymentStatus";
-import { BreadcrumbClient } from "./BreadcrumbClient";
-import { getOrderUser } from "./actions";
-import { addCart } from "../../products/[slug]/actions/addCart";
-import { useRouter } from "next/navigation";
-import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import updateCheckoutLineMetadata from "@/hooks/useAddMetadata";
 
@@ -35,7 +35,7 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 				setIsLoading(false);
 			}
 		};
-		fetchUser();
+		void fetchUser();
 	}, []);
 
 	if (!user || isLoading) {
@@ -124,33 +124,33 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 	};
 
 	return (
-		<div className="container mx-auto px-4 py-8">
+		<div className="container mx-auto p-4 min-h-screen">
 			<ToastContainer />
 			<BreadcrumbClient channel={params.channel} id={orderDetail?.node.number} />
-			<div className="mb-6">
+			<div>
 				<Link
 					href={`/${params.channel}/orders`}
-					className="inline-flex items-center rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
+					className="inline-flex items-center mb-2 lg:mb-4 rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
 				>
 					← Back to Orders
 				</Link>
 			</div>
-			<div className="flex flex-col gap-8 lg:flex-row">
+			<div className="flex flex-col lg:gap-8  gap-4 lg:flex-row">
 				{/* Left Panel - Products List */}
 				<div className="lg:w-[68%]">
-					<div className="rounded-lg bg-white p-6 shadow-sm">
-						<h2 className="mb-6 text-xl font-semibold">Order #{orderDetail?.node.number}</h2>
+					<div className="rounded-lg bg-white shadow-sm">
+						<h2 className="mb-2 lg:mb-4 text-xl font-semibold">Order #{orderDetail?.node.number}</h2>
 						<div className="space-y-4">
 							{products.map((item) => {
 								if (!item.variant) return null;
 								const product = item.variant.product;
-								const {name : variantName} = item.variant 
-								const {category} = item.variant.product 
+								const { name: variantName } = item.variant
+								const { category } = item.variant.product
 								const media = item.variant.media;
 								return (
 									<div
 										key={product.id}
-										className="flex items-start space-x-6 rounded-lg border border-neutral-200 p-6 transition-all hover:border-neutral-300 hover:shadow-md"
+										className="flex items-start space-x-6 rounded-lg border border-neutral-200 p-4 transition-all hover:border-neutral-300 hover:shadow-md"
 									>
 										{media && (
 											<div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg border border-neutral-200 bg-white">
@@ -167,22 +167,23 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 											<div>
 												<h3 className="font-medium text-neutral-900">{product.name}</h3>
 											</div>
-												<p className="text-sm text-slate-500">Type: {category?.name}</p>
-												<p className="text-sm text-slate-500">Variant: {variantName}</p>
+											<p className="text-sm text-slate-500">Type: {category?.name}</p>
+											<p className="text-sm text-slate-500">Variant: {variantName}</p>
 											<div className="flex items-center justify-between">
 												<div className="flex items-center space-x-2">
 													<span className="text-sm font-medium text-neutral-700">Quantity:</span>
 													<span className="text-sm text-neutral-600">{item.quantity}</span>
 												</div>
-												<div className="text-right">
+												<div className="text-right flex items-center gap-1">
 													<div className="text-sm font-medium text-neutral-900">
 														{item.variant.pricing?.price &&
 															formatMoney(
 																item.variant.pricing.price.gross.amount,
 																item.variant.pricing.price.gross.currency,
 															)}
+
 													</div>
-													<div className="mt-1 text-sm text-neutral-500">per unit</div>
+													<div className="text-sm text-neutral-500">/ per unit</div>
 												</div>
 											</div>
 										</div>

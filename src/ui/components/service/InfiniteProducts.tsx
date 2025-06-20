@@ -28,15 +28,17 @@ const NoProducts = () => {
 type InfiniteProductListProps = {
     channel: string;
     first: number;
+    onHandleChangeProductDesign?: ((productId: string) => void) | null;
 };
 
-const InfiniteProducts = ({ channel, first }: InfiniteProductListProps) => {
+const InfiniteProducts = ({ channel, first, onHandleChangeProductDesign }: InfiniteProductListProps) => {
     const { cursor, products, loading, setProducts, setLoading } = useProduct();
     const { onOpen } = useFilterSidebar()
     const [setRef, isIntersecting] = useIntersectionObserver({
         threshold: 1,
         freezeOnceVisible: false,
     });
+
 
     const loadingMoreRef = useRef(false);
 
@@ -107,7 +109,7 @@ const InfiniteProducts = ({ channel, first }: InfiniteProductListProps) => {
     return (
         <div className="flex min-h-screen w-full flex-col gap-x-2 md:flex-row pb-4">
             <Suspense fallback={<SkeletonLoading />}>
-                <FilterSidebar channel={channel} />
+                <FilterSidebar channel={channel} fromDesign={onHandleChangeProductDesign != null ? true : false} />
             </Suspense>
 
             <div className="flex flex-col flex-1 min-h-screen">
@@ -115,7 +117,7 @@ const InfiniteProducts = ({ channel, first }: InfiniteProductListProps) => {
                     {!products && loading ? (
                         <ProductSkeletonLoading />
                     ) : products && products.edges && products.edges.length > 0 ? (
-                        <ProductList products={products.edges.map((e) => e.node)} />
+                        <ProductList products={products.edges.map((e) => e.node)} onHandleChangeProductDesign={onHandleChangeProductDesign} />
                     ) : (
                         <NoProducts />
                     )}
@@ -128,7 +130,6 @@ const InfiniteProducts = ({ channel, first }: InfiniteProductListProps) => {
 
                 <div ref={setRef}></div>
             </div>
-
 
             <button
                 className="fixed bottom-4 right-4 z-50 rounded-full bg-black p-4 hover:bg-black/50 text-white shadow-lg lg:hidden"

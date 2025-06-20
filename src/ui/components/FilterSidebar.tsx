@@ -21,7 +21,7 @@ interface FilterAttribute {
 
 const MAX_VISIBLE_OPTIONS = 4
 
-const FilterSidebar = ({ channel }: { channel: string }) => {
+const FilterSidebar = ({ channel, fromDesign }: { channel: string, fromDesign: boolean }) => {
     const { attibutes, setAttributes, setProducts } = useProduct()
     const router = useRouter();
     const pathname = usePathname();
@@ -181,7 +181,8 @@ const FilterSidebar = ({ channel }: { channel: string }) => {
     return (
         <>
             <div className="max-w-[250px] w-full hidden lg:block">
-                <div className='scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 sticky top-40 hidden h-[calc(100vh-160px)] w-full overflow-y-auto bg-white lg:block'>
+                <div className={`scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hidden h-[calc(100vh-160px)] w-full overflow-y-auto bg-white lg:block ${fromDesign == false ? "sticky top-40" : ""}`}>
+                    {/* Header */}
                     <h2 className="mb-2 text-xl font-semibold capitalize text-gray-800 md:text-2xl lg:text-3xl">
                         Orders
                     </h2>

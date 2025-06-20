@@ -2,10 +2,10 @@ import { Work_Sans } from "next/font/google";
 import "./globals.css";
 import { type ReactNode } from "react";
 import { type Metadata } from "next";
+import { AppLifecycleEvents } from "./AppLifecycleEvents"
 import { DraftModeNotification } from "@/ui/components/DraftModeNotification";
 import { UrqlProvider } from "@/components/UrqlProvider";
 import ScrollToTop from "@/ui/components/ScrollToTop";
-import { AppLifecycleEvents } from "./AppLifecycleEvents"
 
 const workSands = Work_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"] });
 

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 import { toast } from "react-toastify";
 import { Title } from "@/checkout/components/Title";
@@ -15,7 +15,7 @@ interface DeliveryMethodsProps {
 	update: () => void
 }
 
-export const DeliveryMethods = ({ checkout, update}: DeliveryMethodsProps) => {
+export const DeliveryMethods = ({ checkout, update }: DeliveryMethodsProps) => {
 	const { authenticated: user } = useUser();
 
 	const shippingMethods = checkout?.shippingMethods || [];
@@ -28,21 +28,25 @@ export const DeliveryMethods = ({ checkout, update}: DeliveryMethodsProps) => {
 		}
 		return "";
 	});
- 
 
-
-	const deliveryMethod = useMemo(() => {
-		return shippingMethods.find((method) => method.id === checkoutDeliveryMethodId);
-	}, [checkoutDeliveryMethodId, shippingMethods]);
-
-
-	const getSubtitle = ({ min, max }: { min?: number | null; max?: number | null }) => {
-		if (!min || !max) {
-			return undefined;
+	useEffect(() => {
+		if (checkout?.shippingAddress && checkout?.deliveryMethod) {
+			setCheckoutDeliveryMethodId(checkout.deliveryMethod.id);
 		}
+	}, [checkout?.shippingAddress, checkout?.deliveryMethod]);
 
-		return `${min}-${max} business days`;
-	};
+	// const deliveryMethod = useMemo(() => {
+	// 	return shippingMethods.find((method) => method.id === checkoutDeliveryMethodId);
+	// }, [checkoutDeliveryMethodId, shippingMethods]);
+
+
+	// const getSubtitle = ({ min, max }: { min?: number | null; max?: number | null }) => {
+	// 	if (!min || !max) {
+	// 		return undefined;
+	// 	}
+
+	// 	return `${min}-${max} business days`;
+	// };
 
 	const handleChangeDeliveryMethod = async (e: React.ChangeEvent<HTMLSelectElement>) => {
 		setCheckoutDeliveryMethodId(e.target.value);
@@ -89,13 +93,7 @@ export const DeliveryMethods = ({ checkout, update}: DeliveryMethodsProps) => {
 							</option>
 						))}
 					</select>
-					<p className="my-2 text-sm text-gray-900">
-						<strong>Delivery time:</strong>{" "}
-						{getSubtitle({
-							min: deliveryMethod?.minimumDeliveryDays,
-							max: deliveryMethod?.maximumDeliveryDays,
-						})}
-					</p>
+
 				</>
 			)}
 		</div>

@@ -2,14 +2,15 @@
 import React, { useState } from "react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-import { createSupport } from "./actions/create-support";
 import { toast, ToastContainer } from "react-toastify";
+import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
+// eslint-disable-next-line import/no-cycle
+import { createSupport } from "./actions/create-support";
 import "react-toastify/dist/ReactToastify.css";
 import { useSearchParams } from "next/navigation";
 import { getUser } from "../../../../actions/userFullInfo"
 import { getFAQ } from "./actions/get-faq";
-import { GetPublicSettingsQuery } from "@/gql/graphql";
-import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
+import { type GetPublicSettingsQuery } from "@/gql/graphql";
 export interface SupportFormData {
     firstName: string;
     lastName: string;
@@ -75,7 +76,7 @@ enum RequestType {
     REQUEST_REGISTER = "request-register",
 }
 
-const SupportPage = () => {
+const SupportPage = ({ channel }: { channel: string }) => {
     const searchParams = useSearchParams();
     const requestType = searchParams.get("request");
 
@@ -105,7 +106,7 @@ const SupportPage = () => {
         // Implement the logic to fetch FAQ if needed
         const res = await getFAQ({
             keys: ["REQUEST_REGISTER"],
-            channel: "default-channel",
+            channel: channel,
         });
         console.log(res)
         setFaq(res as GetPublicSettingsQuery["publicSettingsByKeys"]);
@@ -113,7 +114,6 @@ const SupportPage = () => {
     }
 
     React.useEffect(() => {
-
         void fetchInitialValues();
         void fetchFAQ();
     }, [requestType]);
@@ -169,7 +169,7 @@ const SupportPage = () => {
                     onSubmit={handleSubmit}
                 >
                     {({ errors, touched }) => (
-                        <Form className="w-full max-w-2xl space-y-6">
+                        <Form className="w-full max-w-2xl space-y-6 px-4">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div>
                                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
@@ -285,15 +285,16 @@ const SupportPage = () => {
                     )}
                 </Formik>
                 {faq && faq.length > 0 && (
-                    <div className="mt-6 w-full max-w-2xl">
+                    <div className="mt-6 w-full max-w-2xl px-4 mb-4">
                         <h3 className="text-lg font-semibold text-gray-900">Frequently Asked Questions</h3>
-                        <ul className="mt-4 space-y-4">
+                        <ul className="space-y-4">
                             {faq.map((item, index) => {
                                 const value = JSON.parse(item?.value as string) as FAQType;
                                 return (
-                                    <li key={index} className="p-0 border rounded-md bg-gray-50">
+                                    <li key={index} className="border rounded-md bg-gray-50 mt-2">
                                         <Accordion>
                                             <AccordionSummary
+                                                className="py-2"
                                                 expandIcon={<span>▼</span>}
                                                 aria-controls={`faq-content-${index}`}
                                                 id={`faq-header-${index}`}
@@ -302,13 +303,13 @@ const SupportPage = () => {
                                             </AccordionSummary>
                                             <AccordionDetails>
                                                 <div className="flex flex-1 items-center justify-between">
-                                                    <p className="mt-2 text-sm text-gray-700">{value.result}</p>
+                                                    <p className="text-sm text-gray-700">{value.result}</p>
+                                                    <button
+                                                        onClick={() => handleApplyFAQ(value.text)}
+                                                        className="float-end mt-2 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#8C3859] rounded-md hover:bg-[#8C3859]/70 focus:outline-none focus:ring-2 focus:ring-[#8C3859] focus:ring-offset-2">
+                                                        Apply
+                                                    </button>
                                                 </div>
-                                                <button
-                                                    onClick={() => handleApplyFAQ(value.text)}
-                                                    className="float-end mt-2 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#8C3859] rounded-md hover:bg-[#8C3859]/70 focus:outline-none focus:ring-2 focus:ring-[#8C3859] focus:ring-offset-2">
-                                                    Apply
-                                                </button>
                                             </AccordionDetails>
                                         </Accordion>
                                     </li>

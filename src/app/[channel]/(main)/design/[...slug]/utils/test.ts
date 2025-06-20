@@ -42,15 +42,15 @@ interface UpdateMetadataResponse {
 }
 
 
-const fetchProductDetail = async (productId: string, variantId: string) => {
+const fetchProductDetail = async (productId: string, variantId: string, channel: string) => {
 
   const listColorVariant = new Map<string, object>();
   const listVariantSizeColor = new Map<string, object>();
   const tempListVariantSizeColor = new Map<string, object>();
   let sizeIdDefault = '';
+  let printingInfoMetadata = null;
   try {
-
-    const rawData = await fetchRawProductDetail(productId);
+    const rawData = await fetchRawProductDetail(productId, channel);
 
     // Kiểm tra xem rawData có phải là một object và có trường 'product'
     if (rawData && typeof rawData === 'object' && 'product' in rawData) {
@@ -59,7 +59,7 @@ const fetchProductDetail = async (productId: string, variantId: string) => {
       const variants = product.variants;
       for (const variant of variants) {
         const metaData = variant.metadata?.find((item: any) => item.key === "custom_json");
-
+        printingInfoMetadata = variant.metadata?.find((item: any) => item.key === "printing_info");
         const colorAttribute = variant.attributes?.find((attr: any) => attr.attribute?.name === "COLOR");
 
         if (metaData != null) {
@@ -81,13 +81,9 @@ const fetchProductDetail = async (productId: string, variantId: string) => {
         if (key === variantId) {
           sizeIdDefault = (value as { size?: string }).size || '';
 
-
           break;
         }
       }
-
-
-
 
       for (const [key, value] of tempListVariantSizeColor.entries()) {
         const typedValue = value as { size?: string };
@@ -102,7 +98,7 @@ const fetchProductDetail = async (productId: string, variantId: string) => {
   } catch (error) {
     console.log("Lỗi khi truy vấn dữ liệu:", error);
   }
-  return { listColorVariant: listColorVariant, listVariantSizeColor: listVariantSizeColor, sizeIdDefault: sizeIdDefault };
+  return { listColorVariant: listColorVariant, listVariantSizeColor: listVariantSizeColor, sizeIdDefault: sizeIdDefault, printingInfoMetadata: printingInfoMetadata };
 }
 
 

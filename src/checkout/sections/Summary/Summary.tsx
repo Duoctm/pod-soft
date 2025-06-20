@@ -1,4 +1,5 @@
 import { type FC } from "react";
+import { Loader2 } from "lucide-react";
 import { SummaryItem, type SummaryLine } from "./SummaryItem";
 import { PromoCodeAdd } from "./PromoCodeAdd";
 import { SummaryMoneyRow } from "./SummaryMoneyRow";
@@ -14,7 +15,6 @@ import {
 } from "@/checkout/graphql";
 import { SummaryItemMoneySection } from "@/checkout/sections/Summary/SummaryItemMoneySection";
 import { type GrossMoney, type GrossMoneyWithTax } from "@/checkout/lib/globalTypes";
-import { Loader2 } from "lucide-react";
 
 interface SummaryProps {
 	id: string;
@@ -145,24 +145,23 @@ export const Summary: FC<SummaryProps> = ({
 
 				show ? (
 					<button
-					onClick={onPlaceOrder}
-					type="submit"
-					className={`flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-						loading
-						?  "cursor-not-allowed bg-gray-400 hover:bg-gray-500 focus:ring-gray-500 "
-						:    "bg-[#8B3958] text-white hover:bg-[#7A314F] focus:ring-[#7A314F] "
-						}`}
+						onClick={onPlaceOrder}
+						type="submit"
+						className={`flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${loading
+								? "cursor-not-allowed bg-gray-400 hover:bg-gray-500 focus:ring-gray-500 "
+								: "bg-[#8B3958] text-white hover:bg-[#7A314F] focus:ring-[#7A314F] "
+							}`}
 						disabled={loading}
-						>
-					{loading ? (
-						<>
-							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-							Loading...
-						</>
-					) : (
-						"Place Order"
-					)}
-				</button>
+					>
+						{loading ? (
+							<>
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+								Loading...
+							</>
+						) : (
+							"Place Order"
+						)}
+					</button>
 				) : null
 			}
 		</div>

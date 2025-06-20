@@ -12,7 +12,7 @@ export const Contact = ({ user }: ContactProps) => {
 					<div className="mb-3">
 						<p className="text-md font-semibold text-gray-800">User name:</p>
 						<p className="text-lg text-gray-900">
-							{user?.lastName} {user?.firstName}
+							{user?.firstName} {user?.lastName}
 						</p>
 					</div>
 				)}

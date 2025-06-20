@@ -1,6 +1,3 @@
-
-
-
 import { invariant } from "ts-invariant";
 import Image from "next/image";
 import { RootWrapper } from "./pageWrapper";
@@ -29,14 +26,14 @@ export default function CheckoutPage({
 
 	return (
 		<div className="min-h-dvh bg-white">
-			<div className="mx-auto flex max-w-7xl flex-col px-8 py-8">
+			<div className="mx-auto flex max-w-7xl flex-col p-4">
 				<div className="flex items-center font-bold">
 					<LinkWithChannel aria-label="homepage" href="/" className="flex items-center">
 						<Image src="/images/main-logo.webp" alt="ZoomPrints" width={150} height={70} />
 					</LinkWithChannel>
 				</div>
 			</div>
-			<section className="mx-auto flex max-w-7xl flex-col px-8">
+			<section className="mx-auto flex max-w-7xl flex-col p-4">
 				<h1 className="text-3xl font-bold text-neutral-900">Checkout</h1>
 
 				<section className="mb-12 mt-6 flex-1">

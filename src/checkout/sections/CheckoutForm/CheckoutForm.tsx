@@ -79,7 +79,6 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 	useEffect(() => {
 		let isMounted = true;
 		if (slug) {
-			console.log(slug);
 			// Fetch countries
 			const fetchCountries = async () => {
 				try {
@@ -235,11 +234,10 @@ export const AddressCheckoutForm: React.FC<AddressCheckoutFormProps> = ({ slug }
 				)}
 				<button
 					type="submit"
-					className={`flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-						isSubmitting
+					className={`flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${isSubmitting
 							? "cursor-not-allowed bg-gray-400 hover:bg-gray-500 focus:ring-gray-500"
 							: "bg-[#8B3958] hover:bg-[#7A314F] focus:ring-[#7A314F] text-white"
-					}`}
+						}`}
 					disabled={isSubmitting}
 				>
 					{isSubmitting ? (

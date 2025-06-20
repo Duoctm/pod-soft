@@ -2,7 +2,7 @@ import React from "react";
 import ProductElement from "./ProductElement";
 import { type ProductListItemFragment } from "@/gql/graphql";
 
-const ProductList = React.memo(function ProductList({ products }: { products: readonly ProductListItemFragment[] }) {
+const ProductList = React.memo(function ProductList({ products, onHandleChangeProductDesign }: { products: readonly ProductListItemFragment[], onHandleChangeProductDesign?: ((productId: string) => void) | null }) {
 	if (!products || products.length === 0) {
 		return (
 			<div className="w-full text-center py-8">
@@ -24,6 +24,7 @@ const ProductList = React.memo(function ProductList({ products }: { products: re
 					product={product}
 					priority={index < 2}
 					loading={index < 3 ? "eager" : "lazy"}
+					onHandleChangeProductDesign={onHandleChangeProductDesign}
 				/>
 			))}
 		</ul>

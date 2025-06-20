@@ -14,7 +14,6 @@ import {
   ShirtIcon,
   ShoppingCart,
   XIcon,
-  MousePointerClickIcon,
   Palette,
   CloudUpload,
   Type,
@@ -42,6 +41,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useDesign } from "../utils/useDesign";
 import { cn } from "@/lib/utils";
 import { redoStackHistory, undoStackHistory } from "../utils/designHistory";
+import { ChangeProductModal } from "./ChangeProduct";
 
 interface DesignPageProps {
   variantId: string;
@@ -83,11 +83,13 @@ function DesignPage(param: DesignPageProps) {
   const [variantIdOfUpdate, setVariantIdOfUpdate] = useState<string | null>(null);
   const [isSpinner, setSpinner] = useState<boolean>(false);
   const [cropImageUrl, setCropImageUrl] = useState<string>("");
+  const [isFistChangeProduct, setIsFistChangeProduct] = useState<boolean>(true);
   const cropContainerRefMobile = useRef<HTMLDivElement | null>(null);
   const cropContainerRefDesktop = useRef<HTMLDivElement | null>(null);
 
   const [isShowDialog, setIsShowDialog] = useState<boolean>(false);
   const [isShowFaceDialog, setIsShowFaceDialog] = useState<boolean>(false);
+  const [showProductModal, setShowProductModal] = useState<number | 0 | 1 | 2>(0);
 
   const [frameState, setFrameState] = useState({
     width: 160,
@@ -110,7 +112,7 @@ function DesignPage(param: DesignPageProps) {
           ? new Map(Object.entries(param.designInfor.variantSizeColorData))
           : null;
     } else {
-      const data = await fetchProductDetail(productId, param.variantId);
+      const data = await fetchProductDetail(productId, param.variantId, param.channel);
       result = data.listColorVariant;
       sizeIdDefault = data.sizeIdDefault;
       variantSizeColor = data.listVariantSizeColor;
@@ -165,6 +167,8 @@ function DesignPage(param: DesignPageProps) {
     }
   }, [colorLoading, colorData]);
 
+
+
   useEffect(() => {
     if (!loading) {
       // Initialize TShirtDesigner
@@ -192,11 +196,12 @@ function DesignPage(param: DesignPageProps) {
           setShowObjectMenu(hasSelection);
         };
 
-        const importUpload = async (designs: object[][]) => {
-          await designerRef.current?.importDesignFromJson(designs);
-        };
+
         try {
           if (param.designInfor) {
+            const importUpload = async (designs: object[][]) => {
+              await designerRef.current?.importDesignFromJson(designs);
+            };
             const designs: object[][] = [];
             let index = -1;
             for (const design of param.designInfor.designs) {
@@ -207,9 +212,12 @@ function DesignPage(param: DesignPageProps) {
             importUpload(designs);
             setVariantIdOfUpdate(variantId);
           }
+
         } catch (error) {
           console.log(error);
         }
+
+
         // }
       }
       const handleKeyDown = (e: KeyboardEvent) => {
@@ -295,7 +303,49 @@ function DesignPage(param: DesignPageProps) {
         document.removeEventListener("keydown", handleKeyDown);
       };
     }
+    //setStageLoading(false);
   }, [loading, data, param.designInfor]);
+
+
+  useEffect(() => {
+    if (designerRef.current?.currentStage.stage && isFistChangeProduct == true) {
+      try {
+        const json = localStorage.getItem("designRelativeInfor");
+
+        if (json) {
+          try {
+            /*const importUpload = async (designs: object[][]) => {
+
+              if (designerRef.current) {
+                await designerRef.current?.importDesignFromJson(designs);
+              }
+              else {
+                alert('Không có thiết kế nào để nhập');
+              }
+            };*/
+            const jsonObject = JSON.parse(json);
+            localStorage.removeItem("designRelativeInfor");
+            //console.log('jsonObject', jsonObject);
+
+            /*const designs: object[][] = [];
+            let index = -1;
+            for (const design of jsonObject as []) {
+              index++;
+              designs[index] = design.designs;
+            }*/
+            //console.log("designs", designs);
+            //importUpload(designs);
+            designerRef.current?.importDesignFromChangeProduct(jsonObject);
+            setIsFistChangeProduct(false);
+          } catch (error) {
+            console.error("Lỗi khi parse hoặc tạo Map từ localStorage:", error);
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }, [designerRef.current?.currentStage.stage]);
 
   const colors = [
     "#FFFFFF",
@@ -331,6 +381,23 @@ function DesignPage(param: DesignPageProps) {
   ];
 
   // const menuWidth = "10vw";
+
+  const handleRedo = () => {
+    if (!designerRef.current?.currentStage) return;
+    const result = redoStackHistory(designerRef.current.currentStage.StackHistories);
+    if (result != null) {
+      designerRef.current.updateHistoryStatus(result, "redo");
+    }
+  };
+
+  const handleUndo = () => {
+    if (!designerRef.current?.currentStage) return;
+    const result = undoStackHistory(designerRef.current.currentStage.StackHistories);
+    if (result != null) {
+      designerRef.current.updateHistoryStatus(result, "undo");
+    }
+  };
+
 
   const handleResizeWidthChange = (value: number | undefined) => {
     if (value == undefined) {
@@ -502,7 +569,6 @@ function DesignPage(param: DesignPageProps) {
             TopScale: topScale
           }, action: "cropt"
         });
-
       }
     };
   };
@@ -559,8 +625,49 @@ function DesignPage(param: DesignPageProps) {
     setSelected(defaultSelected);
   }, [params]);
 
+  useEffect(() => {
+    if (showProductModal) {
+      designerRef.current?.exportRelativeDesignToJson()
+        .then((data) => {
+          localStorage.setItem("designRelativeInfor", JSON.stringify(data));
+        })
+        .catch((error) => {
+          console.error("Error exporting design data:", error);
+        });
+    }
+    // if (showProductModal == 0) {
+    //   localStorage.removeItem("designRelativeInfor");
+    // }
+    if (showProductModal == 2) {
+      setIsShowDialog(!isShowDialog);
+    }
+  }, [showProductModal]);
+
+
+
   return (
     <>
+      {(showProductModal == 1) && (
+        <ChangeProductModal
+          setOpen={setShowProductModal}
+          channel={param.channel}
+          exportRelativeDesignToJson={designerRef.current?.exportRelativeDesignToJson}
+          fromDevice={1}
+          typeDesign={param.typeDesign == 1 ? 1 : 3}
+        />
+      )}
+
+      {(showProductModal == 2) && (
+        <ChangeProductModal
+          setOpen={setShowProductModal}
+          channel={param.channel}
+          exportRelativeDesignToJson={designerRef.current?.exportRelativeDesignToJson}
+          fromDevice={2}
+          typeDesign={param.typeDesign == 1 ? 1 : 3}
+        />
+      )}
+
+
       {isSpinner && (
         <div className="fixed left-0 top-0 z-50 flex h-full w-full items-center justify-center bg-black bg-opacity-50">
           <div className="h-16 w-16 animate-spin rounded-full border-4 border-white border-t-transparent"></div>
@@ -619,9 +726,22 @@ function DesignPage(param: DesignPageProps) {
               <Type className="h-8 w-8" />
               <span className="text-xs">Text</span>
             </button>
+            <button
+              id="changeProduct"
+              onClick={() => {
+                setShowProductModal(1);
+              }}
+              className={cn(
+                "flex h-20 w-20 flex-col items-center justify-center hover:bg-white/20 hover:text-white",
+                { "border-l-[4px] border-l-blue-500 bg-white text-black": selected === "change-product" },
+              )}
+            >
+              <ShirtIcon className="h-8 w-8" />
+              <span className="text-xs">Change Product</span>
+            </button>
           </div>
           {/* Function Area */}
-          <div className="h-full w-full  !bg-white  p-2  lg:flex lg:flex-col relative">
+          <div className="h-full w-full  !bg-white  p-2  lg:flex lg:flex-col relative overflow-y-auto">
             <div className="w-full items-start">
               <input
                 type="file"
@@ -654,6 +774,16 @@ function DesignPage(param: DesignPageProps) {
                     >
                       <Type className="h-8 w-8" />
                       <span className="text-xl font-medium">Text</span>
+                    </div>
+                    <div
+                      onClick={() => {
+                        //alert('ok');
+                        setShowProductModal(1);
+                      }}
+                      className="flex w-full flex-col items-center justify-center rounded-md border py-2 shadow-inner transition-all hover:scale-95 hover:bg-slate-50"
+                    >
+                      <ShirtIcon className="h-8 w-8" />
+                      <span className="text-xl font-medium">Change Products</span>
                     </div>
                   </div>
                 </div>
@@ -1397,6 +1527,8 @@ function DesignPage(param: DesignPageProps) {
                   </div>
                 </div>
               }
+
+
             </div>
           </div>
         </div>
@@ -1405,107 +1537,65 @@ function DesignPage(param: DesignPageProps) {
           className="flex min-h-[calc(100vh-142px)] flex-1 items-center justify-center lg:items-start relative"
           component="section"
           id="editorImage"
+          onClick={(e) => {
+
+            const isInsideCanvas = (e.target as HTMLElement).closest('canvas');
+            if (isInsideCanvas) return;
+
+            if (designerRef.current) {
+              // designerRef.current.clearBorderNode(designerRef.current.currentStage);
+              // setMenuIndex(0);
+              handleDeselect();
+            }
+
+          }}
+          onTouchStart={(e) => {
+
+            const isInsideCanvas = (e.target as HTMLElement).closest('canvas');
+            if (isInsideCanvas) return;
+
+            if (designerRef.current) {
+              // designerRef.current.clearBorderNode(designerRef.current.currentStage);
+              // setMenuIndex(0);
+              handleDeselect();
+            }
+
+          }}
+
         >
-          <div className='w-16 flex flex-col  border-2  rounded-md absolute top-0 left-1 lg:left-2 '>
+          <div className="w-16 flex flex-col border-2 border-gray-300 bg-white rounded-md absolute top-0 left-1 lg:left-2 shadow-sm">
+            {/** Redo Button */}
             <div
-              onClick={() => {
-                if (!designerRef.current?.currentStage)
-                  return;
-                const result = redoStackHistory(designerRef.current?.currentStage.StackHistories);
-
-                if (result != null) {
-                  if (designerRef.current) {
-                    //designerRef.current.updateHistoryStatus(result.type, result.id, result.node);
-                    designerRef.current.updateHistoryStatus(result, "redo");
-                  }
-                }
+              onClick={handleRedo}
+              onTouchStart={(e) => {
+                e.preventDefault(); // tránh gọi cả onClick
+                handleRedo();
               }}
-              onTouchStart={() => {
-                if (!designerRef.current?.currentStage)
-                  return;
-                const result = redoStackHistory(designerRef.current?.currentStage.StackHistories);
-
-                if (result != null) {
-                  if (designerRef.current) {
-                    //designerRef.current.updateHistoryStatus(result.type, result.id, result.node);
-                    designerRef.current.updateHistoryStatus(result, "redo");
-                  }
-                }
-              }}
-              className='w-full h-16 flex items-center justify-center hover:bg-black/10 flex-col'>
-              <RedoIcon />
-              Redo
-            </div>
-            <div
-              onClick={() => {
-                if (!designerRef.current?.currentStage)
-                  return;
-
-                const result = undoStackHistory(designerRef.current?.currentStage.StackHistories);
-                /*if (result != null) {
-
-                  if (result.node != null) {
-
-                    designerRef.current.updateHistoryStatus(result.type, result.id, result.node);
-
-                  }
-                  else if (result.node == null) {
-                    const nodes = designerRef.current?.currentStage.layer?.getChildren();
-                    if (nodes) {
-                      for (const nodeChild of nodes) {
-                        if (nodeChild.id() == result.id) {
-                          nodeChild.destroy();
-                          designerRef.current?.clearBorderNode(designerRef.current.currentStage)
-                          break;
-                        }
-                      }
-                    }
-                  }
-                }*/
-                if (result != null)
-
-                  designerRef.current.updateHistoryStatus(result, "undo");
-              }}
-              onTouchStart={() => {
-                if (!designerRef.current?.currentStage)
-                  return;
-
-                const result = undoStackHistory(designerRef.current?.currentStage.StackHistories);
-                /*if (result != null) {
-
-                  if (result.node != null) {
-
-                    designerRef.current.updateHistoryStatus(result.type, result.id, result.node);
-
-                  }
-                  else if (result.node == null) {
-                    const nodes = designerRef.current?.currentStage.layer?.getChildren();
-                    if (nodes) {
-                      for (const nodeChild of nodes) {
-                        if (nodeChild.id() == result.id) {
-                          nodeChild.destroy();
-                          designerRef.current?.clearBorderNode(designerRef.current.currentStage)
-                          break;
-                        }
-                      }
-                    }
-                  }
-                }*/
-                if (result != null)
-
-                  designerRef.current.updateHistoryStatus(result, "undo");
-              }}
-              className='w-full h-16 flex items-center justify-center hover:bg-black/20 flex-col'>
-              <Undo />
-              Undo
-
+              className="w-full h-16 flex flex-col items-center justify-center 
+               hover:bg-black/10 active:bg-black/20 transition-colors cursor-pointer">
+              <RedoIcon className="text-black" />
+              <span className="text-sm text-black">Redo</span>
             </div>
 
+            {/** Undo Button */}
+            <div
+              onClick={handleUndo}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                handleUndo();
+              }}
+              className="w-full h-16 flex flex-col items-center justify-center 
+               hover:bg-black/10 active:bg-black/20 transition-colors cursor-pointer">
+              <Undo className="text-black" />
+              <span className="text-sm text-black">Undo</span>
+            </div>
           </div>
+
 
           {sort_data.map((item: PrintFaceData, index: number) => {
             return (
               <Box key={index}>
+
                 <Box
                   component="img"
                   id={item.code + "Image"}
@@ -1558,7 +1648,7 @@ function DesignPage(param: DesignPageProps) {
               );
             })}
 
-          {(param.typeDesign == 1 || (param.typeDesign == 2 && variantId != variantIdOfUpdate)) && (
+          {/* {(param.typeDesign == 1 || (param.typeDesign == 2 && variantId != variantIdOfUpdate)) && (
             <Button
               sx={{
                 backgroundColor: "#743C54",
@@ -1671,6 +1761,139 @@ function DesignPage(param: DesignPageProps) {
                     } else {
                       toast.error("An error occurred during processing. Please try again later");
                     }
+                    //localStorage.removeItem('cartId');
+                  }
+                  //window.location.replace(`/${param.channel}/cart`);
+                }
+                setSpinner(false);
+              }}
+            >
+              Update
+            </Button>
+          )} */}
+          {(param.typeDesign == 1) && (
+            <Button
+              sx={{
+                backgroundColor: "#743C54",
+                color: "#ffffff",
+                "&:hover": {
+                  backgroundColor: "#2b2966",
+                },
+                width: "100%",
+                mt: "20px",
+                textTransform: "none",
+              }}
+              onClick={async () => {
+                const isLogin = await checkUser();
+
+                if (isLogin == false) {
+                  window.location.replace(`/${param.channel}/login`);
+                }
+                setSpinner(true);
+                const json = localStorage.getItem("cart");
+
+                if (json != null && json !== undefined) {
+                  const cartItem = JSON.parse(json) as {
+                    params: any; // Loại của params có thể thay đổi tuỳ theo nhu cầu
+                    selectedVariantId: string;
+                    quantity: number;
+                  };
+
+                  if (designerRef.current != null) {
+                    let metaData = null;
+                    const printFace: { data: string[] } = { data: [] };
+                    let hasObjectInStage = false;
+                    if (designerRef.current.stages != null) {
+                    }
+                    for (const stage of designerRef.current.stages) {
+                      if (
+                        stage.layer?.getChildren().length != null &&
+                        stage.layer?.getChildren().length > 0
+                      ) {
+                        hasObjectInStage = true;
+                        break;
+                      }
+                    }
+                    if (hasObjectInStage == true) {
+                      metaData = (await designerRef.current.exportDesignToJson()) as any;
+
+                      for (const item of metaData.designs) {
+                        if (item.designs.length > 0) {
+                          printFace.data.push(item.face_code);
+                        }
+                      }
+                      if (printFace.data.length > 0) {
+                        metaData.face_code = printFace;
+                      }
+                    }
+                    let result = false;
+                    result = (await addItem(
+                      cartItem.params,
+                      variantId,
+                      cartItem.quantity,
+                      JSON.stringify(metaData, null, 2),
+                    )) as boolean;
+                    if (result === true) {
+                      toast.success("Design added to cart successfully");
+                    } else {
+                      toast.error("An error occurred during processing. Please try again later");
+                    }
+                  }
+                }
+                setSpinner(false);
+              }}
+            >
+              Add to Cart
+            </Button>
+          )}
+
+
+
+
+          {(param.typeDesign === 2 || param.typeDesign === 3) && (
+            <Button
+              sx={{
+                backgroundColor: "#743C54",
+                color: "#ffffff",
+                "&:hover": {
+                  backgroundColor: "#2b2966",
+                },
+                width: "100%",
+                mt: "20px",
+                textTransform: "none",
+              }}
+              onClick={async () => {
+                setSpinner(true);
+                const checkoutLineId = localStorage.getItem("checkoutLineId");
+                const checkoutId = localStorage.getItem("checkoutId");
+
+                console.log("checkoutLineId", checkoutLineId);
+                console.log('checkoutId', checkoutId);
+                console.log("variant", variantId);
+                if (param.typeDesign === 3) {
+                  setVariantIdOfUpdate(variantId);
+                }
+                if (checkoutLineId != null && checkoutLineId != undefined && checkoutId != null && variantId != null) {
+                  if (designerRef.current != null) {
+                    const metaData = await designerRef.current.exportDesignToJson();
+                    if (variantId === variantIdOfUpdate) {
+                      const result = await UpdateDesign(checkoutLineId, JSON.stringify(metaData, null, 2), checkoutId);
+
+                      if (result == true) {
+                        toast.success("Design updated successfully");
+                      } else {
+                        toast.error("An error occurred during processing. Please try again later");
+                      }
+                    }
+                    else {
+                      const result = await UpdateDesign(checkoutLineId, JSON.stringify(metaData, null, 2), checkoutId, true, variantId, param.channel);
+                      if (result == true) {
+                        toast.success("Design updated successfully");
+                      } else {
+                        toast.error("An error occurred during processing. Please try again later");
+                      }
+                    }
+
                     //localStorage.removeItem('cartId');
                   }
                   //window.location.replace(`/${param.channel}/cart`);
@@ -1858,11 +2081,11 @@ function DesignPage(param: DesignPageProps) {
           stroke="white"
           onClick={() => setIsShowFaceDialog(!isShowFaceDialog)}
         />
-        <MousePointerClickIcon
+        {/* <MousePointerClickIcon
           onClick={() => handleDeselect()}
           className="fixed bottom-20 right-1 z-10 block h-12 w-12 rounded-full bg-[#8C3859] p-3 lg:hidden"
           stroke="white"
-        />
+        /> */}
       </Box>
       <div
         className={`fixed inset-0 z-50 h-screen transform bg-white transition-transform duration-300 ease-in-out lg:hidden ${isShowDialog ? "translate-x-0" : "-translate-x-full"
@@ -1916,7 +2139,16 @@ function DesignPage(param: DesignPageProps) {
                       <Type className="h-8 w-8" />
                       <span className="text-xl font-medium">Text</span>
                     </div>
-
+                    <div
+                      onClick={() => {
+                        //alert('ok');
+                        setShowProductModal(2);
+                      }}
+                      className="flex w-full flex-col items-center justify-center rounded-md border py-2 shadow-inner transition-all hover:scale-95 hover:bg-slate-50"
+                    >
+                      <ShirtIcon className="h-8 w-8" />
+                      <span className="text-xl font-medium">Change Products</span>
+                    </div>
                   </div>
 
 
@@ -2391,13 +2623,16 @@ function DesignPage(param: DesignPageProps) {
                               className="h-7 w-7 transform cursor-pointer rounded-full transition-transform hover:scale-110"
                               style={{ backgroundColor: color }}
                               data-color={color}
-                              onClick={() => {
+
+                              onTouchStart={() => {
+
                                 if (designerRef.current) {
                                   designerRef.current.changeTextColor(color);
                                   const textInput = document.getElementById(
-                                    "textInput",
+                                    "textInput-mobile",
                                   ) as HTMLTextAreaElement;
                                   if (textInput) {
+
                                     textInput.style.color = color;
                                   }
                                 }
@@ -2418,7 +2653,7 @@ function DesignPage(param: DesignPageProps) {
                             className="h-4 w-4 rounded text-blue-600 focus:ring-blue-500"
                             onChange={(e) => {
                               if (designerRef.current) {
-                                const textInput = document.getElementById("textInput") as HTMLTextAreaElement;
+                                const textInput = document.getElementById("textInput-mobile") as HTMLTextAreaElement;
                                 if (textInput) {
                                   textInput.style.fontWeight = e.target.checked ? "bold" : "normal";
                                   designerRef.current.changeFontWeight(e.target.checked ? "bold" : "normal");
@@ -2435,7 +2670,7 @@ function DesignPage(param: DesignPageProps) {
                             className="h-4 w-4 rounded text-blue-600 focus:ring-blue-500"
                             onChange={(e) => {
                               if (designerRef.current) {
-                                const textInput = document.getElementById("textInput") as HTMLTextAreaElement;
+                                const textInput = document.getElementById("textInput-mobile") as HTMLTextAreaElement;
                                 if (textInput) {
                                   textInput.style.fontStyle = e.target.checked ? "italic" : "normal";
                                   designerRef.current.changeFontStyle(e.target.checked ? "italic" : "normal");
@@ -2456,7 +2691,7 @@ function DesignPage(param: DesignPageProps) {
                         onChange={(e) => {
                           if (designerRef.current) {
                             designerRef.current.changeFontFamily(e.target.value);
-                            const textInput = document.getElementById("textInput") as HTMLTextAreaElement;
+                            const textInput = document.getElementById("textInput-mobile") as HTMLTextAreaElement;
                             if (textInput) {
                               textInput.style.fontFamily = e.target.value;
                             }
@@ -2986,7 +3221,7 @@ function DesignPage(param: DesignPageProps) {
       </div>
 
       <div className="fixed bottom-0 right-0 block  md:hidden">
-        {(param.typeDesign == 1 || (param.typeDesign == 2 && variantId != variantIdOfUpdate)) && (
+        {(param.typeDesign == 1) && (
           <Button
             className="flex h-12 w-12  items-center justify-center rounded-full bg-[#8C3859] p-2"
             onClick={async () => {
@@ -3064,21 +3299,33 @@ function DesignPage(param: DesignPageProps) {
           </Button>
         )}
 
-        {param.typeDesign === 2 && variantId === variantIdOfUpdate && (
+        {(param.typeDesign === 2) && (
           <Button
             onClick={async () => {
               setSpinner(true);
-              const cartId = localStorage.getItem("cartId");
-              if (cartId != null && cartId != undefined) {
+              const checkoutLineId = localStorage.getItem("checkoutLineId");
+              const checkoutId = localStorage.getItem("checkoutId");
+              if (checkoutLineId != null && checkoutLineId != undefined && checkoutId != null && variantIdOfUpdate != null) {
                 if (designerRef.current != null) {
                   const metaData = await designerRef.current.exportDesignToJson();
+                  if (variantId === variantIdOfUpdate) {
+                    const result = await UpdateDesign(checkoutLineId, JSON.stringify(metaData, null, 2), checkoutId);
 
-                  const result = await UpdateDesign(cartId, JSON.stringify(metaData, null, 2));
-                  if (result == true) {
-                    toast.success("Design updated successfully");
-                  } else {
-                    toast.error("An error occurred during processing. Please try again later");
+                    if (result == true) {
+                      toast.success("Design updated successfully");
+                    } else {
+                      toast.error("An error occurred during processing. Please try again later");
+                    }
                   }
+                  else {
+                    const result = await UpdateDesign(checkoutLineId, JSON.stringify(metaData, null, 2), checkoutId, true, variantIdOfUpdate, param.channel);
+                    if (result == true) {
+                      toast.success("Design updated successfully");
+                    } else {
+                      toast.error("An error occurred during processing. Please try again later");
+                    }
+                  }
+
                   //localStorage.removeItem('cartId');
                 }
                 //window.location.replace(`/${param.channel}/cart`);

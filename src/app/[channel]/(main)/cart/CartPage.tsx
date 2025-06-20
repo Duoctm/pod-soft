@@ -12,6 +12,7 @@ import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
 import { formatMoney, getHrefForVariant } from "@/lib/utils";
 import { type CheckoutLine, type Checkout } from "@/gql/graphql";
 import Wrapper from "@/ui/components/wrapper";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export type CheckoutType = Pick<Checkout, "__typename" | "id" | "email" | "lines" | "totalPrice">;
 
@@ -32,19 +33,70 @@ interface CartPageProps {
 	params: { channel: string };
 }
 
+
+
+const QuantityInput = ({
+	item,
+	handleQuantityChange,
+}: {
+	item: CheckoutLine;
+	handleQuantityChange: (id: string, value: number) => void;
+}) => {
+	const [inputValue, setInputValue] = useState(item.quantity.toString());
+	const debouncedValue = useDebounce(inputValue, 500);
+
+	// Cập nhật khi quantity thay đổi từ props (ví dụ khi fetch lại cart)
+	useEffect(() => {
+		setInputValue(item.quantity.toString());
+	}, [item.quantity]);
+
+	useEffect(() => {
+		const num = Number(debouncedValue);
+		if (
+			debouncedValue !== "" &&
+			!isNaN(num) &&
+			num > 0 &&
+			num !== item.quantity
+		) {
+			handleQuantityChange(item.id, num);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [debouncedValue]);
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setInputValue(e.target.value);
+	};
+
+	const handleBlur = () => {
+		setInputValue(item.quantity.toString()); // Clear khi blur
+	};
+
+	return (
+		<input
+			type="number"
+			value={inputValue}
+			onChange={handleChange}
+			onBlur={handleBlur}
+			min="1"
+			className="w-16 rounded-md border border-gray-300 p-0 text-center"
+		/>
+	);
+};
+
+
+
 export function CartPage({ params }: CartPageProps) {
 	const [checkout, setCheckout] = useState<CheckoutType>(INITIAL_CHECKOUT_VALUE);
 	const [items, setItems] = useState<CheckoutLine[]>([]);
 	const [checkoutId, setCheckoutId] = useState<string>("");
 	const [loading, setLoading] = useState(false);
 
-
-
 	const fetchCheckout = useCallback(async () => {
 		//await checkTokenServerAction();
 		setLoading(true);
 		try {
 			const checkoutData = await getCheckoutList(params.channel);
+			console.log("checkoutdata", checkoutData);
 			if (checkoutData) {
 				setCheckout(checkoutData.checkout as CheckoutType);
 				setItems(checkoutData.checkout.lines as CheckoutLine[]);
@@ -134,13 +186,7 @@ export function CartPage({ params }: CartPageProps) {
 							>
 								-
 							</button>
-							<input
-								type="number"
-								value={item.quantity}
-								onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value, 10))}
-								min="1"
-								className="w-16 rounded-md border border-gray-300 p-0 text-center"
-							/>
+							<QuantityInput item={item} handleQuantityChange={handleQuantityChange} />
 							<button
 								type="button"
 								onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
@@ -151,7 +197,7 @@ export function CartPage({ params }: CartPageProps) {
 						</div>
 
 						<div className="hidden items-center justify-center gap-2 md:flex">
-							{Array.isArray(item.metadata) && item.metadata.length > 0 && (
+							{Array.isArray(item.metadata) && item.metadata.length > 0 && (item.metadata?.find((item: any) => item.key === "design")?.value != 'null') && (
 								<ViewDesignButton lineId={item.id} checkout={checkoutId} params={params} />
 							)}
 							{Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && (
@@ -176,7 +222,7 @@ export function CartPage({ params }: CartPageProps) {
 							|
 						</div>
 						<div className="my-2 flex items-center justify-center gap-2 md:hidden">
-							{Array.isArray(item.metadata) && item.metadata.length > 0 && (
+							{Array.isArray(item.metadata) && item.metadata.length > 0 && (item.metadata?.find((item: any) => item.key === "design")?.value != 'null') && (
 								<ViewDesignButton lineId={item.id} checkout={checkoutId} params={params} />
 							)}
 							{Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && (
@@ -232,7 +278,7 @@ export function CartPage({ params }: CartPageProps) {
 						{items.map(renderCartItem)}
 						<div className="mt-2 flex flex-1 justify-end py-2">
 							<p className="font-medium">
-								{`Subtotal ( ${totalSubtotal} items ): `}
+								{`Subtotal ( ${totalSubtotal} items ) : `}
 								{formatMoney(checkout.totalPrice.gross.amount, checkout.totalPrice.gross.currency)}
 							</p>
 						</div>
@@ -242,7 +288,7 @@ export function CartPage({ params }: CartPageProps) {
 						<div className="">
 							<div className="flex items-center justify-between gap-2 py-2">
 								<div>
-									<p className="font-semibold text-neutral-900">{`Subtotal ( ${totalSubtotal} items ): `}</p>
+									<p className="font-semibold text-neutral-900">{`Subtotal ( ${totalSubtotal} items ) : `}</p>
 									{/* <p className="mt-1 text-sm text-neutral-500">
 										Shipping will be calculated in the next step
 									</p> */}

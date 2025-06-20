@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { UserIcon } from "lucide-react";
 import { UserMenu } from "./UserMenu";
 import { getUser } from "@/actions/user";
-import { UserDetailsFragment } from "@/gql/graphql";
-import { ErrorDetail, ExternalAuthUrlResponse, ParsedAuthData } from "@/ui/components/LoginForm";
+import { type UserDetailsFragment } from "@/gql/graphql";
+import { type ErrorDetail, type ExternalAuthUrlResponse, type ParsedAuthData } from "@/ui/components/LoginForm";
 
 export function UserMenuContainer({ params }: { params?: { channel: string } }) {
+
 	const [user, setUser] = useState<UserDetailsFragment>();
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -23,7 +24,7 @@ export function UserMenuContainer({ params }: { params?: { channel: string } }) 
 				setIsLoading(false);
 			}
 		};
-		fetchUser();
+		void fetchUser();
 	}, []);
 
 
@@ -34,8 +35,9 @@ export function UserMenuContainer({ params }: { params?: { channel: string } }) 
 
 			// 1. Xác định URL callback trên Storefront
 			const storefrontBaseUrl = process.env.NEXT_PUBLIC_STOREFRONT_URL || "http://localhost:3001";
-			const channelFromParams = params?.channel || "default-channel";
+			const channelFromParams = params?.channel;
 			const storefrontCallbackUrl = `${storefrontBaseUrl}/${channelFromParams}/auth/keycloak-callback`;
+
 
 
 			const saleorApiGraphqlEndpoint = process.env.NEXT_PUBLIC_SALEOR_API_URL;

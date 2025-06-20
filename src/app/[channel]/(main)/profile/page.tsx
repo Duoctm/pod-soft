@@ -3,10 +3,11 @@
 import React, { Fragment, useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Eye, EyeOff, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import { Dialog, Tab, Transition } from "@headlessui/react";
 
+import { MenuItem, Select, type SelectChangeEvent } from "@mui/material";
 import {
 	currentUser,
 	updateAddress,
@@ -18,7 +19,6 @@ import {
 import { type CustomUserQuery } from "@/gql/graphql";
 import "react-toastify/dist/ReactToastify.css";
 import { getCountryList } from "@/checkout/hooks/useCountryList";
-import { MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import Wrapper from "@/ui/components/wrapper";
 import { cn } from "@/lib/utils";
 
@@ -39,11 +39,11 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 
 	const [user, setUser] = React.useState<UserType | null>(null);
 	const [address, setAddress] = React.useState<Address | null>(null);
-	const [showNewPassword, setShowNewPassword] = React.useState(false);
-	const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+	// const [showNewPassword, setShowNewPassword] = React.useState(false);
+	// const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 	const [countries, setCountries] = React.useState<{ code: string; country: string }[]>([]);
 	const [country, setCountry] = React.useState<{ country: string; code: string }>({ country: "", code: "" });
-	const [isOpen, setIsOpen] = useState<boolean>(false);
+	const [_isOpen, setIsOpen] = useState<boolean>(false);
 	const [isOpenEditProfile, setIsOpenEditProfile] = useState<boolean>(false);
 	const [isOpenEditAddress, setIsOpenAddress] = useState<boolean>(false);
 
@@ -164,40 +164,9 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 		},
 	});
 
-	const closeModal = () => {
-		setIsOpen(false);
-	};
-	/*const [documents, setDocuments] = useState<{ name: string; date: string; file: string }[]>([]);
-
-	const [showModal, setShowModal] = useState(false);
-
-	const handleAddDocument = async (newDoc: any, formData: FormData) => {
-		const result = await uploadPdf(formData);
-		console.log('ke qua upload', result);
-
-
-		const url = result?.file.cloudinary_url;
-
-		console.log("url", url);
-		newDoc.file = url;
-		const doc: any = {
-			name: newDoc.name,
-			date: newDoc.date,
-			url: url
-		}
-		const metadata = [{
-			key: "documents",
-			value: {
-				data: {
-					documents: [doc]
-				}
-			}
-		}]
-		await updateUserMetadata(metadata);
-
-		setDocuments((prev) => [...prev, newDoc]);
-	};*/
-
+	// const closeModal = () => {
+	// 	setIsOpen(false);
+	// };
 	return (
 		<>
 			<Wrapper className="min-h-[80vh]">
@@ -211,7 +180,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 										"px-4 py-2.5 text-left text-sm font-medium leading-5 whitespace-nowrap",
 										"ring-white/60 focus:outline-none",
 										selected
-											? "border-b-4 md:border-b-0 md:border-l-4 border-blue-700 bg-blue-50 text-blue-700"
+											? "border-b-4 md:border-b-0 md:border-l-4 border-[#8C3859] bg-[#8C3859]/20 text-black"
 											: "text-gray-700 hover:bg-gray-50 hover:text-gray-900",
 									)
 								}
@@ -225,7 +194,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 										"px-4 py-2.5 text-left text-sm font-medium leading-5 whitespace-nowrap",
 										"ring-white/60 focus:outline-none",
 										selected
-											? "border-b-4 md:border-b-0 md:border-l-4 border-blue-700 bg-blue-50 text-blue-700"
+											? "border-b-4 md:border-b-0 md:border-l-4 border-[#8C3859] bg-[#8C3859]/20 text-black"
 											: "text-gray-700 hover:bg-gray-50 hover:text-gray-900",
 									)
 								}
@@ -243,7 +212,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 											<h2 className="text-xl md:text-2xl font-bold text-gray-900">Profile Information</h2>
 											<button
 												onClick={() => setIsOpenEditProfile(true)}
-												className="rounded-full bg-blue-50 p-2 text-blue-600 hover:bg-blue-100"
+												className="rounded-full bg-[#8C3859]/20 p-2 text-black hover:bg-blue-100"
 											>
 												<Pencil className="h-5 w-5" />
 											</button>
@@ -286,7 +255,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 										</div>
 
 										{/* Actions */}
-										<div className="flex items-center justify-between">
+										{/* <div className="flex items-center justify-between">
 											<button
 												type="button"
 												onClick={() => setIsOpen(!isOpen)}
@@ -294,7 +263,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 											>
 												Change Password
 											</button>
-										</div>
+										</div> */}
 									</div>
 								</div>
 							</Tab.Panel>
@@ -307,7 +276,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 											<h2 className="text-xl md:text-2xl font-bold text-gray-900">Address Information</h2>
 											<button
 												onClick={() => setIsOpenAddress(true)}
-												className="rounded-full bg-blue-50 p-2 text-blue-600 hover:bg-blue-100"
+												className="rounded-full bg-[#8C3859]/20 p-2 text-black hover:bg-blue-100"
 											>
 												<Pencil className="h-5 w-5" />
 											</button>
@@ -351,7 +320,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 				</Tab.Group>
 			</Wrapper>
 
-			<Transition appear show={isOpen} as={Fragment}>
+			{/* <Transition appear show={isOpen} as={Fragment}>
 				<Dialog as="div" className="relative z-10" onClose={closeModal}>
 					<Transition.Child
 						as={Fragment}
@@ -392,9 +361,9 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 												onChange={formik.handleChange}
 												onBlur={formik.handleBlur}
 												required
-												className={`peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent px-0 py-2 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0  ${formik.touched.oldPassword && formik.errors.oldPassword
-														? "border-red-500"
-														: "border-gray-300"
+												className={`peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent px-0 py-2 text-sm text-gray-900 focus:border-[#8C3859] focus:outline-none focus:ring-0  ${formik.touched.oldPassword && formik.errors.oldPassword
+													? "border-red-500"
+													: "border-gray-300"
 													}`}
 											/>
 											{formik.touched.oldPassword && formik.errors.oldPassword && (
@@ -412,8 +381,8 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 												onBlur={formik.handleBlur}
 												required
 												className={`peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent px-0 py-2 pr-10 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0  ${formik.touched.newPassword && formik.errors.newPassword
-														? "border-red-500"
-														: "border-gray-300"
+													? "border-red-500"
+													: "border-gray-300"
 													}`}
 											/>
 											<button
@@ -441,8 +410,8 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 												onBlur={formik.handleBlur}
 												required
 												className={`peer block w-full appearance-none border-0 border-b-2 border-gray-300 bg-transparent px-0 py-2 pr-10 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-0  ${formik.touched.confirmPassword && formik.errors.confirmPassword
-														? "border-red-500"
-														: "border-gray-300"
+													? "border-red-500"
+													: "border-gray-300"
 													}`}
 											/>
 											<button
@@ -491,7 +460,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 						</div>
 					</div>
 				</Dialog>
-			</Transition>
+			</Transition> */}
 
 			{/* Edit Profile Modal */}
 			<Transition appear show={isOpenEditProfile} as={Fragment}>
@@ -533,7 +502,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 													name="firstName"
 													value={userFormik.values.firstName}
 													onChange={userFormik.handleChange}
-													className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+													className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#8C3859] focus:outline-none focus:ring-1 focus:ring-[#8C3859]"
 												/>
 											</div>
 
@@ -544,7 +513,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 													name="lastName"
 													value={userFormik.values.lastName}
 													onChange={userFormik.handleChange}
-													className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+													className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#8C3859] focus:outline-none focus:ring-1 focus:ring-[#8C3859]"
 												/>
 											</div>
 										</div>
@@ -560,7 +529,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 											<button
 												type="submit"
 												disabled={!userFormik.dirty || userFormik.isSubmitting}
-												className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${!userFormik.dirty || userFormik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
+												className={`flex items-center rounded bg-[#8C3859] px-4 py-2 font-medium text-white hover:bg-[#8C3859]/70 ${!userFormik.dirty || userFormik.isSubmitting ? "cursor-not-allowed opacity-70" : ""
 													}`}
 											>
 												{userFormik.isSubmitting ? (
@@ -621,7 +590,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 														name="companyName"
 														value={companyFormik.values.companyName}
 														onChange={companyFormik.handleChange}
-														className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+														className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#8C3859] focus:outline-none focus:ring-1 focus:ring-[#8C3859]"
 													/>
 												</div>
 
@@ -630,7 +599,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 													<Select
 														value={country.code}
 														onChange={handleChange}
-														className="mt-1 block h-10 w-full rounded-md border-gray-300"
+														className="mt-1 block h-10 w-full rounded-md border-[#8C3859] focus:border-[#8C3859] focus:outline-none focus:ring-1 focus:ring-[#8C3859]"
 														variant="outlined"
 													>
 														{countries.map((option) => (
@@ -648,7 +617,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 														name="city"
 														value={companyFormik.values.city}
 														onChange={companyFormik.handleChange}
-														className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+														className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#8C3859] focus:outline-none focus:ring-1 focus:ring-[#8C3859]"
 													/>
 												</div>
 
@@ -659,7 +628,7 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 														name="streetAddress1"
 														value={companyFormik.values.streetAddress1}
 														onChange={companyFormik.handleChange}
-														className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+														className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#8C3859] focus:outline-none focus:ring-1 focus:ring-[#8C3859]"
 													/>
 												</div>
 											</div>
@@ -678,9 +647,9 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 												<button
 													type="submit"
 													disabled={!companyFormik.dirty || companyFormik.isSubmitting}
-													className={`flex items-center rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 ${!companyFormik.dirty || companyFormik.isSubmitting
-															? "cursor-not-allowed opacity-70"
-															: ""
+													className={`flex items-center rounded bg-[#8C3859] px-4 py-2 font-medium text-white hover:bg-[#8C3859] ${!companyFormik.dirty || companyFormik.isSubmitting
+														? "cursor-not-allowed opacity-70"
+														: ""
 														}`}
 												>
 													{companyFormik.isSubmitting ? (

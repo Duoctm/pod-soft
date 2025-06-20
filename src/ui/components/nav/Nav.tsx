@@ -19,7 +19,7 @@ export const Nav = ({ channel }: { channel: string }) => {
 			<div className="flex items-center gap-2 md:gap-4 lg:gap-6">
 				<Suspense fallback={<div className="w-8" />}>
 
-					<UserMenuContainer />
+					<UserMenuContainer params={{ channel: channel }} />
 				</Suspense>
 				<Suspense fallback={<div className="w-6" />}>
 					<CartNavItem channel={channel} />

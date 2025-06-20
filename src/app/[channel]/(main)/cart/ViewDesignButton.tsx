@@ -20,7 +20,8 @@ export function ViewDesignButton({ lineId, checkout, params }: ViewDesignButtonP
 					);
 					const metadata = (await fetchCheckoutLineMetadata(checkout, lineId)) as any;
 					localStorage.setItem("designInfor", JSON.stringify(metadata));
-					localStorage.setItem("cartId", lineId);
+					localStorage.setItem("checkoutLineId", lineId);
+					localStorage.setItem("checkoutId", checkout);
 					window.location.replace(`design/2/${metadata.productId}/${metadata.colorValue}/${metadata.variantId}`);
 				}}
 				className="whitespace-nowrap rounded-full border border-black bg-white px-4 py-1 text-sm md:border-none md:font-medium md:text-blue-500 md:underline"

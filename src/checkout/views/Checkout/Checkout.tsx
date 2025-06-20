@@ -5,6 +5,8 @@ import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { EmptyCartPage } from "../EmptyCartPage";
 import { PageNotFound } from "../PageNotFound";
+import { checkoutValidate } from "../../../app/checkoutValidate";
+import { ErrorDialogPlaceOrder } from "../../../app/ErrorDialogPlaceOrder";
 import { Summary, SummarySkeleton } from "@/checkout/sections/Summary";
 import { CheckoutSkeleton } from "@/checkout/views/Checkout/CheckoutSkeleton";
 import { getUserServer, type User, type Address as ApiAddress } from "@/checkout/hooks/useUserServer";
@@ -31,8 +33,6 @@ import { type Address, type FormValues } from "@/checkout/lib/utils/type";
 import AddressEditDialogForm from "@/checkout/sections/AddressEditForm/AddressEditDialogForm";
 import CustomerAddressInfo from "@/checkout/sections/CustomerAddressInfo/CustomerAddressInfo";
 import { DeliveryMethods } from "@/checkout/sections/CheckoutForm/DeliveryMethodsSection";
-import { checkoutValidate } from "../../../app/checkoutValidate";
-import { ErrorDialogPlaceOrder } from "../../../app/ErrorDialogPlaceOrder";
 //import { GetItemToServerCookie } from "../../../app/actions";
 //import { callRefreshToken } from "../../../app/callRefreshToken";
 // import { DeliveryMethods } from "@/checkout/sections/DeliveryMethods";
@@ -171,7 +171,6 @@ export const Checkout = () => {
 		const fetchCheckout = async () => {
 			try {
 				const data = await getCheckoutServer({ id: checkoutId, languageCode: LanguageCodeEnum.EnUs });
-				console.log(data);
 				if (isMounted) {
 					setCheckout(data.checkout as CheckoutType);
 				}
@@ -347,10 +346,17 @@ export const Checkout = () => {
 	};
 
 	const handlePlaceOrder = async () => {
-
+		setIsLoadingPlaceOrder(true);
 		//const refreshTokenKey = `${process.env.NEXT_PUBLIC_SALEOR_API_URL}+saleor_auth_module_refresh_token`;
 		//const refreshToken = await GetItemToServerCookie(refreshTokenKey);
 		//await callRefreshToken(refreshTokenKey, refreshToken || "");
+
+		console.log(checkout)
+		if (!checkout?.deliveryMethod) {
+			toast.error("Please type shipping address");
+			setIsLoadingPlaceOrder(false);
+			return;
+		}
 
 
 		const response = await checkoutValidate(checkoutId || "");
@@ -366,14 +372,8 @@ export const Checkout = () => {
 
 
 
-
-		setIsLoadingPlaceOrder(true);
 		const dataCheckout = await getCheckoutServer({ id: checkoutId, languageCode: LanguageCodeEnum.EnUs });
 
-		if (!dataCheckout.checkout?.shippingMethods || dataCheckout.checkout.shippingMethods.length === 0) {
-			toast.error("Please type shipping address");
-			return;
-		}
 
 		// await updateDeliveryMethod({
 		// 	id: dataCheckout.checkout?.id || "",
@@ -388,22 +388,22 @@ export const Checkout = () => {
 				checkoutId: dataCheckout.checkout?.id || "",
 			});
 
+			completeResult.checkoutComplete?.order?.id
 			const completeCheckoutErrors: readonly CheckoutError[] | null | undefined =
 				completeResult.checkoutComplete?.errors;
 			if (completeCheckoutErrors && completeCheckoutErrors.length > 0) {
-				console.log(completeCheckoutErrors)
-
-				// completeCheckoutErrors.forEach((error: CheckoutError) => {
-				// 	toast.error(error.message);
-				// 	setIsLoadingPlaceOrder(false);
-				// });
+				completeCheckoutErrors.forEach((error: CheckoutError) => {
+					toast.error(error.message);
+					setIsLoadingPlaceOrder(false);
+				});
+				return;
 			} else {
 				const notification = (message: string) => {
 					toast.success(message, {
 						position: "top-right",
 					});
 					setTimeout(function () {
-						window.location.href = `/${dataCheckout.checkout?.channel.slug}/orders`;
+						window.location.href = `/${dataCheckout.checkout?.channel.slug}/order-complete?orderId=${completeResult.checkoutComplete?.order?.id}`;
 					}, 2500);
 				};
 				notification("The order has been placed successfully!");
@@ -452,12 +452,14 @@ export const Checkout = () => {
 
 
 						</div>
+						{
+							checkout ? (<div className="order-1 bg-gray-50 px-4 py-10 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 lg:py-16">
+								<Suspense fallback={<SummarySkeleton />}>
+									{checkout && <Summary {...checkout} update={update} onPlaceOrder={handlePlaceOrder} show={Boolean(checkout.shippingAddress)} loading={isLoadingPlaceOrder} />}
+								</Suspense>
+							</div>) : null
+						}
 
-						<div className="order-1 bg-gray-50 px-4 py-10 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 lg:py-16">
-							<Suspense fallback={<SummarySkeleton />}>
-								{checkout && <Summary {...checkout} update={update} onPlaceOrder={handlePlaceOrder} show={Boolean(checkout.shippingAddress)} loading={isLoadingPlaceOrder} />}
-							</Suspense>
-						</div>
 					</div>
 				)}
 

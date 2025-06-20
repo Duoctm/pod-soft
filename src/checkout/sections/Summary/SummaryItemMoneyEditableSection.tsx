@@ -54,7 +54,7 @@ export const SummaryItemMoneyEditableSection: React.FC<SummaryItemMoneyEditableS
 	return (
 		<div className="flex flex-col items-start gap-1 font-sans">
 			{/* Hộp hiển thị quantity */}
-			<div className="w-16 rounded-md border border-gray-300 bg-white px-3 py-2 text-center text-sm font-medium text-gray-800 shadow-sm">
+			<div className="w-full rounded-md border border-gray-300 bg-white p-2 text-center text-sm font-medium text-gray-800 shadow-sm">
 				{quantity}
 			</div>
 		</div>

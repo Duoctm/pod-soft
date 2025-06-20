@@ -31,8 +31,7 @@ export const DeleteLineButton = ({ lineId, checkoutId, onRemove }: Props) => {
 				<Loader className="spin h-10 w-10" />
 			) : (
 				<span
-		 			className="text-sm md:text-blue-500 md:underline md:font-medium  border md:border-none py-1 border-black bg-white  px-2 rounded-full"
-					// className="flex text-sm font-semibold bg-red-500 text-white hover:bg-red-600 px-3 py-1 rounded-md"
+					className="text-sm md:text-blue-500 md:underline md:font-medium  border md:border-none  border-black bg-white  px-2 rounded-full py-1"
 				>
 					Delete
 				</span>

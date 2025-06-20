@@ -2,38 +2,42 @@ import { default as nextPWA } from "@ducanh2912/next-pwa";
 
 /** @type {import('next').NextConfig} */
 const config = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "saleor-media-bucket-name.s3.amazonaws.com",
-      },
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-        port: "",
-        pathname: "/dzzqvl1b2/image/**",
-      },
-    ],
-    unoptimized: process.env.NEXT_IMAGE_UNOPTIMIZED === "true",
-  },
-  experimental: {
-    typedRoutes: false,
-  },
+	images: {
+		remotePatterns: [
+			{
+				protocol: "https",
+				hostname: "saleor-media-bucket-name.s3.amazonaws.com",
+			},
+			{
+				protocol: "https",
+				hostname: "res.cloudinary.com",
+				port: "",
+				pathname: "/dzzqvl1b2/image/**",
+			},
+			{
+				protocol: "https",
+				hostname: "api-dev.mypodsoftware.io.vn",
+				port: "",
+				pathname: "/thumbnail/**",
+			},
+		],
+		unoptimized: process.env.NEXT_IMAGE_UNOPTIMIZED === "true",
+	},
+	experimental: {
+		typedRoutes: false,
+	}, // used in the Dockerfile
 
-  // used in the Dockerfile
-  output:
-    process.env.NEXT_OUTPUT === "standalone"
-      ? "standalone"
-      : process.env.NEXT_OUTPUT === "export"
-        ? "export"
-        : undefined,
+	output:
+		process.env.NEXT_OUTPUT === "standalone"
+			? "standalone"
+			: process.env.NEXT_OUTPUT === "export"
+				? "export"
+				: undefined, // Add ESLint configuration to ignore errors during build
 
-  // Add ESLint configuration to ignore errors during build
-  eslint: {
-    // This setting will ignore ESLint errors during the build
-    ignoreDuringBuilds: true,
-  },
+	eslint: {
+		// This setting will ignore ESLint errors during the build
+		ignoreDuringBuilds: true,
+	},
 
 	reactStrictMode: false,
 	// experimental: {
@@ -59,8 +63,7 @@ const config = {
 };
 
 const withPWA = nextPWA({
-  dest: "public",
+	dest: "public",
 });
 
 export default withPWA(config);
- 
