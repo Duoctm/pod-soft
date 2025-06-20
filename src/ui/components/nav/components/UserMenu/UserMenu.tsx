@@ -12,16 +12,14 @@ import { useRouter } from "next/navigation";
 
 type Props = {
 	user: UserDetailsFragment;
-	channel: string
+
 };
 
-export function UserMenu({ user, channel }: Props) {
+export function UserMenu({ user }: Props) {
 	const router = useRouter();
 
 	const logoutClient = async () => {
-		if (channel) {
-			await logout({ channel });
-		}
+		await logout();
 		router.push("/");
 	}
 

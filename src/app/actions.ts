@@ -4,11 +4,13 @@ import { cookies } from 'next/headers'
 import { getServerAuthClient } from "@/app/config";
 import { setItem, getItem, removeItem } from './StorageRepository';
 import { checkTokenExpiringSoon } from "./checkTokenExpiringSoon";
-export async function logout({ channel }: { channel: string }) {
+export async function logout() {
 	"use server";
 	getServerAuthClient().signOut();
 	const clean = await cookies();
-	clean.delete(`checkoutId-${channel}`)
+
+	clean.delete(`checkoutId-us`)
+
 
 
 }

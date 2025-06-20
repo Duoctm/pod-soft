@@ -102,7 +102,7 @@ export function UserMenuContainer({ params }: { params?: { channel: string } }) 
 	}
 
 	if (user) {
-		return <UserMenu user={user} channel={params?.channel as string} />;
+		return <UserMenu user={user} />;
 	}
 
 	return (
