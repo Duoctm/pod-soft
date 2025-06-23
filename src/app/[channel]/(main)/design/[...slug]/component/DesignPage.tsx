@@ -1393,7 +1393,7 @@ function DesignPage(param: DesignPageProps) {
                         </div>
                         <hr className="mt-2" />
                         <div className="mt-2 flex flex-col items-start gap-2 px-2">
-                          <span className="font-semibold">FrontSize</span>
+                          <span className="font-semibold">Font Size</span>
                           <div className="flex w-full items-center gap-2">
                             <input
                               type="range"
@@ -1448,6 +1448,90 @@ function DesignPage(param: DesignPageProps) {
                         </div>
 
                         <hr className="mt-2" />
+
+
+                        <hr className="mt-2" />
+                        <div className="flex w-full items-start justify-between flex-col mt-2">
+                          <span className="font-semibold">Color</span>
+                          <div className="flex flex-wrap gap-2">
+                            {colors.map((color: string) => (
+                              <div
+                                key={color}
+                                className="w-7 h-7 rounded-md border hover:border-black/50 cursor-pointer transition-transform transform hover:scale-110"
+                                style={{ backgroundColor: color }}
+                                data-color={color}
+                                onClick={() => {
+                                  if (designerRef.current) {
+                                    designerRef.current.changeTextColorInStage(color);
+
+                                  }
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <hr className="mt-2" />
+                        <div className="flex w-full flex-col mt-2">
+                          <span className="font-semibold">Font Style</span>
+                          <div className="flex items-center gap-4">
+                            <label className="flex cursor-pointer items-center gap-2">
+                              <input
+                                type="checkbox"
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  if (designerRef.current) {
+                                    designerRef.current.changeFontWeightInsStage(checked);
+                                  }
+                                }}
+                                className="h-4 w-4 rounded border-gray-300 text-[#743C54] focus:ring-[#743C54]"
+                              />
+                              <span className="font-bold">Bold</span>
+                            </label>
+                            <label className="flex cursor-pointer items-center gap-2">
+                              <input
+                                type="checkbox"
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  if (designerRef.current) {
+                                    designerRef.current.changeFontStyleInsStage(checked)
+                                  }
+                                }}
+                                className="h-4 w-4 rounded border-gray-300 text-[#743C54] focus:ring-[#743C54]"
+                              />
+                              <span className="italic">Italic</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        <hr className="mt-2" />
+                        <div id="fontFamily" className="flex w-full flex-col mt-2">
+                          <span className="font-semibold">Font Family</span>
+                          <select
+                            className="w-full rounded-lg border"
+                            id="chooseFontFamily"
+                            onChange={(e) => {
+                              if (designerRef.current) {
+                                designerRef.current.changeFontFamilyInsStage(e.target.value);
+
+                              }
+                            }}
+                          >
+                            <option value="Montserrat" style={{ fontFamily: "Montserrat, sans-serif" }}>Montserrat</option>
+                            <option value="Sans Serif" style={{ fontFamily: "sans-serif" }}>Sans Serif</option>
+                            <option value="Arial" style={{ fontFamily: "Arial, sans-serif" }}>Arial</option>
+                            <option value="Comic Sans MS" style={{ fontFamily: "Comic Sans MS, cursive, sans-serif" }}>Comic Sans MS</option>
+                            <option value="Times New Roman" style={{ fontFamily: "Times New Roman, serif" }}>Times New Roman</option>
+                            <option value="Courier New" style={{ fontFamily: "Courier New, monospace" }}>Courier New</option>
+                            <option value="Verdana" style={{ fontFamily: "Verdana, sans-serif" }}>Verdana</option>
+                            <option value="Trebuchet MS" style={{ fontFamily: "Trebuchet MS, sans-serif" }}>Trebuchet MS</option>
+                            <option value="Arial Black" style={{ fontFamily: "Arial Black, sans-serif" }}>Arial Black</option>
+                            <option value="Impact" style={{ fontFamily: "Impact, sans-serif" }}>Impact</option>
+                            <option value="Bookman" style={{ fontFamily: "Bookman, serif" }}>Bookman</option>
+                            <option value="Garamond" style={{ fontFamily: "Garamond, serif" }}>Garamond</option>
+                            <option value="Palatino" style={{ fontFamily: "Palatino, serif" }}>Palatino</option>
+                            <option value="Georgia" style={{ fontFamily: "Georgia, serif" }}>Georgia</option>
+                          </select>
+                        </div>
                       </div>
                     )
                   }
@@ -1867,9 +1951,6 @@ function DesignPage(param: DesignPageProps) {
                 const checkoutLineId = localStorage.getItem("checkoutLineId");
                 const checkoutId = localStorage.getItem("checkoutId");
 
-                console.log("checkoutLineId", checkoutLineId);
-                console.log('checkoutId', checkoutId);
-                console.log("variant", variantId);
                 if (param.typeDesign === 3) {
                   setVariantIdOfUpdate(variantId);
                 }
@@ -3080,6 +3161,95 @@ function DesignPage(param: DesignPageProps) {
                         </Box>
                       </Box>
                     </Box>
+
+                    <div id="fontColorPickerWrap">
+                      <h5 className="mb-3 text-lg font-medium">Text Color</h5>
+                      <div id="fontColorPicker">
+                        <div className="grid grid-cols-10 gap-1">
+                          {colors.map((color) => (
+                            <div
+                              key={color}
+                              className="h-7 w-7 transform cursor-pointer rounded-full transition-transform hover:scale-110"
+                              style={{ backgroundColor: color }}
+                              data-color={color}
+
+                              onTouchStart={() => {
+
+                                if (designerRef.current) {
+                                  designerRef.current.changeTextColorInStage(color);
+                                }
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div id="fontStyle">
+                      <h5 className="mb-3 text-lg font-medium">Font Style</h5>
+                      <div className="flex justify-center gap-4">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="boldCheck"
+                            className="h-4 w-4 rounded text-blue-600 focus:ring-blue-500"
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              if (designerRef.current) {
+                                designerRef.current.changeFontWeightInsStage(checked);
+                              }
+
+                            }}
+                          />
+                          <span>Bold</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="italicCheck"
+                            className="h-4 w-4 rounded text-blue-600 focus:ring-blue-500"
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              if (designerRef.current) {
+                                designerRef.current.changeFontStyleInsStage(checked)
+                              }
+
+                            }}
+                          />
+                          <span>Italic</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div id="fontFamily">
+                      <h5 className="mb-3 text-lg font-medium">Font Family</h5>
+                      <select
+                        className="w-full rounded-lg border p-2"
+                        id="chooseFontFamily"
+                        onChange={(e) => {
+                          if (designerRef.current) {
+                            designerRef.current.changeFontFamilyInsStage(e.target.value);
+
+                          }
+
+                        }}
+                      >
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Sans Serif">Sans Serif</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Comic Sans MS">Comic Sans MS</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Trebuchet MS">Trebuchet MS</option>
+                        <option value="Arial Black">Arial Black</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Bookman">Bookman</option>
+                        <option value="Garamond">Garamond</option>
+                        <option value="Palatino">Palatino</option>
+                        <option value="Georgia">Georgia</option>
+                      </select>
+                    </div>
                   </Box>
                 )}
               </Box>

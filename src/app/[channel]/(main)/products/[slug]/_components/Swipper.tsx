@@ -1,3 +1,5 @@
+/* eslint-disable import/no-default-export */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 "use client";
 import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -38,7 +40,7 @@ const Swipper: React.FC<Props> = ({ images, loading, onImagesLoaded }) => {
 	}
 
 	return (
-		<div className="flex flex-col gap-y-2">
+		<div className="flex flex-col gap-y-2 aspect-square w-full">
 			<Swiper
 				style={{
 					height: "420px",

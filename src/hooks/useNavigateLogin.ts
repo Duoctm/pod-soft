@@ -1,4 +1,4 @@
-import { ErrorDetail, ExternalAuthUrlResponse, ParsedAuthData } from "@/ui/components/LoginForm";
+import { type ErrorDetail, type ExternalAuthUrlResponse, type ParsedAuthData } from "@/ui/components/LoginForm";
 
 export const useNavigateLogin = async (channel: string) => {
     let errorMessages = "Failed to initiate Keycloak login.";

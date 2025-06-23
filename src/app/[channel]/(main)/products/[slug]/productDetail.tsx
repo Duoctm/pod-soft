@@ -173,6 +173,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         }
 
         setAddToCartLoading(false);
+        setSizeQuantities({});
     }, [channel, params, sizeQuantities]);
 
     // Chuyển sang trang design
@@ -254,7 +255,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                             selectedSize={selectedSize}
                             onSelectSize={setSelectedSize}
                             min={0}
-                            max={9999}
+                            max={productDetail?.defaultVariant?.quantityAvailable as number}
                         />
                         <div className="flex flex-col gap-2 sm:flex-row sm:justify-start mt-4">
                             {loading ? (

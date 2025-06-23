@@ -1559,6 +1559,83 @@ class TShirtDesigner {
 
   }
 
+  public changeTextColorInStage(color: string) {
+    if (this.currentStage.selectedNode instanceof Konva.Node) {
+      const node = this.currentStage.selectedNode as Konva.Text;
+      node.fill(color);
+    }
+  }
+
+  public changeFontFamilyInsStage(style: string) {
+    if (this.currentStage.selectedNode instanceof Konva.Node) {
+      //alert('ola');
+      const node = this.currentStage.selectedNode as Konva.Text;
+      node.fontFamily(style);
+      //node.fontSize(20);
+    }
+  }
+
+  public changeFontWeightInsStage(bold: boolean) {
+    if (this.currentStage.selectedNode instanceof Konva.Node) {
+      const node = this.currentStage.selectedNode as Konva.Text;
+      if (bold) {
+        if (node.fontStyle().includes("italic")) {
+          node.fontStyle("bold italic");
+        }
+        else {
+          node.fontStyle("bold");
+        }
+      }
+      else {
+        if (node.fontStyle().includes("italic")) {
+          node.fontStyle("italic")
+        }
+        else {
+          node.fontStyle("normal");
+        }
+      }
+
+      //node.fontSize(20);
+    }
+  }
+
+  public changeFontStyleInsStage(italic: boolean) {
+    if (this.currentStage.selectedNode instanceof Konva.Node) {
+      const node = this.currentStage.selectedNode as Konva.Text;
+      /*var fontStyle = "";
+      //console.log(this.fontStyle, this.fontWeight);
+      if (node.fontStyle() === 'bold') {
+        fontStyle += "700";
+        if (italic) {
+          fontStyle += " " + "italic";
+        }
+      }
+      else {
+        fontStyle = "italic";
+      }
+      node.fontStyle(fontStyle);*/
+      //node.fontSize(20);
+
+      if (italic) {
+        if (node.fontStyle().includes("bold")) {
+          node.fontStyle("bold italic");
+        }
+        else {
+          node.fontStyle("italic");
+        }
+      }
+      else {
+        if (node.fontStyle().includes("bold")) {
+          node.fontStyle("bold")
+        }
+        else {
+          node.fontStyle("normal");
+        }
+      }
+    }
+  }
+
+
   public changeFontStyle(style: string) {
     switch (style) {
       case 'italic':

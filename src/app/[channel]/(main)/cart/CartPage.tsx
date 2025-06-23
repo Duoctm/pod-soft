@@ -43,7 +43,7 @@ const QuantityInput = ({
 	handleQuantityChange: (id: string, value: number) => void;
 }) => {
 	const [inputValue, setInputValue] = useState(item.quantity.toString());
-	const debouncedValue = useDebounce(inputValue, 500);
+	const debouncedValue = useDebounce(inputValue, 1000);
 
 	// Cập nhật khi quantity thay đổi từ props (ví dụ khi fetch lại cart)
 	useEffect(() => {
@@ -67,18 +67,16 @@ const QuantityInput = ({
 		setInputValue(e.target.value);
 	};
 
-	const handleBlur = () => {
-		setInputValue(item.quantity.toString()); // Clear khi blur
-	};
+	console.log("QuantityInput render", item);
 
 	return (
 		<input
 			type="number"
 			value={inputValue}
 			onChange={handleChange}
-			onBlur={handleBlur}
 			min="1"
 			className="w-16 rounded-md border border-gray-300 p-0 text-center"
+			max={item.variant.quantityAvailable || 9999} // Giới hạn tối đa theo stock
 		/>
 	);
 };
@@ -137,6 +135,9 @@ export function CartPage({ params }: CartPageProps) {
 		() => checkout.lines.reduce((total, item) => total + item.quantity, 0),
 		[checkout.lines],
 	);
+	console.log(checkout)
+
+
 	const renderCartItem = (item: CheckoutLine) => (
 		<div key={item.id} className="flex flex-1 flex-col py-4">
 			<li className="flex gap-x-2">
@@ -170,9 +171,9 @@ export function CartPage({ params }: CartPageProps) {
 						<p className="text-left  font-semibold text-neutral-900 md:text-right">
 							{/* {formatMoney(item.totalPrice.gross.amount, item.totalPrice.gross.currency)} */}
 							{formatMoney(
-								item.variant?.pricing?.price?.gross?.amount as number,
+								checkout.totalPrice.gross.amount / totalSubtotal,
 								item.variant?.pricing?.price?.gross?.currency as string,
-							)}
+							)} / per unit
 						</p>
 					</div>
 

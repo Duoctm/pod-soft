@@ -75,7 +75,7 @@ export default function CheckoutCompleteClient({ channel }: { channel: string })
                     </div>
                     <div className="flex justify-between mb-2">
                         <span className="font-medium text-gray-700">Total:</span>
-                        <span className="text-gray-800">
+                        <span className="text-gray-800  font-bold">
                             {
                                 formatMoney(orderDetail?.total.gross.amount as number, orderDetail?.total.gross.currency as string)
                             }
@@ -84,10 +84,10 @@ export default function CheckoutCompleteClient({ channel }: { channel: string })
                 </div>
                 <div className="w-full mb-4">
                     <h2 className="font-semibold text-gray-700 mb-2">Order Details</h2>
-                    <div className="flex items-center bg-gray-50 rounded-lg p-3">
+                    <div className="flex items-center bg-gray-50 rounded-lg p-3 flex-col gap-2 h-52 overflow-auto">
                         {
                             orderDetail?.lines.map((order) => {
-                                return <div key={order.variant?.id} className="flex flex-1">
+                                return <div key={order.variant?.id} className="flex flex-1 w-full">
                                     <Image
                                         width={64}
                                         height={64}
@@ -100,8 +100,6 @@ export default function CheckoutCompleteClient({ channel }: { channel: string })
                                         <div className="font-medium text-gray-800">{order.variant?.name}</div>
                                         <div className="text-gray-800 text-sm font-semibold flex items-center justify-between">
                                             <div className="text-gray-600 text-sm">Qty: {order.quantity}</div>
-                                            {formatMoney(order.variant?.pricing?.price?.gross.amount as number, order.variant?.pricing?.price?.gross.currency as string)}
-
                                         </div>
                                     </div>
                                 </div>

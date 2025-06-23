@@ -27,17 +27,29 @@ export async function addCart(
 	"use server";
 	try {
 		const checkout = await Checkout.findOrCreate({
-			checkoutId: await Checkout.getIdFromCookies(params.channel),
+			checkoutId: Checkout.getIdFromCookies(params.channel),
 			channel: params.channel,
+
 		});
+
 
 		invariant(checkout, "This should never happen");
 
-		await Checkout.saveIdToCookie(params.channel, checkout.id);
+		Checkout.saveIdToCookie(params.channel, checkout.id);
+
+		const newLines = lines.map((line) => {
+
+			return {
+				...line,
+				variantId: line.variantId,
+				quantity: line.quantity,
+				metadata: line.metadata || [],
+			};
+		})
 
 		const updatedCheckout = await checkoutLinesAddMultipleItems({
 			id: checkout.id,
-			lines,
+			lines: newLines,
 		});
 
 		if (updatedCheckout?.errors?.length) {
@@ -53,6 +65,7 @@ export async function addCart(
 				}
 			};
 		}
+
 
 		revalidatePath("/cart");
 

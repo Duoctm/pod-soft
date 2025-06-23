@@ -32,7 +32,7 @@ const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> = ({
 			<div className="my-6 animate-pulse">
 				<div className="mb-2 h-5 w-20 rounded bg-gray-200"></div>
 				<div className="flex flex-wrap gap-2">
-					{[...Array(4)].map((_, index) => (
+					{[...Array<number>(4)].map((_, index) => (
 						<div key={index} className="h-9 w-9 rounded-md bg-gray-200"></div>
 					))}
 				</div>

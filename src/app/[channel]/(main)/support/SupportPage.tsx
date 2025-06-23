@@ -4,7 +4,7 @@ import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { toast, ToastContainer } from "react-toastify";
 import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
-// eslint-disable-next-line import/no-cycle
+// eslint-disable-next-line import/no-cycle, import/order
 import { createSupport } from "./actions/create-support";
 import "react-toastify/dist/ReactToastify.css";
 import { useSearchParams } from "next/navigation";
@@ -83,6 +83,7 @@ const SupportPage = ({ channel }: { channel: string }) => {
     const [initialValues, setInitialValues] = React.useState<SupportFormData>(defaultInitialValues);
     const [loading, setLoading] = React.useState(false);
     const [faq, setFaq] = React.useState<GetPublicSettingsQuery["publicSettingsByKeys"] | null>(null); // Adjust type as needed
+    const [openIndex, setOpenIndex] = useState<number | null>(null);
 
     const [supportType, setSupportType] = useState<string>("NORMAL")
 
@@ -128,6 +129,7 @@ const SupportPage = ({ channel }: { channel: string }) => {
 
             const res = await createSupport(newValueCreate);
             if (res?.success) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                 resetForm();
                 toast.success(res.message);
             } else {
@@ -139,20 +141,6 @@ const SupportPage = ({ channel }: { channel: string }) => {
             setLoading(false);
         }
     };
-
-
-    const handleApplyFAQ = (value: string) => {
-        setInitialValues(prev => ({
-            ...prev,
-            details: value
-        }))
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
-        }
-        );
-
-    }
 
 
     return (
@@ -168,7 +156,7 @@ const SupportPage = ({ channel }: { channel: string }) => {
                     validationSchema={validationSchema}
                     onSubmit={handleSubmit}
                 >
-                    {({ errors, touched }) => (
+                    {({ errors, touched, setFieldValue }) => (
                         <Form className="w-full max-w-2xl space-y-6 px-4">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div>
@@ -281,43 +269,48 @@ const SupportPage = ({ channel }: { channel: string }) => {
                                     {loading ? "Submitting..." : "Submit"}
                                 </button>
                             </div>
+                            {faq && faq.length > 0 && (
+                                <div className="mt-6 w-full max-w-2xl">
+                                    <h3 className="text-lg font-semibold text-gray-900">Frequently Asked Questions</h3>
+                                    <ul className="space-y-4">
+                                        {faq.map((item, index) => {
+                                            const value = JSON.parse(item?.value as string) as FAQType;
+                                            return (
+                                                <li key={index} className="border rounded-md bg-gray-50 mt-2">
+                                                    <Accordion expanded={openIndex === index} onChange={() => setOpenIndex(openIndex === index ? null : index)}>
+                                                        <AccordionSummary
+                                                            className="py-2"
+                                                            expandIcon={<span>▼</span>}
+                                                            aria-controls={`faq-content-${index}`}
+                                                            id={`faq-header-${index}`}
+                                                        >
+                                                            <h4 className="font-medium">{value.question}</h4>
+                                                        </AccordionSummary>
+                                                        <AccordionDetails>
+                                                            <div className="flex flex-1 items-center justify-between">
+                                                                <p className="text-sm text-gray-700">{value.result}</p>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        void setFieldValue("details", value.text);
+                                                                        setOpenIndex(null); // Đóng accordion sau khi apply
+                                                                        window.scrollTo({ top: 0, behavior: "smooth" });
+                                                                    }}
+                                                                    className="float-end mt-2 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#8C3859] rounded-md hover:bg-[#8C3859]/70 focus:outline-none focus:ring-2 focus:ring-[#8C3859] focus:ring-offset-2">
+                                                                    Apply
+                                                                </button>
+                                                            </div>
+                                                        </AccordionDetails>
+                                                    </Accordion>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </div>
+                            )}
                         </Form>
                     )}
                 </Formik>
-                {faq && faq.length > 0 && (
-                    <div className="mt-6 w-full max-w-2xl px-4 mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">Frequently Asked Questions</h3>
-                        <ul className="space-y-4">
-                            {faq.map((item, index) => {
-                                const value = JSON.parse(item?.value as string) as FAQType;
-                                return (
-                                    <li key={index} className="border rounded-md bg-gray-50 mt-2">
-                                        <Accordion>
-                                            <AccordionSummary
-                                                className="py-2"
-                                                expandIcon={<span>▼</span>}
-                                                aria-controls={`faq-content-${index}`}
-                                                id={`faq-header-${index}`}
-                                            >
-                                                <h4 className="font-medium">{value.question}</h4>
-                                            </AccordionSummary>
-                                            <AccordionDetails>
-                                                <div className="flex flex-1 items-center justify-between">
-                                                    <p className="text-sm text-gray-700">{value.result}</p>
-                                                    <button
-                                                        onClick={() => handleApplyFAQ(value.text)}
-                                                        className="float-end mt-2 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#8C3859] rounded-md hover:bg-[#8C3859]/70 focus:outline-none focus:ring-2 focus:ring-[#8C3859] focus:ring-offset-2">
-                                                        Apply
-                                                    </button>
-                                                </div>
-                                            </AccordionDetails>
-                                        </Accordion>
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </div>
-                )}
             </div>
         </div >
     );

@@ -27,6 +27,7 @@ const ProductSizeQuantityInputs: React.FC<Props> = ({
 			{sizeList.map((size) => (
 				<div key={size} className="flex flex-col items-center">
 					<span className="mb-1 font-semibold">{size}</span>
+
 					<input
 						type="text"
 						max={max}
@@ -39,15 +40,19 @@ const ProductSizeQuantityInputs: React.FC<Props> = ({
 						className={`w-12 rounded border px-2 py-1 text-center transition-all duration-150
         ${selectedSize === size
 								? "w-20 border-2 border-[#8B3958] bg-white shadow-lg ring-2 ring-[#8B3958]"
-								: "border-gray-300 bg-gray-50 opacity-60"
+								: sizeQuantities[size]?.quantity > 0
+									? "border-2 border-[#8B3958] bg-blue-50 font-bold text-black"
+									: "border-gray-300 bg-gray-50 opacity-60"
 							}`}
 						disabled={selectedSize !== size}
 						onFocus={() => onSelectSize?.(size)}
 					/>
+
 				</div>
 			))}
 		</div>
 	);
 };
 
+// eslint-disable-next-line import/no-default-export
 export default React.memo(ProductSizeQuantityInputs);

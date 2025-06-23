@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 
 type Props = {
 	user: UserDetailsFragment;
-
 };
 
 export function UserMenu({ user }: Props) {
