@@ -2,7 +2,7 @@ import React from 'react'
 
 const SkeletonLoading = () => {
     return (
-        <div className="animate-pulse max-w-[250px] w-full">
+        <div className="animate-pulse max-w-[250px] w-full hidden lg:block">
             {[1, 2, 3, 4].map((index) => (
                 <div key={index} className="mb-6">
                     {/* Filter header skeleton */}

@@ -1,5 +1,7 @@
+/* eslint-disable import/no-default-export */
 import React from "react";
 import { groupAndSortColors } from "../utils/soft-color";
+import { cn } from "@/lib/utils";
 
 type ProductAttributeSelectorProps = {
 	name: string;
@@ -82,11 +84,14 @@ const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> = ({
 							value && (
 								<button
 									key={value}
-									className={`flex h-8 items-center justify-center rounded-md px-3 text-sm
-								transition-all duration-150 
-								${isSelected ? "border-slate-300 bg-[#8C3859] text-white" : "border border-slate-200 hover:border-gray-300"}`}
+									className={cn(
+										"rounded px-3 py-1 border",
+										isSelected
+											? "border-[#8B3958] bg-[#8B3958] text-white font-bold shadow"
+											: "border-gray-300 bg-white text-black"
+									)}
 									onClick={() => onSelect(value)}
-									title={value.replace("-", "")}
+									disabled={loading}
 								>
 									{value}
 								</button>

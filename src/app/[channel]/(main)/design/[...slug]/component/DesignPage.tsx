@@ -2154,7 +2154,12 @@ function DesignPage(param: DesignPageProps) {
         <Pen
           className="absolute right-1 top-1 z-10 block h-12 w-12 rounded-full bg-[#8C3859] p-3 lg:hidden"
           stroke="white"
-          onClick={() => setIsShowDialog(!isShowDialog)}
+          onClick={() => {
+            if (designerRef.current) {
+              handleDeselect();
+            }
+            setIsShowDialog(!isShowDialog);
+          }}
         />
 
         <ShirtIcon

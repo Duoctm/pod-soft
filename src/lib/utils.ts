@@ -49,4 +49,8 @@ export function getHrefForVariant({
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
-  }
+}
+
+export function formatNumber(n: number): string {
+	return n.toLocaleString('de-DE'); // 'de-DE' dùng dấu chấm làm phân cách
+}

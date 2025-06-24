@@ -13,6 +13,7 @@ type Props = {
 		variant?: ProductVariant | null
 	) => void;
 	defaultVariant?: ProductVariant | null;
+	selectedColor?: string | null; // Thêm dòng này
 };
 
 const ProductColorSizeSelector: React.FC<Props> = ({
@@ -20,6 +21,7 @@ const ProductColorSizeSelector: React.FC<Props> = ({
 	loading,
 	onChange,
 	defaultVariant,
+	selectedColor: selectedColorProp, // Thêm dòng này
 }) => {
 	const variantMap = useMemo(() => {
 		const map = new Map<string, ProductVariant>();
@@ -42,7 +44,7 @@ const ProductColorSizeSelector: React.FC<Props> = ({
 		return Array.from(set);
 	}, [variants]);
 
-	const [selectedColor, setSelectedColor] = useState<string | null>(null);
+	const [selectedColor, setSelectedColor] = useState<string | null>(selectedColorProp ?? null);
 	const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
 	// Chỉ set mặc định 1 lần khi mount hoặc khi defaultVariant thực sự thay đổi
@@ -67,6 +69,9 @@ const ProductColorSizeSelector: React.FC<Props> = ({
 		}
 	}, [colorList, selectedColor]);
 
+	useEffect(() => {
+		if (selectedColorProp !== undefined) setSelectedColor(selectedColorProp);
+	}, [selectedColorProp]);
 
 	const sizeList = useMemo(() => {
 		if (!selectedColor) return [];

@@ -6,7 +6,7 @@ import { Breadcrumb } from "@/ui/components/Breadcrumb";
 // Tạo context để lưu trạng thái breadcrumb
 const BreadcrumbContext = createContext<{
   setBreadcrumb: Dispatch<SetStateAction<ReactNode>>;
-}>({ setBreadcrumb: () => {} });
+}>({ setBreadcrumb: () => { } });
 
 // Hook để sử dụng context trong các component con
 export const useBreadcrumb = () => useContext(BreadcrumbContext);
@@ -21,10 +21,9 @@ export function BreadcrumbProvider({ children, channel }: BreadcrumbProviderProp
 
   return (
     <BreadcrumbContext.Provider value={{ setBreadcrumb }}>
-      {breadcrumb == null && <Breadcrumb channel={channel} />}
-      {breadcrumb != null && children && breadcrumb }
+      {!breadcrumb && <Breadcrumb channel={channel} />}
       {children}
+      {breadcrumb}
     </BreadcrumbContext.Provider>
-    
   );
 }
