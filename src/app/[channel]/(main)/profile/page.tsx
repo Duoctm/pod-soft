@@ -598,8 +598,14 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 														name="companyName"
 														value={companyFormik.values.companyName}
 														onChange={companyFormik.handleChange}
+														onBlur={companyFormik.handleBlur}
 														className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#8C3859] focus:outline-none focus:ring-1 focus:ring-[#8C3859]"
 													/>
+													{companyFormik.touched.companyName && companyFormik.errors.companyName && (
+														<p className="mt-1 text-sm text-red-600">
+															{companyFormik.errors.companyName}
+														</p>
+													)}
 												</div>
 
 												<div>
@@ -636,8 +642,15 @@ const ProfilePage = ({ params }: { params: { channel: string } }) => {
 														name="streetAddress1"
 														value={companyFormik.values.streetAddress1}
 														onChange={companyFormik.handleChange}
+														onBlur={companyFormik.handleBlur}
 														className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-[#8C3859] focus:outline-none focus:ring-1 focus:ring-[#8C3859]"
 													/>
+													{companyFormik.touched.streetAddress1 &&
+														companyFormik.errors.streetAddress1 && (
+															<p className="mt-1 text-sm text-red-600">
+																{companyFormik.errors.streetAddress1}
+															</p>
+														)}
 												</div>
 											</div>
 
