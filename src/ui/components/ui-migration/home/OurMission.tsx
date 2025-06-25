@@ -9,7 +9,7 @@ const OurMission = () => {
             <Image src='/images/aps-ketches.webp' fill className='bg-center opacity-30' alt='' />
             <Wrapper className='flex flex-1 items-center justify-center flex-col gap-4 relative z-10 max-w-[1080px]'>
                 <h2 className='text-3xl md:text-4xl lg:text-[65px] font-bold text-[#F58B71]'>Our Mission</h2>
-                <p className='max-w-4xl lg:px-4 px-2  text-center text-[#F0F2F3] text-sm md:text-base lg:text-[25px] lg:mt-8 leading-tight'>
+                <p className='max-w-4xl lg:px-4 text-center text-[#F0F2F3] text-sm md:text-base lg:text-[24px] lg:mt-8 leading-tight px-4 lg:px-0'>
                     At ZoomPrints, we get you the freshest digital prints, fast: just 1 day.
                     Our team is all about giving you the best service and top-quality prints every time from anywhere in the US. We stay ahead of the game, always pushing tech forward and keeping it green for the industry.
                 </p>
