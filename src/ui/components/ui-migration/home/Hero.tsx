@@ -45,9 +45,9 @@ const HeroNewVersion = ({ channel }: { channel: string }) => {
                     w-full max-w-3xl px-4
                 "
             >
-                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-[#F58B71] mb-4 leading-tight">
+                <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-[#F58B71] mb-4 leading-tight">
                     Fresh Prints, Fast Delivery
-                </h1>
+                </h2>
                 <p className="text-[#F0F2F3] text-base md:text-xl lg:text-2xl mb-8 max-w-2xl">
                     Get your custom shirts printed and shipped in just 1 day. Top quality, best service, anywhere in the US.
                 </p>
