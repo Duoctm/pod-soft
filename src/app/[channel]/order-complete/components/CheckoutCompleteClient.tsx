@@ -118,13 +118,13 @@ export default function CheckoutCompleteClient({ channel }: { channel: string })
                 </div>
                 <a
                     href="/"
-                    className="w-full bg-[#8C3859] hover:bg-[#8C3859]/80 text-white font-semibold py-2 rounded-lg text-center transition mb-2"
+                    className="w-full bg-[#F58A71] hover:bg-[#F58A71]/80 text-white font-semibold py-2 rounded-lg text-center transition mb-2"
                 >
                     Go to Homepage
                 </a>
                 <a
                     href={`/${channel}/products`}
-                    className="w-full text-[#8C3859] hover:underline text-center text-sm"
+                    className="w-full text-[#F58A71] hover:underline text-center text-sm"
                 >
                     Continue Shopping
                 </a>

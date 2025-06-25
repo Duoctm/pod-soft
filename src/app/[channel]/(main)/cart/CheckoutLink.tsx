@@ -1,12 +1,12 @@
 "use client";
 import { toast } from "react-toastify";
+import { useState } from 'react';
+import { checkoutValidate } from "../../../checkoutValidate";
+import { ErrorDialogPlaceOrder } from "../../../ErrorDialogPlaceOrder"
 import { checkout } from "./updateDefaultAddressServerFunc";
 //import { callRefreshToken } from "../../../callRefreshToken"
 //import { GetItemToServerCookie } from "../../../actions"
-import { checkoutValidate } from "../../../checkoutValidate";
 //import { checkTokenServerAction } from "../../../actions"
-import { ErrorDialogPlaceOrder } from "../../../ErrorDialogPlaceOrder"
-import { useState } from 'react';
 
 type Props = {
 	disabled?: boolean;
@@ -60,7 +60,7 @@ export const CheckoutLink = ({ disabled, checkoutId, className = "", channel }: 
 					}
 
 				}}
-				className={`inline-block max-w-full rounded border border-transparent bg-[#8B3958] px-6 py-2 text-center font-medium text-[#FFFFFF] hover:cursor-pointer hover:bg-[#7A314F] aria-disabled:cursor-not-allowed aria-disabled:bg-[#C59CAE] sm:px-16 ${className}`}
+				className={`inline-block max-w-full rounded border border-transparent bg-[#F58A71] px-6 py-2 text-center font-medium text-[#FFFFFF] hover:cursor-pointer hover:bg-[#F58A71] aria-disabled:cursor-not-allowed aria-disabled:bg-[#C59CAE] sm:px-16 ${className}`}
 			>
 				Checkout
 			</a>

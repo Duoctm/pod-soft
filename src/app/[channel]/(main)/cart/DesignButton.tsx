@@ -21,9 +21,12 @@ export function DesignButton({ productId, colorId, variantId, params, selectedVa
 				localStorage.setItem('cart', cartInfo);
 				window.location.replace(`design/1/${productId}/${colorId}/${variantId}`);
 			}}
-			className="text-sm md:text-blue-500 md:underline md:font-medium  border md:border-none  border-black bg-white  px-2 rounded-full py-1"
 		>
-			Design
+			<span
+				className="text-sm md:text-blue-500 md:underline md:font-medium  border md:border-none  border-black bg-white  px-2 rounded-full py-1"
+			>
+				Design
+			</span>
 		</button>
 	);
 }

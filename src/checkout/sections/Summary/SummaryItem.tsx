@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+// eslint-disable-next-line no-restricted-imports
 import Image from "next/image";
 import { useSummaryLineLineAttributesText, getSummaryLineProps } from "./utils";
 import { type CheckoutLineFragment, type OrderLineFragment } from "@/checkout/graphql";
@@ -24,7 +25,7 @@ export const SummaryItem = ({ line, children }: SummaryItemProps) => {
 						height={250}
 						src={productImage.url}
 						alt={productImage.alt ?? ""}
-						className="h-full w-full object-contain object-center"
+						className="h-full w-full object-contain  bg-cover"
 					/>
 				) : (
 					<PhotoIcon />

@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { CheckoutLink } from "./CheckoutLink";
 import { DeleteLineButton } from "./DeleteLineButton";
 import { ViewDesignButton } from "./ViewDesignButton";
@@ -42,10 +44,12 @@ const QuantityInput = ({
 	item: CheckoutLine;
 	handleQuantityChange: (id: string, value: number) => void;
 }) => {
+	const maxQty = item.variant.quantityAvailable || 9999;
 	const [inputValue, setInputValue] = useState(item.quantity.toString());
+	const [hasShownMaxToast, setHasShownMaxToast] = useState(false);
+
 	const debouncedValue = useDebounce(inputValue, 1000);
 
-	// Cập nhật khi quantity thay đổi từ props (ví dụ khi fetch lại cart)
 	useEffect(() => {
 		setInputValue(item.quantity.toString());
 	}, [item.quantity]);
@@ -56,31 +60,64 @@ const QuantityInput = ({
 			debouncedValue !== "" &&
 			!isNaN(num) &&
 			num > 0 &&
-			num !== item.quantity
+			num !== item.quantity &&
+			num <= maxQty
 		) {
 			handleQuantityChange(item.id, num);
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [debouncedValue]);
+	}, [debouncedValue, handleQuantityChange, item, maxQty]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setInputValue(e.target.value);
+		const value = e.target.value;
+		const num = Number(value);
+
+		if (value === "") {
+			setInputValue(value);
+			setHasShownMaxToast(false);
+			return;
+		}
+
+		if (isNaN(num) || num < 1) {
+			toast.error("Please enter a quantity of at least 1.");
+			setHasShownMaxToast(false);
+			return;
+		}
+
+		if (num > maxQty) {
+			if (!hasShownMaxToast) {
+				toast.error(`Maximum available`);
+				setHasShownMaxToast(true);
+			}
+			return;
+		}
+
+		// valid input
+		setHasShownMaxToast(false);
+		setInputValue(value);
 	};
 
-	console.log("QuantityInput render", item);
+	const handleBlur = () => {
+		const num = Number(inputValue);
+		if (isNaN(num) || num < 1) {
+			toast.error("Quantity must be at least 1");
+			setInputValue("1");
+		}
+	};
 
 	return (
-		<input
-			type="number"
-			value={inputValue}
-			onChange={handleChange}
-			min="1"
-			className="w-16 rounded-md border border-gray-300 p-0 text-center"
-			max={item.variant.quantityAvailable || 9999} // Giới hạn tối đa theo stock
-		/>
+		<div>
+			<input
+				type="number"
+				value={inputValue}
+				onBlur={handleBlur}
+				onChange={handleChange}
+				min="1"
+				max={maxQty}
+				className="rounded-md border border-gray-300 p-0 text-center pl-4"
+			/>
+		</div>
 	);
 };
-
 
 
 export function CartPage({ params }: CartPageProps) {
@@ -89,13 +126,14 @@ export function CartPage({ params }: CartPageProps) {
 	const [checkoutId, setCheckoutId] = useState<string>("");
 	const [loading, setLoading] = useState(false);
 
+
 	const fetchCheckout = useCallback(async () => {
 		//await checkTokenServerAction();
 		setLoading(true);
 		try {
 			const checkoutData = await getCheckoutList(params.channel);
-			console.log("checkoutdata", checkoutData);
 			if (checkoutData) {
+				console.log(checkoutData);
 				setCheckout(checkoutData.checkout as CheckoutType);
 				setItems(checkoutData.checkout.lines as CheckoutLine[]);
 			}
@@ -138,6 +176,7 @@ export function CartPage({ params }: CartPageProps) {
 
 	const renderCartItem = (item: CheckoutLine) => (
 		<div key={item.id} className="flex flex-1 flex-col py-4">
+			<ToastContainer />
 			<li className="flex gap-x-2">
 				<div className="relative aspect-square h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border bg-neutral-50 sm:h-32 sm:w-32">
 					{item.variant?.media && (
@@ -151,7 +190,7 @@ export function CartPage({ params }: CartPageProps) {
 					)}
 				</div>
 				<div className="relative flex flex-1 flex-col justify-between">
-					<div className="flex flex-col justify-between justify-items-start gap-4 md:flex-row">
+					<div className="flex flex-col justify-between justify-items-start gap-2 md:flex-row">
 						<div>
 							<LinkWithChannel
 								href={getHrefForVariant({
@@ -175,7 +214,7 @@ export function CartPage({ params }: CartPageProps) {
 						</p>
 					</div>
 
-					<div className="flex flex-col items-start justify-start gap-y-2 md:flex-row md:items-center">
+					<div className="flex flex-col items-start justify-start gap-y-2 md:flex-row md:items-center mt-2">
 						<div className="flex items-center gap-2 font-bold">
 							<button
 								type="button"
@@ -258,7 +297,7 @@ export function CartPage({ params }: CartPageProps) {
 						</p>
 						<LinkWithChannel
 							href="/products"
-							className="inline-block max-w-full rounded border border-transparent bg-[#8B3958] px-6 py-2 text-center font-medium text-[#FFFFFF] hover:bg-[#7A314F] aria-disabled:cursor-not-allowed aria-disabled:bg-[#C59CAE] sm:px-16"
+							className="inline-block max-w-full rounded border border-transparent bg-[#F58A71] px-6 py-2 text-center font-medium text-[#FFFFFF] hover:bg-[#F58A71] aria-disabled:cursor-not-allowed aria-disabled:bg-[#C59CAE] sm:px-16"
 						>
 							Explore products
 						</LinkWithChannel>

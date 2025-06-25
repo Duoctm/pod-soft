@@ -134,7 +134,7 @@ export const Summary: FC<SummaryProps> = ({
 						<p className="font-bold">Total price</p>
 					</div>
 					<Money
-						className="font-bold text-[#8B3958]"
+						className="font-bold text-[#1E2737]"
 						ariaLabel="total price"
 						money={totalPrice?.gross}
 						data-testid="totalOrderPrice"
@@ -148,8 +148,8 @@ export const Summary: FC<SummaryProps> = ({
 						onClick={onPlaceOrder}
 						type="submit"
 						className={`flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${loading
-								? "cursor-not-allowed bg-gray-400 hover:bg-gray-500 focus:ring-gray-500 "
-								: "bg-[#8B3958] text-white hover:bg-[#7A314F] focus:ring-[#7A314F] "
+							? "cursor-not-allowed bg-gray-400 hover:bg-gray-500 focus:ring-gray-500 "
+							: "bg-[#F58A71] text-white hover:bg-[#F58A71] focus:ring-[#F58A71] "
 							}`}
 						disabled={loading}
 					>

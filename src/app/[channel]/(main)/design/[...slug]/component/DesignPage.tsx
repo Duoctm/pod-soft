@@ -1,6 +1,3 @@
-/* eslint-disable import/no-default-export */
-/* eslint-disable jsx-a11y/alt-text */
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -40,7 +37,7 @@ import { fetchProductDetail } from "../utils/test";
 import "react-toastify/dist/ReactToastify.css";
 import { useDesign } from "../utils/useDesign";
 import { cn } from "@/lib/utils";
-import { redoStackHistory, undoStackHistory } from "../utils/designHistory";
+import { redoStackHistory2, undoStackHistory2, destroyStackHistory2, NodeHistory2 } from "../utils/designHistory2";
 import { ChangeProductModal } from "./ChangeProduct";
 
 interface DesignPageProps {
@@ -86,10 +83,17 @@ function DesignPage(param: DesignPageProps) {
   const [isFistChangeProduct, setIsFistChangeProduct] = useState<boolean>(true);
   const cropContainerRefMobile = useRef<HTMLDivElement | null>(null);
   const cropContainerRefDesktop = useRef<HTMLDivElement | null>(null);
+  const [isFirstLoad, setIsFirstLoad] = useState<boolean>(true);
 
   const [isShowDialog, setIsShowDialog] = useState<boolean>(false);
   const [isShowFaceDialog, setIsShowFaceDialog] = useState<boolean>(false);
   const [showProductModal, setShowProductModal] = useState<number | 0 | 1 | 2>(0);
+  const isDestroyHistortRef = useRef(true);
+  const [isDestroyHistort, setIsDestroyHistort] = useState(true);
+
+  useEffect(() => {
+    isDestroyHistortRef.current = isDestroyHistort;
+  }, [isDestroyHistort]);
 
   const [frameState, setFrameState] = useState({
     width: 160,
@@ -177,6 +181,7 @@ function DesignPage(param: DesignPageProps) {
         productId,
         variantId,
         colorId,
+        param.typeDesign,
         colorData,
         sizeIdDefault,
         variantSizeColor,
@@ -211,6 +216,12 @@ function DesignPage(param: DesignPageProps) {
 
             importUpload(designs);
             setVariantIdOfUpdate(variantId);
+            setTimeout(() => {
+              if (designerRef.current)
+                designerRef.current.createNodeHistory(true);
+            }, 100);
+
+
           }
 
         } catch (error) {
@@ -279,7 +290,7 @@ function DesignPage(param: DesignPageProps) {
             imageDom.style.display = "block";
             previewDom!.style.display = "block";
             if (designerRef.current) {
-              designerRef.current.switchToStage(sort_data[item].code);
+              designerRef.current.switchToStage(sort_data[item].code, true);
             }
           }
         }
@@ -344,8 +355,276 @@ function DesignPage(param: DesignPageProps) {
       } catch (error) {
         console.log(error);
       }
+
+
+      try {
+        const raw = localStorage.getItem("nodeHistory");
+        if (raw) {
+          //alert('co')
+          const nodeHistory = JSON.parse(raw) as NodeHistory2;
+          updateHisoryStatus(nodeHistory);
+
+          localStorage.removeItem("nodeHistory");
+        }
+        else {
+
+          if (param.typeDesign == 1 && isFirstLoad) {
+            designerRef.current.createNodeHistory();
+            setIsFirstLoad(false);
+          }
+        }
+      }
+      catch (error) {
+        console.log(error);
+      }
     }
   }, [designerRef.current?.currentStage.stage]);
+
+  useEffect(() => {
+
+    const handleBeforeUnload = () => {
+      if (isDestroyHistortRef.current === true) {
+        destroyStackHistory2();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      // Cleanup khi component unmount
+      if (isDestroyHistortRef.current === true) {
+        destroyStackHistory2();
+      }
+
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
+
+
+  const handleChangeProductColor = (key: string) => {
+    if (designerRef.current == null || designerRef.current == undefined)
+      return;
+    const result = getMetaDtataFromColorVariant(key, colorData);
+    sort_data = result.sort((a, b) => a.z_index - b.z_index);
+
+    for (const item of result) {
+      const imageDom = document.getElementById(
+        item.code + "Image",
+      ) as HTMLImageElement;
+      const thumbnailDom = document.getElementById(`thumb-${item.code}`);
+      imageDom.src = item.image;
+      if (thumbnailDom) {
+        thumbnailDom.setAttribute("src", item.image);
+      }
+    }
+    const thumbnails = document.querySelectorAll(".thumbnail");
+    thumbnails.forEach((thumb) => {
+      thumb.addEventListener("click", handleThumbnailClick);
+    });
+
+    designerRef.current.data = result;
+    designerRef.current.colorValue = key;
+    if (variantSizeColor) {
+      const selectVariant = getVariantIdFromColorSize(
+        key,
+        sizeIdDefault,
+        variantSizeColor,
+      );
+
+      if (selectVariant !== undefined) {
+        setVariantId(selectVariant);
+      }
+    }
+  }
+
+  const updateHisoryStatus = (satus: NodeHistory2) => {
+    if (designerRef.current == null || designerRef.current == undefined)
+      return;
+
+    if (satus.ProductId == designerRef.current.productId) {
+      if (satus.ColorId != designerRef.current.colorValue && satus.ColorId != null) {
+        handleChangeProductColor(satus.ColorId)
+      }
+    }
+    else {
+      router.push(`/${param.channel}/design/${satus.DesignType}/${satus.ProductId}/${satus.ColorId}/${satus.VariantId}`);
+      localStorage.setItem("nodeHistory", JSON.stringify(satus));
+      setIsDestroyHistort(false);
+    }
+
+    if (satus.StageId) {
+      designerRef.current.switchToStage(satus.StageId);
+    }
+
+    if (designerRef.current.currentStage.layer) {
+      designerRef.current.currentStage.layer.destroyChildren();
+      designerRef.current.currentStage.layer.draw();
+    }
+    if (satus.Nodes && satus.Nodes.length > 0) {
+      for (const node of satus.Nodes) {
+        if (node.Type == "text") {
+          if (!designerRef.current.currentStage.stage || !designerRef.current.currentStage.layer) {
+            console.error('Current stage or layer is not initialized');
+            return;
+          }
+          designerRef.current.updateStagePositions();
+          designerRef.current.clearBorderNode(designerRef.current.currentStage);
+
+          const textNode = new Konva.Text({
+            id: node.Id || "",
+            text: node.Text || "",
+            x: node.PositionX || 0,
+            y: node.PositionY || 0,
+            fontSize: node.FontSize || 0,
+            draggable: true,
+            fill: node.Fill || "",
+            fontFamily: node.FontFamily || "",
+            fontStyle: node.FontStyle || "",
+            align: 'center',
+            padding: 5,
+            rotation: node.RotationAngle || 0
+          });
+
+          designerRef.current.trimTextToFitStageWidth(textNode, designerRef.current.currentStage.stage);
+
+          // Căn giữa text node
+          textNode.offsetX(textNode.width() / 2);
+          textNode.offsetY(textNode.height() / 2);
+
+          textNode.setAttr('rotationOfLastWidth', textNode.width());
+          textNode.setAttr('rotationOfLastHeight', textNode.height());
+
+          textNode.setAttr('lastPositionX', textNode.x());
+          textNode.setAttr('lastPositionY', textNode.y());
+
+          textNode.dragBoundFunc(function (pos) {
+            const stage = textNode.getStage();
+            const stageWidth = stage!.width();
+            const stageHeight = stage!.height();
+
+            const tempNode = textNode.clone();
+            tempNode.position(pos);
+            const bounds = tempNode.getClientRect();
+
+            let newX = pos.x;
+            let newY = pos.y;
+
+            if (bounds.x < 0) {
+              newX = pos.x - bounds.x;
+            }
+            if (bounds.x + bounds.width > stageWidth) {
+              newX = pos.x - (bounds.x + bounds.width - stageWidth);
+            }
+            if (bounds.y < 0) {
+              newY = pos.y - bounds.y;
+            }
+            if (bounds.y + bounds.height > stageHeight) {
+              newY = pos.y - (bounds.y + bounds.height - stageHeight);
+            }
+
+            return { x: newX, y: newY };
+          });
+
+          designerRef.current.currentStage.layer.add(textNode);
+          designerRef.current.currentStage.layer.draw();
+          //this.showBorderNode(textNode, this.currentStage);
+          //this.menuIndexSetter(6);
+          designerRef.current.setMenuWithNodeAndStage(textNode, designerRef.current.currentStage, 6);
+          designerRef.current.getRSOfNode();
+          //console.log('currentStage', textNode.fontSize(), textNode.width(), textNode.height());
+
+          textNode.on('dragend', () => {
+            if (designerRef.current)
+              designerRef.current.createNodeHistory();
+          });
+        }
+        else if (node.Type == "image") {
+          //console.log('nodeeeeeeeeeeeeeeeeeee', node);
+          if (!designerRef.current.currentStage.stage || !designerRef.current.currentStage.layer) {
+            console.error('Current stage or layer is not initialized');
+            return;
+          }
+          designerRef.current.updateStagePositions();
+          designerRef.current.clearBorderNode(designerRef.current.currentStage);
+          const image = new Image();
+          if (node.SrcImg) {
+            image.src = node.SrcImg;
+          }
+          const imgNode = new Konva.Image({
+            id: node.Id || "",
+            image: image,
+            x: node.PositionX || 0,
+            y: node.PositionY || 0,
+            width: node.WidthSize || 0,
+            height: node.HeightSize || 0,
+            draggable: true,
+            rotation: node.RotationAngle || 0
+          });
+
+          imgNode.offsetX(imgNode.width() / 2);
+          imgNode.offsetY(imgNode.height() / 2);
+
+          imgNode.setAttr('rotationOfLastWidth', imgNode.width());
+          imgNode.setAttr('rotationOfLastHeight', imgNode.height());//lastPositionNode
+
+          imgNode.setAttr('lastPositionX', imgNode.x());
+          imgNode.setAttr('lastPositionY', imgNode.y());
+
+          imgNode.dragBoundFunc(function (pos) {
+            const stage = imgNode.getStage();
+            //console.log('stage', stage);
+            const stageWidth = stage!.width();
+            const stageHeight = stage!.height();
+
+            const tempNode = imgNode.clone();
+            tempNode.position(pos);
+            const bounds = tempNode.getClientRect();
+
+            let newX = pos.x;
+            let newY = pos.y;
+
+            if (bounds.x < 0) {
+              newX = pos.x - bounds.x;
+            }
+            if (bounds.x + bounds.width > stageWidth) {
+              newX = pos.x - (bounds.x + bounds.width - stageWidth);
+            }
+            if (bounds.y < 0) {
+              newY = pos.y - bounds.y;
+            }
+            if (bounds.y + bounds.height > stageHeight) {
+              newY = pos.y - (bounds.y + bounds.height - stageHeight);
+            }
+
+
+
+            return { x: newX, y: newY };
+          });
+
+
+
+          designerRef.current.currentStage.layer!.add(imgNode);
+          designerRef.current.currentStage.layer!.draw();
+
+          //this.showBorderNode(imgNode, this.currentStage);
+          //this.menuIndexSetter(5);
+          designerRef.current.setMenuWithNodeAndStage(imgNode, designerRef.current.currentStage, 5);
+          designerRef.current.getWHROfNode();
+
+          imgNode.on('dragend', () => {
+            if (designerRef.current)
+              designerRef.current.createNodeHistory();
+          });
+
+        }
+      }
+    }
+  }
+
+
+
+
 
   const colors = [
     "#FFFFFF",
@@ -384,18 +663,21 @@ function DesignPage(param: DesignPageProps) {
 
   const handleRedo = () => {
     if (!designerRef.current?.currentStage) return;
-    const result = redoStackHistory(designerRef.current.currentStage.StackHistories);
+    const result = redoStackHistory2();
+    console.log('redo', result);
     if (result != null) {
-      designerRef.current.updateHistoryStatus(result, "redo");
+      updateHisoryStatus(result);
     }
   };
 
   const handleUndo = () => {
     if (!designerRef.current?.currentStage) return;
-    const result = undoStackHistory(designerRef.current.currentStage.StackHistories);
+    const result = undoStackHistory2();
+    console.log('undo', result);
     if (result != null) {
-      designerRef.current.updateHistoryStatus(result, "undo");
+      updateHisoryStatus(result);
     }
+
   };
 
 
@@ -490,7 +772,7 @@ function DesignPage(param: DesignPageProps) {
         imageDom.style.display = "block";
         previewDom!.style.display = "block";
         if (designerRef.current) {
-          designerRef.current.switchToStage(sort_data[item].code);
+          designerRef.current.switchToStage(sort_data[item].code, true);
         }
       }
     }
@@ -559,16 +841,11 @@ function DesignPage(param: DesignPageProps) {
             imageNode.getLayer()?.draw();
             //imageNode.setAttr('rotationOfLastWidth', imageNode.width());
             //imageNode.setAttr('rotationOfLastHeight', imageNode.height());
+
+            designerRef.current.createNodeHistory();
           }
         };
-        designerRef.current?.handleAddHistory({
-          node: imageNode, rotationAngle: imageNode.rotation(), CroptParam: {
-            HeightScale: heightScale,
-            WidthScale: widthScale,
-            LeftScale: leftScale,
-            TopScale: topScale
-          }, action: "cropt"
-        });
+
       }
     };
   };
@@ -650,6 +927,7 @@ function DesignPage(param: DesignPageProps) {
       {(showProductModal == 1) && (
         <ChangeProductModal
           setOpen={setShowProductModal}
+          isDestroyHistoty={setIsDestroyHistort}
           channel={param.channel}
           exportRelativeDesignToJson={designerRef.current?.exportRelativeDesignToJson}
           fromDevice={1}
@@ -660,6 +938,7 @@ function DesignPage(param: DesignPageProps) {
       {(showProductModal == 2) && (
         <ChangeProductModal
           setOpen={setShowProductModal}
+          isDestroyHistoty={setIsDestroyHistort}
           channel={param.channel}
           exportRelativeDesignToJson={designerRef.current?.exportRelativeDesignToJson}
           fromDevice={2}
@@ -679,7 +958,7 @@ function DesignPage(param: DesignPageProps) {
           id="rightMenu"
           className="lg:flex h-full w-full max-w-[370px] flex-row overflow-hidden rounded-md border hidden "
         >
-          <div className="flex h-full w-20 flex-col items-start justify-start bg-[#743C54] pt-2 text-white relative ">
+          <div className="flex h-full w-20 flex-col items-start justify-start bg-[#2c3c50] pt-2 text-white relative ">
             <div
               className={cn(
                 "flex h-20 w-20 flex-col items-center justify-center hover:bg-white/20 hover:text-white",
@@ -802,37 +1081,8 @@ function DesignPage(param: DesignPageProps) {
                         onClick={() => {
                           if (designerRef.current) {
                             setLoading(true);
-                            const result = getMetaDtataFromColorVariant(key, colorData);
-                            sort_data = result.sort((a, b) => a.z_index - b.z_index);
-
-                            for (const item of result) {
-                              const imageDom = document.getElementById(
-                                item.code + "Image",
-                              ) as HTMLImageElement;
-                              const thumbnailDom = document.getElementById(`thumb-${item.code}`);
-                              imageDom.src = item.image;
-                              if (thumbnailDom) {
-                                thumbnailDom.setAttribute("src", item.image);
-                              }
-                            }
-                            const thumbnails = document.querySelectorAll(".thumbnail");
-                            thumbnails.forEach((thumb) => {
-                              thumb.addEventListener("click", handleThumbnailClick);
-                            });
-
-                            designerRef.current.data = result;
-                            designerRef.current.colorValue = key;
-                            if (variantSizeColor) {
-                              const selectVariant = getVariantIdFromColorSize(
-                                key,
-                                sizeIdDefault,
-                                variantSizeColor,
-                              );
-
-                              if (selectVariant !== undefined) {
-                                setVariantId(selectVariant);
-                              }
-                            }
+                            handleChangeProductColor(key);
+                            designerRef.current.createNodeHistory();
                             setLoading(false);
                           }
                         }}
@@ -1184,7 +1434,7 @@ function DesignPage(param: DesignPageProps) {
                                   }
                                 }
                               }}
-                              className="h-4 w-4 rounded border-gray-300 text-[#743C54] focus:ring-[#743C54]"
+                              className="h-4 w-4 rounded border-gray-300 text-[#2c3c50] focus:ring-[#2c344b]"
                             />
                             <span className="font-bold">Bold</span>
                           </label>
@@ -1204,7 +1454,7 @@ function DesignPage(param: DesignPageProps) {
                                   }
                                 }
                               }}
-                              className="h-4 w-4 rounded border-gray-300 text-[#743C54] focus:ring-[#743C54]"
+                              className="h-4 w-4 rounded border-gray-300 text-[#2c3c50] focus:ring-[#2c344b]"
                             />
                             <span className="italic">Italic</span>
                           </label>
@@ -1245,7 +1495,7 @@ function DesignPage(param: DesignPageProps) {
                       </div>
                       <button
                         type="button"
-                        className="mt-2 w-full rounded-lg border border-gray-300  py-2 focus:border-gray-300 focus:outline-none focus:ring-0 text-white bg-[#8C3859]"
+                        className="mt-2 w-full rounded-lg border border-gray-300  py-2 focus:border-gray-300 focus:outline-none focus:ring-0 text-white bg-[#2c344b]"
                         id="submitText"
                         onClick={() => {
                           const text = (
@@ -1483,7 +1733,7 @@ function DesignPage(param: DesignPageProps) {
                                     designerRef.current.changeFontWeightInsStage(checked);
                                   }
                                 }}
-                                className="h-4 w-4 rounded border-gray-300 text-[#743C54] focus:ring-[#743C54]"
+                                className="h-4 w-4 rounded border-gray-300 text-[#2c3c50] focus:ring-[#2c344b]"
                               />
                               <span className="font-bold">Bold</span>
                             </label>
@@ -1496,7 +1746,7 @@ function DesignPage(param: DesignPageProps) {
                                     designerRef.current.changeFontStyleInsStage(checked)
                                   }
                                 }}
-                                className="h-4 w-4 rounded border-gray-300 text-[#743C54] focus:ring-[#743C54]"
+                                className="h-4 w-4 rounded border-gray-300 text-[#2c3c50] focus:ring-[#2c344b]"
                               />
                               <span className="italic">Italic</span>
                             </label>
@@ -1600,7 +1850,7 @@ function DesignPage(param: DesignPageProps) {
                     }
                   </div>
                   <div
-                    className="mt-2 flex w-full items-center justify-center bg-[#8C3859] py-2 text-white rounded-md cursor-pointer hover:bg-[#743C54] transition-colors"
+                    className="mt-2 flex w-full items-center justify-center bg-[#2c344b] py-2 text-white rounded-md cursor-pointer hover:bg-[#2c3c50] transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       cropImage(cropContainerRefDesktop);
@@ -1858,7 +2108,7 @@ function DesignPage(param: DesignPageProps) {
           {(param.typeDesign == 1) && (
             <Button
               sx={{
-                backgroundColor: "#743C54",
+                backgroundColor: "#2c3c50",
                 color: "#ffffff",
                 "&:hover": {
                   backgroundColor: "#2b2966",
@@ -1937,7 +2187,7 @@ function DesignPage(param: DesignPageProps) {
           {(param.typeDesign === 2 || param.typeDesign === 3) && (
             <Button
               sx={{
-                backgroundColor: "#743C54",
+                backgroundColor: "#2c3c50",
                 color: "#ffffff",
                 "&:hover": {
                   backgroundColor: "#2b2966",
@@ -2152,13 +2402,18 @@ function DesignPage(param: DesignPageProps) {
         </Paper> */}
 
         <Pen
-          className="absolute right-1 top-1 z-10 block h-12 w-12 rounded-full bg-[#8C3859] p-3 lg:hidden"
+          className="absolute right-1 top-1 z-10 block h-12 w-12 rounded-full bg-[#2c344b] p-3 lg:hidden"
           stroke="white"
-          onClick={() => setIsShowDialog(!isShowDialog)}
+          onClick={() => {
+            if (designerRef.current) {
+              handleDeselect();
+            }
+            setIsShowDialog(!isShowDialog);
+          }}
         />
 
         <ShirtIcon
-          className="absolute right-1 top-14 z-10 block h-12 w-12 rounded-full bg-[#8C3859] p-3 lg:hidden"
+          className="absolute right-1 top-14 z-10 block h-12 w-12 rounded-full bg-[#2c344b] p-3 lg:hidden"
           stroke="white"
           onClick={() => setIsShowFaceDialog(!isShowFaceDialog)}
         />
@@ -2255,37 +2510,8 @@ function DesignPage(param: DesignPageProps) {
                       onClick={() => {
                         if (designerRef.current) {
                           setLoading(true);
-                          const result = getMetaDtataFromColorVariant(key, colorData);
-                          sort_data = result.sort((a, b) => a.z_index - b.z_index);
-
-                          for (const item of result) {
-                            const imageDom = document.getElementById(
-                              item.code + "Image",
-                            ) as HTMLImageElement;
-                            const thumbnailDom = document.getElementById(`thumb-${item.code}`);
-                            imageDom.src = item.image;
-                            if (thumbnailDom) {
-                              thumbnailDom.setAttribute("src", item.image);
-                            }
-                          }
-                          const thumbnails = document.querySelectorAll(".thumbnail");
-                          thumbnails.forEach((thumb) => {
-                            thumb.addEventListener("click", handleThumbnailClick);
-                          });
-
-                          designerRef.current.data = result;
-                          designerRef.current.colorValue = key;
-                          if (variantSizeColor) {
-                            const selectVariant = getVariantIdFromColorSize(
-                              key,
-                              sizeIdDefault,
-                              variantSizeColor,
-                            );
-
-                            if (selectVariant !== undefined) {
-                              setVariantId(selectVariant);
-                            }
-                          }
+                          handleChangeProductColor(key);
+                          designerRef.current.createNodeHistory();
                           setLoading(false);
                         }
                       }}
@@ -2799,7 +3025,7 @@ function DesignPage(param: DesignPageProps) {
                     <div className="text-center">
                       <button
                         type="button"
-                        className="w-full rounded-lg bg-[#8C3859] px-6 py-2.5 text-white hover:bg-[#8C3859]/70 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                        className="w-full rounded-lg bg-[#2c344b] px-6 py-2.5 text-white hover:bg-[#2c344b]/70 focus:outline-none focus:ring-2 focus:ring-offset-2"
                         id="submitText"
                         onClick={() => {
                           const text = (
@@ -3316,7 +3542,7 @@ function DesignPage(param: DesignPageProps) {
                 }
               </div>
               <div
-                className="mt-2 flex w-full items-center justify-center bg-[#8C3859] py-2 text-white rounded-md cursor-pointer hover:bg-[#743C54] transition-colors"
+                className="mt-2 flex w-full items-center justify-center bg-[#2c344b] py-2 text-white rounded-md cursor-pointer hover:bg-[#2c3c50] transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
 
@@ -3393,7 +3619,7 @@ function DesignPage(param: DesignPageProps) {
       <div className="fixed bottom-0 right-0 block  md:hidden">
         {(param.typeDesign == 1) && (
           <Button
-            className="flex h-12 w-12  items-center justify-center rounded-full bg-[#8C3859] p-2"
+            className="flex h-12 w-12  items-center justify-center rounded-full bg-[#2c344b] p-2"
             onClick={async () => {
               const isLogin = await checkUser();
               if (isLogin == false) {
@@ -3463,7 +3689,7 @@ function DesignPage(param: DesignPageProps) {
             }}
           >
             <ShoppingCart
-              className="flex h-12 w-12  items-center justify-center rounded-full bg-[#8C3859] p-2"
+              className="flex h-12 w-12  items-center justify-center rounded-full bg-[#2c344b] p-2"
               stroke="white"
             />
           </Button>
@@ -3505,7 +3731,7 @@ function DesignPage(param: DesignPageProps) {
           >
             <ShoppingCart
               stroke="white"
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#8C3859] p-2"
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2c344b] p-2"
             />
           </Button>
         )}

@@ -65,7 +65,7 @@ const ErrorDialogPlaceOrder: React.FC<ErrorDialogPlaceOrder> = ({ message, onClo
 									{onConfirm && (
 										<button
 											type="button"
-											className="w-full justify-center rounded-md border border-transparent bg-[#8C3859] px-6 py-2 text-sm font-medium text-white hover:bg-[#8C3859]/80"
+											className="w-full justify-center rounded-md border border-transparent bg-[#F58A71] px-6 py-2 text-sm font-medium text-white hover:bg-[#F58A71]/80"
 											onClick={() => {
 												onConfirm()
 												router.push(`/${channel}/support?request=order-limit`)

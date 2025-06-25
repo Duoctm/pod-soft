@@ -83,7 +83,7 @@ export const PromoCodeAdd = ({ id, update }: { id: string; update: () => void })
 
 				<button
 					type="submit"
-					className="inline-flex justify-center rounded-md border border-transparent bg-[#8B3958] px-4 py-2 text-sm font-medium text-white shadow-sm transition duration-150 ease-in-out hover:bg-[#7A314F] focus:bg-[#7A314F] focus:outline-none focus:ring-2 focus:ring-[#7A314F] focus:ring-offset-2"
+					className="inline-flex justify-center rounded-md border border-transparent bg-[#F58A71] px-4 py-2 text-sm font-medium text-white shadow-sm transition duration-150 ease-in-out hover:bg-[#7A314F] focus:bg-[#7A314F] focus:outline-none focus:ring-2 focus:ring-[#7A314F] focus:ring-offset-2"
 					disabled={loading || isLocked}
 				>
 					{loading ? <LoaderCircle className="mr-2 h-5 w-5 animate-spin" /> : "Apply"}
