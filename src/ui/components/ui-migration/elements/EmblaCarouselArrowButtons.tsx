@@ -69,6 +69,7 @@ export const PrevButton: React.FC<PropType> = (props) => {
 
     return (
         <button
+            aria-label="Previous Slide"
             type="button"
             className={`${buttonClass} ${className}`}
             {...restProps}
@@ -84,6 +85,7 @@ export const NextButton: React.FC<PropType> = (props) => {
 
     return (
         <button
+            aria-label="Next Slide"
             type="button"
             className={`${buttonClass} ${className}`}
             {...restProps}
