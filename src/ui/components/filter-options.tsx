@@ -33,12 +33,12 @@ export const FilterOption = React.memo(function FilterOption({
 		<div
 			onClick={onSelect}
 			className={cn(
-				"text-sm font-medium flex cursor-pointer items-center justify-center transition-all duration-200 ease-in-out hover:bg-[#8C3859] hover:text-white",
+				"text-sm font-medium flex cursor-pointer items-center justify-center transition-all duration-200 ease-in-out ",
 				isColor
 					? "w-10 h-10 border-2 rounded-full shadow-md hover:shadow-lg"
 					: "min-w-14 px-2 py-2 rounded-md shadow-sm hover:shadow-md",
 				isSelected
-					? " ring-gray-200 !bg-[#8C3859] !text-white"
+					? " ring-gray-200 !bg-[#F58A71] !text-white"
 					: "border-2 border-gray-200 hover:border-gray-300"
 			)}
 			style={{

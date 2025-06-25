@@ -10,9 +10,11 @@ interface PageProps {
 
 const ProductDetail: React.FC<PageProps> = ({ params }) => {
     return (
-        <ProductDetailComponent
-            params={params}
-        />
+        <div className="bg-[#fafafa]">
+            <ProductDetailComponent
+                params={params}
+            />
+        </div>
     );
 };
 

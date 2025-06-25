@@ -6,6 +6,10 @@ import { UserMenu } from "./UserMenu";
 import { getUser } from "@/actions/user";
 import { type UserDetailsFragment } from "@/gql/graphql";
 import { type ErrorDetail, type ExternalAuthUrlResponse, type ParsedAuthData } from "@/ui/components/LoginForm";
+import { cn } from "@/lib/utils";
+
+const version = process.env.NEXT_PUBLIC_UI_VERSION;
+
 
 export function UserMenuContainer({ params }: { params?: { channel: string } }) {
 
@@ -108,7 +112,11 @@ export function UserMenuContainer({ params }: { params?: { channel: string } }) 
 
 	return (
 		<div onClick={handleLogin} className="flex items-center justify-center rounded-md p-2">
-			<UserIcon className="h-6 w-6" aria-hidden="true" />
+			<UserIcon className={cn('h-6 w-6', {
+				"text-black": version === "1",
+				"text-white": version === "2",
+			})} aria-hidden="true" />
+
 			<span className="sr-only">Log in</span>
 		</div>
 	);

@@ -39,9 +39,9 @@ const ProductSizeQuantityInputs: React.FC<Props> = ({
 						}}
 						className={`w-12 rounded border px-2 py-1 text-center transition-all duration-150
         ${selectedSize === size
-								? "w-20 border-2 border-[#8B3958] bg-white shadow-lg ring-2 ring-[#8B3958]"
+								? "w-20 border-2 border-[#F58A71] bg-white shadow-lg ring-2 ring-[#F58A71]"
 								: sizeQuantities[size]?.quantity > 0
-									? "border-2 border-[#8B3958] bg-blue-50 font-bold text-black"
+									? "border-2 border-[#F58A71] bg-blue-50 font-bold text-black"
 									: "border-gray-300 bg-gray-50 opacity-60"
 							}`}
 						disabled={selectedSize !== size}

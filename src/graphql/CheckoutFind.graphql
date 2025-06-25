@@ -16,9 +16,8 @@ query CheckoutFind($id: ID!) {
 				value
 			}
 			variant {
-				quantityAvailable
-				media {
-					url
+				media{
+					url 
 					alt
 				}
 				product {

@@ -18,10 +18,12 @@ export default async function Page({
 	};
 }) {
 	return (
-		<Wrapper>
-			{/* <h2 className="sr-only">Product list</h2> */}
-			{/* <InfiniteProductList channel={params.channel} first={ProductsPerPage} /> */}
-			<InfiniteProducts channel={params.channel} first={ProductsPerPage} />
-		</Wrapper>
+		<div className="bg-[#fafafa]">
+			<Wrapper>
+				{/* <h2 className="sr-only">Product list</h2> */}
+				{/* <InfiniteProductList channel={params.channel} first={ProductsPerPage} /> */}
+				<InfiniteProducts channel={params.channel} first={ProductsPerPage} />
+			</Wrapper>
+		</div>
 	);
 }

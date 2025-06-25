@@ -4,6 +4,7 @@ import React from "react";
 // import { FilterSidebar } from "./_components/filter-sidebar";
 import { ProductCard } from "./_components/ProductCard";
 import { useCategoryData } from "./hooks/useCategoryData";
+import Wrapper from "@/ui/components/wrapper";
 const CategoryPage = ({ params }: { params: { slug: string; channel: string } }) => {
 	const { attributes, category } = useCategoryData(params.slug, params.channel);
 
@@ -24,19 +25,12 @@ const CategoryPage = ({ params }: { params: { slug: string; channel: string } })
 				{category?.name || "Collection Products"}
 			</h1>
 			<div className="relative flex items-start">
-				{/* <FilterSidebar
-					channel={params.channel}
-					slug={params.slug}
-					category={category}
-					attributes={attributes}
-					setCategory={setCategory}
-				/> */}
 				{category.products?.edges && category.products.edges.length > 0 ? (
-					<div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+					<Wrapper className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 ">
 						{category.products.edges.map((product) => (
 							<ProductCard key={product.node.id} product={product} channel={params.channel} />
 						))}
-					</div>
+					</Wrapper>
 				) : (
 					<div className="flex min-h-[400px] w-full flex-col items-center justify-center rounded-lg bg-gray-50">
 						<svg

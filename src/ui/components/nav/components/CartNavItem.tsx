@@ -2,6 +2,10 @@ import { ShoppingCart } from "lucide-react";
 import clsx from "clsx";
 import * as Checkout from "@/lib/checkout";
 import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
+import { cn } from "@/lib/utils";
+
+
+const version = process.env.NEXT_PUBLIC_UI_VERSION;
 
 export const CartNavItem = async ({ channel }: { channel: string }) => {
 	const checkoutId = Checkout.getIdFromCookies(channel);
@@ -9,9 +13,14 @@ export const CartNavItem = async ({ channel }: { channel: string }) => {
 
 	const lineCount = checkout ? checkout.lines.length : 0;
 
+
+
 	return (
 		<LinkWithChannel href="/cart" className="relative flex items-center" data-testid="CartNavItem">
-			<ShoppingCart className="h-6 w-6 shrink-0" aria-hidden="true" />
+			<ShoppingCart className={cn('h-6 w-6 shrink-0   ', {
+				"text-black": version === "1",
+				"text-white": version === "2",
+			})} aria-hidden="true" />
 			{lineCount > 0 ? (
 				<div
 					className={clsx(

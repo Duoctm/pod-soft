@@ -132,10 +132,10 @@ const InfiniteProducts = ({ channel, first, onHandleChangeProductDesign }: Infin
             </div>
 
             <button
-                className="fixed bottom-4 right-4 z-50 rounded-full bg-black p-4 hover:bg-black/50 text-white shadow-lg lg:hidden"
+                className="fixed bottom-4 right-4 z-50 rounded-full bg-[#F58A71] p-4 hover:bg-black/50 text-white shadow-lg lg:hidden"
                 onClick={() => onOpen()}
             >
-                <FilterIcon className="h-6 w-6" />
+                <FilterIcon className="h-6 w-6 " />
             </button>
         </div>
     );

@@ -61,8 +61,8 @@ const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> = ({
 										<button
 											className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all duration-150
                         ${isSelected
-													? "scale-110 border-[#8C3859] shadow-lg ring-2 ring-[#8C3859]"
-													: "border-slate-300 hover:scale-105 hover:border-[#8C3859]"
+													? "scale-110 border-[#F58A71] shadow-lg ring-2 ring-[#F58A71]"
+													: "border-slate-300 hover:scale-105 hover:border-[#F58A71]"
 												}`}
 											style={{ backgroundColor: colorCode || "#f9fafb" }}
 											onClick={() => onSelect(value)}
@@ -87,7 +87,7 @@ const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> = ({
 									className={cn(
 										"rounded px-3 py-1 border",
 										isSelected
-											? "border-[#8B3958] bg-[#8B3958] text-white font-bold shadow"
+											? "border-[#F58A71] bg-[#F58A71] text-white font-bold shadow"
 											: "border-gray-300 bg-white text-black"
 									)}
 									onClick={() => onSelect(value)}

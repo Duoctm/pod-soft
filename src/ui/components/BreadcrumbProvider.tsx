@@ -20,7 +20,7 @@ export function BreadcrumbProvider({ children, channel }: BreadcrumbProviderProp
   const [breadcrumb, setBreadcrumb] = useState<ReactNode>(null);
 
   return (
-    <BreadcrumbContext.Provider value={{ setBreadcrumb }}>
+    <BreadcrumbContext.Provider value={{ setBreadcrumb }} >
       {!breadcrumb && <Breadcrumb channel={channel} />}
       {children}
       {breadcrumb}

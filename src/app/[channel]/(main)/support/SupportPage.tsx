@@ -264,7 +264,7 @@ const SupportPage = ({ channel }: { channel: string }) => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full rounded-md bg-[#8C3859] px-4 py-2 text-white hover:bg-[#8C3859]/60 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                                    className="w-full rounded-md bg-[#F58A71] px-4 py-2 text-white hover:bg-[#F58A71]/60 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
                                 >
                                     {loading ? "Submitting..." : "Submit"}
                                 </button>
@@ -296,7 +296,7 @@ const SupportPage = ({ channel }: { channel: string }) => {
                                                                         setOpenIndex(null); // Đóng accordion sau khi apply
                                                                         window.scrollTo({ top: 0, behavior: "smooth" });
                                                                     }}
-                                                                    className="float-end mt-2 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#8C3859] rounded-md hover:bg-[#8C3859]/70 focus:outline-none focus:ring-2 focus:ring-[#8C3859] focus:ring-offset-2">
+                                                                    className="float-end mt-2 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#F58A71] rounded-md hover:bg-[#F58A71]/70 focus:outline-none focus:ring-2 focus:ring-[#F58A71] focus:ring-offset-2">
                                                                     Apply
                                                                 </button>
                                                             </div>

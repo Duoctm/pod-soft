@@ -20,6 +20,12 @@ const config = {
 				port: "",
 				pathname: "/thumbnail/**",
 			},
+			{
+				protocol: "http",
+				hostname: "api-dev.mypodsoftware.io.vn",
+				port: "",
+				pathname: "/thumbnail/**",
+			},
 		],
 		unoptimized: process.env.NEXT_IMAGE_UNOPTIMIZED === "true",
 	},

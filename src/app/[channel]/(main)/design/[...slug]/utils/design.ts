@@ -1454,8 +1454,6 @@ class TShirtDesigner {
           this.handleAddHistory({ node: imgNode, positionX: imgNode.x(), positionY: imgNode.y(), rotationAngle: imgNode.rotation(), action: "update" })
         });
 
-        this.clearBorderNode(this.currentStage);
-
         //console.log('currentStage', this.currentStage.borderDiv?.style.x, this.currentStage.borderDiv?.style.y);
       };
       img.src = e.target?.result as string;
@@ -1553,7 +1551,7 @@ class TShirtDesigner {
     textNode.on('dragend', () => {
       this.handleAddHistory({ node: textNode, fontFamily: textNode.fontFamily(), fontSize: textNode.fontSize(), fontStyle: textNode.fontStyle(), positionX: textNode.x(), positionY: textNode.y(), rotationAngle: textNode.rotation(), action: "update" })
     });
-    this.clearBorderNode(this.currentStage);
+
   }
 
   public changeTextColor(color: string) {

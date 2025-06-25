@@ -168,7 +168,7 @@ const FilterSidebar = ({ channel, fromDesign }: { channel: string; fromDesign: b
         <>
             <div className="hidden w-full max-w-[250px] lg:block">
                 <div
-                    className={`scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hidden h-[calc(100vh-160px)] w-full overflow-y-auto bg-white lg:block ${fromDesign == false ? "sticky top-40" : ""
+                    className={`scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hidden h-[calc(100vh-160px)] w-full overflow-y-auto lg:block ${fromDesign == false ? "sticky top-40" : ""
                         }`}
                 >
                     {/* Header */}
@@ -178,7 +178,7 @@ const FilterSidebar = ({ channel, fromDesign }: { channel: string; fromDesign: b
 
                     <button
                         onClick={handleResetFilters}
-                        className="mb-4 w-full rounded-lg bg-[#8C3859] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#8C3859]/50"
+                        className="mb-4 w-full rounded-lg bg-[#F58A71] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#F58A71]/50"
                     >
                         Reset Filters
                     </button>
@@ -217,7 +217,7 @@ const FilterSidebar = ({ channel, fromDesign }: { channel: string; fromDesign: b
                                                 {options.length > 4 && slug && (
                                                     <button
                                                         onClick={() => toggleExpand(slug)}
-                                                        className="ml-auto w-full text-right text-sm text-[#8C3859] hover:text-[#8C3859]/70"
+                                                        className="ml-auto w-full text-right text-sm text-[#F58A71] hover:text-[#F58A71]/70"
                                                     >
                                                         {expandedAttributes[slug] ? "Show Less" : `Show More (${options.length - 4})`}
                                                     </button>
@@ -250,7 +250,7 @@ const FilterSidebar = ({ channel, fromDesign }: { channel: string; fromDesign: b
                     <div className="flex-1 overflow-y-auto p-4">
                         <button
                             onClick={handleResetFilters}
-                            className="mb-4 w-full rounded-lg bg-[#8C3859] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#8C3859]/50"
+                            className="mb-4 w-full rounded-lg bg-[#F58A71] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#F58A71]/50"
                         >
                             Reset Filters
                         </button>
@@ -289,7 +289,7 @@ const FilterSidebar = ({ channel, fromDesign }: { channel: string; fromDesign: b
                                                     {options.length > 4 && slug && (
                                                         <button
                                                             onClick={() => toggleExpand(slug)}
-                                                            className="ml-auto w-full text-right text-sm text-[#8C3859] hover:text-[#8C3859]/70"
+                                                            className="ml-auto w-full text-right text-sm text-[#F58A71] hover:text-[#F58A71]/70"
                                                         >
                                                             {expandedAttributes[slug] ? "Show Less" : `Show More (${options.length - 4})`}
                                                         </button>
@@ -306,7 +306,7 @@ const FilterSidebar = ({ channel, fromDesign }: { channel: string; fromDesign: b
                     <div className="border-t p-4">
                         <button
                             onClick={onClose}
-                            className="w-full rounded-lg bg-[#8C3859] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#8C3859]/50"
+                            className="w-full rounded-lg bg-[#F58A71] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#F58A71]/50"
                         >
                             Apply Filters
                         </button>

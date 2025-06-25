@@ -219,7 +219,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
     }, [colorAttributeValueId, selectedVariant, channel, productDetail, params, router]);
 
     return (
-        <Wrapper className='min-h-screen flex flex-col md:flex-row'>
+        <Wrapper className='min-h-screen flex flex-col md:flex-row ' >
             <ToastContainer position="top-center" />
             <ProductTitle name={productDetail?.name} isLoading={loading} className="mb-7 px-4 md:hidden" />
             <div className="relative flex w-full max-w-7xl flex-col gap-2 rounded-lg px-4 md:flex-row md:gap-8">
@@ -290,7 +290,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                                         <button
                                             id="add-to-cart-button"
                                             className={cn(
-                                                "flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-5 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 focus:outline-none focus:ring-2 focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto",
+                                                "flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#F58A71] px-5 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-[#F58A71]/90 focus:outline-none focus:ring-2 focus:ring-[#F58A71] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto",
                                                 addtoCartLoading ? "cursor-not-allowed opacity-50" : ""
                                             )}
                                             onClick={handleClickAddToCart}
@@ -308,11 +308,11 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                                         {selectedVariant?.metadata?.find(i => i.key === "custom_json") ? (
                                             <div onClick={handleNavigateTodesign} className="w-full sm:w-auto">
                                                 <button
-                                                    className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-5 
+                                                    className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#F58A71] px-5 
               py-2 text-sm font-semibold text-white shadow-lg 
-              transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
+              transition-all duration-300 hover:scale-105 hover:bg-[#F58A71]/90 
               focus:outline-none focus:ring-2
-              focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              focus:ring-[#F58A71] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                                                 >
                                                     <Pen className="w-4 h-4" />
                                                     Design
@@ -328,11 +328,11 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                                         {selectedVariant?.metadata?.find(i => i.key === "custom_json") ? (
                                             <div onClick={handleNavigateTodesign} className="w-full sm:w-auto">
                                                 <button
-                                                    className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#8B3958] px-5 
+                                                    className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#F58A71] px-5 
               py-2 text-sm font-semibold text-white shadow-lg 
-              transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 
+              transition-all duration-300 hover:scale-105 hover:bg-[#F58A71]/90 
               focus:outline-none focus:ring-2
-              focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              focus:ring-[#F58A71] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                                                 >
                                                     Select Product
                                                 </button>
