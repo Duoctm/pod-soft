@@ -2,6 +2,10 @@
 import React from 'react'
 import Image from 'next/image'
 import ShopNow from '../elements/ShopNow'
+import Banner from '../elements/Banner'
+import Wrapper from '../../wrapper'
+import HeroTitle from '../elements/HeroTitle'
+import HeroSubTitle from '../elements/HeroSubTitle'
 
 
 const HeroNewVersion = ({ channel }: { channel: string }) => {
@@ -13,6 +17,7 @@ const HeroNewVersion = ({ channel }: { channel: string }) => {
                 w-full overflow-hidden
             "
         >
+            <Banner />
             {/* Background Image */}
             <Image
                 src="/images/hero-section.webp"
@@ -28,31 +33,28 @@ const HeroNewVersion = ({ channel }: { channel: string }) => {
                     select-none
                     pointer-events-none
                     -z-10
+                    blur-sm
+                    lg:blur-none
                 "
                 sizes="100vw"
             />
 
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-[#1E2737] opacity-40 -z-0 pointer-events-none" />
-
             {/* Content */}
-            <div
-                className="
-                    relative z-10 flex flex-col
-                    items-center lg:items-start
-                    justify-center
-                    text-center lg:text-left
-                    w-full max-w-3xl px-4
-                "
-            >
-                <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-[#F58B71] mb-4 leading-tight">
-                    Fresh Prints, Fast Delivery
-                </h2>
-                <p className="text-[#F0F2F3] text-base md:text-xl lg:text-2xl mb-8 max-w-2xl">
-                    Get your custom shirts printed and shipped in just 1 day. Top quality, best service, anywhere in the US.
-                </p>
-                <ShopNow channel={channel} />
+            <div className='relative flex items-center justify-center w-full'>
+                <Wrapper className='w-full flex items-start flex-row'>
+                    <div className='flex flex-col items-center justify-center lg:items-start lg:justify-start'>
+                        <HeroTitle />
+                        <div className='flex items-center justify-center flex-1 w-full lg:mt-10 mt-4'>
+                            <ShopNow channel={channel} />
+
+                        </div>
+                        <HeroSubTitle />
+                    </div>
+                    <div className='hidden lg:block'></div>
+                </Wrapper>
+                {/* Responsive background image */}
             </div>
+
         </section>
     )
 }
