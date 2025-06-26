@@ -3,7 +3,7 @@ import React from 'react'
 
 const HeroTitle = () => {
     return (
-        <h1 className="text-5xl md:text-[90px] font-bold text-white text-center">
+        <h1 className="text-5xl md:text-[65px] 2xl:text-[90px] font-bold text-white text-center">
             WELCOME
             <br />
             PROMOTIONAL
