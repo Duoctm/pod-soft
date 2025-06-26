@@ -25,7 +25,7 @@ export default function LogoNewVersion() {
             <LinkWithChannel
                 aria-label="homepage"
                 href="/"
-                className="flex items-center gap-2 relative w-[100px] h-[40px] md:w-[120px] md:h-[48px] lg:h-[75px] lg:w-[150px]"
+                className="flex items-center gap-2 relative w-[100px] h-[40px] md:w-[120px] md:h-[48px] xl:h-[75px] xl:w-[150px]"
             >
                 <Image
                     src="/images/logo-new-v.webp"

@@ -9,7 +9,7 @@ const NavList = ({ navLinks }: { navLinks: { name: string; path: string }[] }) =
     const location = usePathname()
 
     return (
-        <ul className='lg:flex items-center gap-2 hidden'>
+        <ul className='md:flex items-center gap-2 hidden'>
             {navLinks.map(link => (
 
                 <Link

@@ -8,12 +8,12 @@ const FooterNewVersion = () => {
     return (
         <div className='min-h-[30vh] flex flex-col items-center justify-center px-4 md:px-0 py-8 md:py-10 lg:py-14 bg-[#1E2737] relative'>
             <Image src='/images/aps-ketches.webp' fill className='bg-center opacity-30 -z-10' alt='' />
-            <Wrapper className='flex flex-1 items-start md:items-center justify-between flex-col md:flex-row '>
+            <Wrapper className='flex flex-1 items-start md:items-center justify-between flex-col md:flex-row gap-4'>
                 <div className='flex items-start gap-4 flex-col flex-1 w-full'>
                     <Link href="/">
                         <Image src="/images/logo-new-v.webp" alt="SwiftPod Logo" width={150} height={75} />
                     </Link>
-                    <span className='flex items-center gap-2 text-white text-sm justify-between w-full lg:max-w-[300px]'>
+                    <span className='flex items-center gap-2 text-white text-sm justify-between w-full md:max-w-[300px]'>
                         <Link href="/"><Image src="/icons/fb.svg" alt="Facebook Logo" width={20} height={20} /></Link>
                         <Link href="/"><Image src="/icons/x.svg" alt="Twitter Logo" width={20} height={20} /></Link>
                         <Link href="/"><Image src="/icons/instagram.svg" alt="Instagram Logo" width={20} height={20} /></Link>

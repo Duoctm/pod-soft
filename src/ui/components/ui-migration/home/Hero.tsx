@@ -26,8 +26,9 @@ const HeroNewVersion = ({ channel }: { channel: string }) => {
                 priority
                 quality={70}
                 className="
+                    scale-x-[-1] lg:scale-x-100
                     object-cover
-                    object-left md:object-center
+                    object-right lg:object-center
                     transition-all
                     duration-300
                     select-none
@@ -41,7 +42,7 @@ const HeroNewVersion = ({ channel }: { channel: string }) => {
 
             {/* Content */}
             <div className='relative flex items-center justify-center w-full'>
-                <Wrapper className='w-full flex items-start flex-row'>
+                <Wrapper className='w-full flex items-center flex-row justify-center lg:justify-start'>
                     <div className='flex flex-col items-center justify-center lg:items-start lg:justify-start'>
                         <HeroTitle />
                         <div className='flex items-center justify-center flex-1 w-full lg:mt-10 mt-4'>
@@ -50,7 +51,6 @@ const HeroNewVersion = ({ channel }: { channel: string }) => {
                         </div>
                         <HeroSubTitle />
                     </div>
-                    <div className='hidden lg:block'></div>
                 </Wrapper>
                 {/* Responsive background image */}
             </div>
