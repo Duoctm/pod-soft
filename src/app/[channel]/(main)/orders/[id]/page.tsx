@@ -9,7 +9,7 @@ import { toast, ToastContainer } from "react-toastify";
 import { addCart } from "../../products/[slug]/actions/addCart";
 import { BreadcrumbClient } from "./BreadcrumbClient";
 import { getOrderUser } from "./actions";
-import { type CurrentUserOrderListQuery, type PaymentChargeStatusEnum } from "@/gql/graphql";
+import { type CurrentUserOrderListQuery, type PaymentChargeStatusEnum, DiscountValueTypeEnum } from "@/gql/graphql";
 
 // import { LoginForm } from "@/ui/components/LoginForm";
 import { cn, formatDate, formatMoney } from "@/lib/utils";
@@ -219,6 +219,32 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 								/>
 							</div>
 							<div className="mt-3 border-t pt-3">
+								<div className="flex items-center justify-between font-semibold">
+									{
+										orderDetail?.node.discounts ?
+											orderDetail.node.discounts.map((discount) => {
+												return <div key={discount.name} className="flex items-center justify-between flex-1">
+													<span>Discount:</span>
+													<span className=" flex items-center gap-1">
+														<i className="
+														text-gray-400 font-light text-sm">{
+																discount.valueType === DiscountValueTypeEnum.Percentage
+																	? `( ${discount.value}% )`
+																	: null
+															}</i>
+														<span>
+															{formatMoney(
+																discount.amount.amount || 0,
+																discount.amount
+																	.currency || "",
+															)}
+														</span>
+													</span>
+												</div>
+											})
+											: "No discount applied"
+									}
+								</div>
 								<div className="flex items-center justify-between font-semibold">
 									<span>Total</span>
 									<span>

@@ -1072,7 +1072,7 @@ function DesignPage(param: DesignPageProps) {
                 <div className="flex flex-1 flex-col p-2">
                   <div className="flex items-center justify-between ">
                     <span className="text-md font-semibold">Choose Color</span>
-                    <X onClick={() => setMenuIndex(0)} />
+                    <X />
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2 ">
                     {Array.from(colorData.entries()).map(([key, value]) => (

@@ -1,5 +1,16 @@
 fragment OrderDetails on Order {
 	id
+	discounts {
+		type
+		name
+		translatedName
+		valueType
+		value
+		amount {
+			currency
+			amount
+		}
+	}
 	number
 	created
 	total {

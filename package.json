@@ -13,7 +13,8 @@
 		"lint": "next lint --dir src --fix",
 		"generate": "graphql-codegen --config .graphqlrc.ts",
 		"prepare": "husky install",
-		"test": "playwright test"
+		"test": "playwright test",
+		"test:cucumber": "cucumber-js --require-module dotenv/config --format progress --format html:test-results/cucumber/cucumber-report.html"
 	},
 	"dependencies": {
 		"@adyen/adyen-web": "5.53.3",
@@ -65,6 +66,7 @@
 		"zustand": "4.4.6"
 	},
 	"devDependencies": {
+		"@cucumber/cucumber": "11.3.0",
 		"@graphql-codegen/cli": "5.0.0",
 		"@graphql-codegen/client-preset": "4.1.0",
 		"@graphql-typed-document-node/core": "3.2.0",
