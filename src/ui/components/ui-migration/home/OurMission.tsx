@@ -18,7 +18,7 @@ const OurMission = () => {
                         *Orders of 144 and lower single side print.
                     </p>
                 </div>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8 lg:mt-4 min-h-0 md:min-h-[261px] h-full'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8 min-h-0 md:min-h-[261px] h-full'>
                     {/* IMAGE BLOCK */}
                     <div className='relative w-full aspect-[16/9] md:aspect-auto md:h-auto'>
                         <Image
