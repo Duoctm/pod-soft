@@ -10,6 +10,7 @@ interface ProductPriceDisplayProps {
     };
 }
 
+// If price is 0, show contact message
 const ProductPriceDisplay: React.FC<ProductPriceDisplayProps> = ({
     loading,
     currentColor,
