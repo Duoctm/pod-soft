@@ -1,8 +1,7 @@
 import { type FC } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Receipt, Tag, Truck } from "lucide-react";
 import { SummaryItem, type SummaryLine } from "./SummaryItem";
 import { PromoCodeAdd } from "./PromoCodeAdd";
-import { SummaryMoneyRow } from "./SummaryMoneyRow";
 import { SummaryPromoCodeRow } from "./SummaryPromoCodeRow";
 import { SummaryItemMoneyEditableSection } from "./SummaryItemMoneyEditableSection";
 import { ChevronDownIcon } from "@/checkout/ui-kit/icons";
@@ -32,13 +31,80 @@ interface SummaryProps {
 	loading?: boolean;
 }
 
+// Parse pricing_info from metadata safely
+function parsePricingInfo(metadata: { key: string; value: string }[]): PricingInfo | null {
+	const item = metadata.find((m) => m.key === "pricing_info");
+	if (!item) return null;
+	try {
+		// Some APIs may use single quotes, so replace with double quotes for JSON.parse
+		const value = item.value.replace(/'/g, '"');
+		const parsed = JSON.parse(value) as Record<string, unknown>;
+		// Type guard
+		if (
+			typeof parsed.member_price === "number" &&
+			typeof parsed.retail_price === "number" &&
+			typeof parsed.discount_percentage === "number" &&
+			typeof parsed.currency === "string" &&
+			typeof parsed.has_discount === "boolean" &&
+			typeof parsed.quantity === "number"
+		) {
+			return parsed as unknown as PricingInfo;
+		}
+		return null;
+	} catch {
+		return null;
+	}
+}
+
+// Aggregate pricing info from all lines
+function aggregatePricing(lines: SummaryLine[]) {
+	let totalRetail = 0;
+	let totalMember = 0;
+	let totalSavings = 0;
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	let totalQuantity = 0;
+	let discountPercent = 0;
+	let currency = "";
+	let hasDiscount = false;
+
+	lines.forEach((line) => {
+		// Use type assertion to access metadata if it exists
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+		const metadata = (line as any).metadata;
+		if (!line || !Array.isArray(metadata)) return;
+		const info = parsePricingInfo(metadata as { key: string; value: string }[]);
+		if (info) {
+			totalRetail += info.retail_price * info.quantity;
+			totalMember += info.member_price * info.quantity;
+			totalSavings += (info.retail_price - info.member_price) * info.quantity;
+			totalQuantity += info.quantity;
+			discountPercent = info.discount_percentage; // Use last, or could average if needed
+			currency = info.currency;
+			if (info.has_discount) hasDiscount = true;
+		}
+	});
+	return { totalRetail, totalMember, totalSavings, discountPercent, currency, hasDiscount };
+}
+
+
+
+
+interface PricingInfo {
+	member_price: number;
+	retail_price: number;
+	discount_percentage: number;
+	currency: string;
+	has_discount: boolean;
+	color?: string;
+	quantity: number;
+}
+
 export const Summary: FC<SummaryProps> = ({
 	id,
 	editable = true,
 	lines,
 	totalPrice,
 	subtotalPrice,
-	giftCards = [],
 	voucherCode,
 	shippingPrice,
 	discount,
@@ -47,39 +113,41 @@ export const Summary: FC<SummaryProps> = ({
 	onPlaceOrder,
 	show
 }) => {
-	const hanlePriceBeforeAddVoucher = (priceGross: MoneyType, voucherDiscount: number) => {
-		if (!voucherCode) return priceGross;
-		return {
-			...priceGross,
-			amount: priceGross.amount + voucherDiscount,
-		};
-	};
+	const { totalRetail, totalSavings, currency } = aggregatePricing(lines);
+	const saleDiscount = totalSavings;
+	const voucherDiscount = discount?.amount || 0;
+	const totalSavingsAmount = saleDiscount + voucherDiscount;
+
+	// const hanlePriceBeforeAddVoucher = (priceGross: MoneyType, voucherDiscount: number) => {
+	// 	if (!voucherCode) return priceGross;
+	// 	return {
+	// 		...priceGross,
+	// 		amount: priceGross.amount + voucherDiscount,
+	// 	};
+	// };
+
 
 	return (
-		<div
-			className="flex flex-col"
-		>
+		<div className="flex flex-col">
 			<details open className="group">
 				<summary className="-mb-2 flex cursor-pointer flex-row items-center pt-4">
 					<Title>Summary</Title>
 					<ChevronDownIcon className="mb-2 group-open:rotate-180" />
 				</summary>
 				<ul className="py-2" data-testid="SummaryProductList">
-					{lines.map((line) => {
-						return (
-							<SummaryItem line={line} key={line?.id}>
-								{editable ? (
-									<SummaryItemMoneyEditableSection
-										line={line as CheckoutLineFragment}
-										id={id}
-										update={update}
-									/>
-								) : (
-									<SummaryItemMoneySection line={line as OrderLineFragment} />
-								)}
-							</SummaryItem>
-						);
-					})}
+					{lines.map((line) => (
+						<SummaryItem line={line} key={line?.id}>
+							{editable ? (
+								<SummaryItemMoneyEditableSection
+									line={line as CheckoutLineFragment}
+									id={id}
+									update={update}
+								/>
+							) : (
+								<SummaryItemMoneySection line={line as OrderLineFragment} />
+							)}
+						</SummaryItem>
+					))}
 				</ul>
 			</details>
 			{editable && (
@@ -88,68 +156,99 @@ export const Summary: FC<SummaryProps> = ({
 					<Divider className="mt-4" />
 				</>
 			)}
-			<div className="mt-4 flex max-w-full flex-col">
-				<SummaryMoneyRow
-					label="Subtotal"
-					money={hanlePriceBeforeAddVoucher(subtotalPrice?.gross as MoneyType, discount?.amount as number)}
-					ariaLabel="subtotal price"
-				/>
+			<div className="mt-4 flex max-w-full flex-col gap-2">
+				{/* 1. Original Price */}
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-2">
+						<Receipt className="w-4 h-4 text-gray-500" />
+						<span className="text-sm text-gray-700">Original Price</span>
+					</div>
+					<span className="text-base font-medium text-gray-900">
+						<Money money={{ amount: totalRetail, currency }} ariaLabel="original price" />
+					</span>
+				</div>
+
+
+				{/* 2. Discount */}
+				{saleDiscount > 0 && (
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-2">
+							<Tag className="w-4 h-4 text-gray-500" />
+							<span className="text-sm text-gray-700">Discount</span>
+						</div>
+						<span className="text-base font-semibold text-red-600">
+							<Money money={{ amount: saleDiscount, currency }} ariaLabel="discount" />
+						</span>
+					</div>
+				)}
+
+
+				{/* 3. Voucher */}
 				{voucherCode && (
 					<SummaryPromoCodeRow
 						id={id}
+						className="font-semibold text-[#8B3958]"
 						editable={editable}
 						promoCode={voucherCode}
 						ariaLabel="voucher"
-						label={`Voucher code: ${voucherCode}`}
+						label={`Voucher: ${voucherCode}`}
 						money={discount}
 						update={update}
 						negative
 					/>
 				)}
-
-				{giftCards.map(({ currentBalance, displayCode, id: grif_id }) => (
-					<SummaryPromoCodeRow
-						key={grif_id}
-						id={id}
-						editable={editable}
-						promoCodeId={grif_id}
-						ariaLabel="gift card"
-						label={`Gift Card: •••• •••• ${displayCode}`}
-						money={currentBalance}
-						update={update}
-						negative
-					/>
-				))}
-				<SummaryMoneyRow label="Shipping cost" ariaLabel="shipping cost" money={shippingPrice?.gross} />
-				<div className="flex flex-row items-baseline justify-between pb-4">
-					<div className="flex flex-row items-baseline">
-						<p>Tax</p>
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-2">
+						<Truck className="w-4 h-4 text-gray-500" />
+						<span className="text-sm text-gray-700">Shipping Cost</span>
 					</div>
-					<Money ariaLabel="total price" money={totalPrice?.tax} data-testid="totalOrderPrice" />
+					<span className="text-base text-gray-900">
+						<Money money={shippingPrice?.gross} ariaLabel="shipping cost" />
+					</span>
+				</div>
+				{/* 5. Tax */}
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-2">
+						<Receipt className="w-4 h-4 text-gray-500" />
+						<span className="text-sm text-gray-700">Tax</span>
+					</div>
+					<span className="text-base text-gray-900">
+						<Money ariaLabel="tax" money={totalPrice?.tax} data-testid="totalOrderPrice" />
+					</span>
 				</div>
 				<Divider className="mb-2" />
+				{totalSavingsAmount > 0 && (
+					<div className="flex items-center justify-between">
+						<span className="text-sm">Total Savings</span>
+						<span className="text-lg font-bold  flex items-baseline">
+							<span className="mr-1">-</span><Money money={{ amount: totalSavingsAmount, currency }} ariaLabel="total savings" />
+						</span>
+					</div>
 
+				)}
+
+
+				{/* 7. Subtotal */}
 				<div className="flex flex-row items-baseline justify-between pb-4">
 					<div className="flex flex-row items-baseline">
-						<p className="font-bold">Total price</p>
+						<p className="text-sm">Total</p>
 					</div>
 					<Money
-						className="font-bold text-[#1E2737]"
-						ariaLabel="total price"
-						money={totalPrice?.gross}
+						className="font-bold text-[#8B3958] text-2xl"
+						ariaLabel="subtotal"
+						money={subtotalPrice?.gross || totalPrice?.gross}
 						data-testid="totalOrderPrice"
 					/>
 				</div>
 			</div>
 			{
-
 				show ? (
 					<button
 						onClick={onPlaceOrder}
 						type="submit"
 						className={`flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${loading
 							? "cursor-not-allowed bg-gray-400 hover:bg-gray-500 focus:ring-gray-500 "
-							: "bg-[#F58A71] text-white hover:bg-[#F58A71] focus:ring-[#F58A71] "
+							: "bg-[#8B3958] text-white hover:bg-[#7A314F] focus:ring-[#7A314F] "
 							}`}
 						disabled={loading}
 					>
@@ -164,6 +263,7 @@ export const Summary: FC<SummaryProps> = ({
 					</button>
 				) : null
 			}
-		</div>
+		</div >
 	);
 };
+

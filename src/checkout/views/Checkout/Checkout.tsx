@@ -18,6 +18,7 @@ import {
 	type AddressInput,
 	type CountryCode,
 	type CheckoutError,
+	CheckoutErrorCode,
 } from "@/gql/graphql";
 import { extractCheckoutIdFromUrl } from "@/checkout/lib/utils/url";
 import { type Checkout as CheckoutType } from "@/checkout/graphql";
@@ -171,6 +172,8 @@ export const Checkout = () => {
 		const fetchCheckout = async () => {
 			try {
 				const data = await getCheckoutServer({ id: checkoutId, languageCode: LanguageCodeEnum.EnUs });
+				console.log(data.checkout);
+
 				if (isMounted) {
 					setCheckout(data.checkout as CheckoutType);
 				}
@@ -362,7 +365,7 @@ export const Checkout = () => {
 		const response = await checkoutValidate(checkoutId || "");
 
 		const invalidError = Array.isArray(response.checkoutValidate?.errors)
-			? response.checkoutValidate.errors.find((error) => error.code === "INVALID")
+			? response.checkoutValidate.errors.find((error) => error.code === CheckoutErrorCode.Invalid)
 			: undefined;
 
 		if (invalidError) {
@@ -416,6 +419,9 @@ export const Checkout = () => {
 		setIsOpenAddressEditDialog(!isOpenAddressEditDialog);
 	};
 
+	console.log(checkout)
+
+
 	return isCheckoutInvalid ? (
 		<PageNotFound />
 	) : isInitiallyLoading ? (
@@ -453,9 +459,9 @@ export const Checkout = () => {
 
 						</div>
 						{
-							checkout ? (<div className="order-1 bg-gray-50 px-4 py-10 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 lg:py-16">
+							checkout ? (<div className="order-1  px-4 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 ">
 								<Suspense fallback={<SummarySkeleton />}>
-									{checkout && <Summary {...checkout} update={update} onPlaceOrder={handlePlaceOrder} show={Boolean(checkout.shippingAddress)} loading={isLoadingPlaceOrder} />}
+									{checkout && <Summary {...checkout} lines={checkout.lines} update={update} onPlaceOrder={handlePlaceOrder} show={Boolean(checkout.shippingAddress)} loading={isLoadingPlaceOrder} />}
 								</Suspense>
 							</div>) : null
 						}

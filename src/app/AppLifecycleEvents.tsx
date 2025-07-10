@@ -7,7 +7,11 @@ import { getCheckoutDetail } from './[channel]/auth/keycloak-callback/checkoutda
 
 async function getCheckout(channel: any) {
     const user = await getUserServer();
-    if (user.status == true) {
+    if (!user) {
+        return;
+    }
+
+    if (user.status) {
         getCheckoutDetail(channel);
     }
 }

@@ -15,6 +15,10 @@ fragment CheckoutLineFragment on CheckoutLine {
 	undiscountedUnitPrice {
 		...Money
 	}
+	metadata {
+		key
+		value
+	}
 	variant {
 		attributes(variantSelection: ALL) {
 			values {

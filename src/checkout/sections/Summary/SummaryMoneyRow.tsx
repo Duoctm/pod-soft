@@ -11,9 +11,9 @@ export const SummaryMoneyRow: React.FC<PropsWithChildren<SummaryMoneyRowProps>> 
 	...moneyProps
 }) => {
 	return (
-		<div className="mb-2 flex flex-row items-center justify-between">
+		<div className="flex flex-row items-center justify-between">
 			<div className="flex flex-row items-center">
-				<p color="secondary">{label}</p>
+				<p className="">{label}</p>
 				{children}
 			</div>
 			<Money {...moneyProps} />

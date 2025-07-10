@@ -1,8 +1,8 @@
 "use server";
 
+import { type SupportFormData } from "../SupportPage";
 import { SupportCreateDocument } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
-import { SupportFormData } from "../SupportPage";
 
 export async function createSupport(input: SupportFormData) {
 	try {

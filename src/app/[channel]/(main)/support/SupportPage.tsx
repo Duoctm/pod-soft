@@ -10,7 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useSearchParams } from "next/navigation";
 import { getUser } from "../../../../actions/userFullInfo"
 import { getFAQ } from "./actions/get-faq";
-import { type GetPublicSettingsQuery } from "@/gql/graphql";
+import { SupportTypeEnum, type GetPublicSettingsQuery } from "@/gql/graphql";
 export interface SupportFormData {
     firstName: string;
     lastName: string;
@@ -85,21 +85,19 @@ const SupportPage = ({ channel }: { channel: string }) => {
     const [faq, setFaq] = React.useState<GetPublicSettingsQuery["publicSettingsByKeys"] | null>(null); // Adjust type as needed
     const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-    const [supportType, setSupportType] = useState<string>("NORMAL")
-
-
+    const [supportType, setSupportType] = useState<SupportTypeEnum>(SupportTypeEnum.Normal);
 
     const fetchInitialValues = async () => {
         if (requestType === RequestType.ORDER_LIMIT) {
-            setSupportType("PERMISSION_REQUIRED")
+            setSupportType(SupportTypeEnum.PermissionRequired)
             const values = await getUserAndSetToForm();
             setInitialValues(values);
         } else if (requestType === RequestType.REQUEST_REGISTER) {
             setInitialValues(requestRegisterToForm());
-            setSupportType("ACCOUNT_CREATION")
+            setSupportType(SupportTypeEnum.AccountCreation);
         } else {
             setInitialValues(defaultInitialValues);
-            setSupportType("NORMAL")
+            setSupportType(SupportTypeEnum.Normal);
         }
     };
 
@@ -296,7 +294,7 @@ const SupportPage = ({ channel }: { channel: string }) => {
                                                                         setOpenIndex(null); // Đóng accordion sau khi apply
                                                                         window.scrollTo({ top: 0, behavior: "smooth" });
                                                                     }}
-                                                                    className="float-end mt-2 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#F58A71] rounded-md hover:bg-[#F58A71]/70 focus:outline-none focus:ring-2 focus:ring-[#F58A71] focus:ring-offset-2">
+                                                                    className="float-end mt-2 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#8C3859] rounded-md hover:bg-[#8C3859]/70 focus:outline-none focus:ring-2 focus:ring-[#8C3859] focus:ring-offset-2">
                                                                     Apply
                                                                 </button>
                                                             </div>

@@ -230,8 +230,6 @@ const getVariantIdFromColorSize = (colorId: string | undefined, sizeId: string |
 
 }
 
-
-
 const getMetaDtataFromColorVariant = (colorId: string, listColorVariant: Map<string, object>) => {
   const colorVariant = listColorVariant.get(colorId);
   if (colorVariant && (colorVariant as any).meta_data) {

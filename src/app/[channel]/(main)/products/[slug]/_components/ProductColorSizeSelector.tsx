@@ -119,6 +119,7 @@ const ProductColorSizeSelector: React.FC<Props> = ({
 		selectedVariant,
 	]);
 
+
 	return (
 		<div>
 			<ProductAttributeSelector

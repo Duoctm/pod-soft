@@ -43,25 +43,34 @@ interface UpdateMetadataResponse {
 
 
 const fetchProductDetail = async (productId: string, variantId: string, channel: string) => {
-
   const listColorVariant = new Map<string, object>();
   const listVariantSizeColor = new Map<string, object>();
   const tempListVariantSizeColor = new Map<string, object>();
   let sizeIdDefault = '';
   let printingInfoMetadata = null;
+  let colorId = '';
+
   try {
     const rawData = await fetchRawProductDetail(productId, channel);
-
+    localStorage.setItem('productDetailDesign', JSON.stringify(rawData));
     // Kiểm tra xem rawData có phải là một object và có trường 'product'
     if (rawData && typeof rawData === 'object' && 'product' in rawData) {
       const product = (rawData as { product: { variants: any[] } }).product;
 
       const variants = product.variants;
+      //const a = [];
+
       for (const variant of variants) {
+        if (variant.id == variantId) {
+          colorId = variant.attributes?.[0]?.values?.[0]?.id;
+          break;
+        }
+      }
+      for (const variant of variants) {
+
         const metaData = variant.metadata?.find((item: any) => item.key === "custom_json");
         printingInfoMetadata = variant.metadata?.find((item: any) => item.key === "printing_info");
         const colorAttribute = variant.attributes?.find((attr: any) => attr.attribute?.name === "COLOR");
-
         if (metaData != null) {
 
           const colorValue = colorAttribute?.values?.[0]?.name?.split("-")[1] || '';
@@ -98,7 +107,7 @@ const fetchProductDetail = async (productId: string, variantId: string, channel:
   } catch (error) {
     console.log("Lỗi khi truy vấn dữ liệu:", error);
   }
-  return { listColorVariant: listColorVariant, listVariantSizeColor: listVariantSizeColor, sizeIdDefault: sizeIdDefault, printingInfoMetadata: printingInfoMetadata };
+  return { colorId: colorId, listColorVariant: listColorVariant, listVariantSizeColor: listVariantSizeColor, sizeIdDefault: sizeIdDefault, printingInfoMetadata: printingInfoMetadata };
 }
 
 

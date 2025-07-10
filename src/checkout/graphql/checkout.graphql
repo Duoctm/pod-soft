@@ -125,6 +125,10 @@ fragment CheckoutLineFragment on CheckoutLine {
 		...Money
 	}
 	variant {
+		metadata {
+			key
+			value
+		}
 		attributes(variantSelection: ALL) {
 			values {
 				name

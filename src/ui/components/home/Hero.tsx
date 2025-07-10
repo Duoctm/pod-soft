@@ -6,7 +6,7 @@ const Hero = () => {
 	return (
 		<section className="w-full bg-white text-gray-600 h-screen flex items-center">
 			<div className="mx-auto flex w-full max-w-[1600px] px-6 lg:px-20 items-center justify-between gap-10 flex-col md:flex-row">
-
+				
 				{/* Left content */}
 				<div className="flex flex-col gap-6 max-w-xl w-full">
 					<h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-gray-900">

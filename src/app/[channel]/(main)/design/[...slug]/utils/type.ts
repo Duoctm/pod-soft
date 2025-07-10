@@ -46,15 +46,32 @@ export interface DesignFace {
 export interface DesignInfo {
   productId: string,
   variantId: string | null,
-  colorData: Record<string, object>;
-  colorValue: string,
-  sizeIdDefault: string | undefined,
-  variantSizeColorData: Record<string, object> | null;
+  //colorData: Record<string, object>;
+  //colorValue: string,
+  //sizeIdDefault: string | undefined,
+  //variantSizeColorData: Record<string, object> | null;
   faces: PrintFaceData[];
-  backgroundColor: string;
+  //backgroundColor: string;
   designs: Array<DesignFace>;
 }
 
 export interface UploadDataType {
   file: File
+}
+
+export interface AddCartType {
+  quantity: number;
+  variantId: string;
+  productId: string;
+}
+
+export interface PriceOfVariantDesign {
+  variantId: string;
+  memberPrice: number;
+  retail_price: number;
+  discount_percentage: number;
+  currency: string;
+  has_discount: boolean;
+  color: string;
+  quantity: number;
 }

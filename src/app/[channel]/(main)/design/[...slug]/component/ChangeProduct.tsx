@@ -47,6 +47,7 @@ export function ChangeProductModal({ setOpen, isDestroyHistoty, channel, fromDev
                         className="text-xl text-gray-600 hover:text-black"
                         onClick={() => {
                             localStorage.removeItem("designRelativeInfor");
+                            localStorage.removeItem("changeProductFrom");
                             setOpen(0);
                             isDestroyHistoty(true);
                         }}

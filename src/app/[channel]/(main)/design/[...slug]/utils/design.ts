@@ -3,7 +3,7 @@
 import Konva from 'konva';
 import $ from 'jquery';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import { type PrintFaceData, type DesignInfo/*, UploadDataType*/ } from '../utils/type';
+import { type PrintFaceData, type DesignInfo/*, UploadDataType*/ } from './type';
 import { uploadImageRaw } from './UpdateImage';
 import { v4 as uuidv4 } from 'uuid';
 import { NodeConfig2, NodeHistory2, addStackHistory2, initialStackHistory2 } from './designHistory2'
@@ -20,9 +20,9 @@ class TShirtDesigner {
   public productId: string;
   public colorValue: string;
   public variantId: string | null;
-  private colorData: Map<string, object>;
-  private sizeIdDefault: string | undefined;
-  private variantSizeColorData: Map<string, object> | null;
+  //private colorData: Map<string, object>;
+  //private sizeIdDefault: string | undefined;
+  //private variantSizeColorData: Map<string, object> | null;
   public stages: StageConfig[] = [];
   public designType: number;
 
@@ -205,7 +205,7 @@ class TShirtDesigner {
 
   };
 
-  constructor(data: PrintFaceData[], productId: string, variantId: string | null, colorValue: string, designType: number, colorData: Map<string, object>, sizeIdDefault: string | undefined, variantSizeColorData: Map<string, object> | null,
+  constructor(data: PrintFaceData[], productId: string, variantId: string | null, colorValue: string, designType: number, /*olorData: Map<string, object>, sizeIdDefault: string | undefined, variantSizeColorData: Map<string, object> | null,*/
     menuIndexSetter: React.Dispatch<React.SetStateAction<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>>,
     resizeWidthSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
     resizeHeightSetter: React.Dispatch<React.SetStateAction<number | undefined>>,
@@ -220,9 +220,9 @@ class TShirtDesigner {
     this.colorValue = colorValue;
     this.variantId = variantId;
     this.designType = designType;
-    this.colorData = colorData;
-    this.sizeIdDefault = sizeIdDefault;
-    this.variantSizeColorData = variantSizeColorData;
+    //this.colorData = colorData;
+    //this.sizeIdDefault = sizeIdDefault;
+    //this.variantSizeColorData = variantSizeColorData;
     this.menuIndexSetter = menuIndexSetter;
     this.resizeWidthSetter = resizeWidthSetter;
     this.resizeHeightSetter = resizeHeightSetter;
@@ -272,7 +272,7 @@ class TShirtDesigner {
   private initializeStages() {
     const doms: HTMLImageElement[] = [];
     for (const item in this.data) {
-      this.faceImage[this.data[item].code] = "";
+      this.faceImage[this.data[item].code] = this.data[item].image;
       const imageDom = document.getElementById(this.data[item].code + "Image") as HTMLImageElement;
       if (imageDom) {
         doms.push(imageDom);
@@ -1538,6 +1538,7 @@ class TShirtDesigner {
         const designOfStage = {
           final_image_url: "",
           designs: [] as any[],
+          face_code: ""
         };
         const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
         imageDom.crossOrigin = 'anonymous';
@@ -1574,6 +1575,7 @@ class TShirtDesigner {
         }
 
         designOfStage.designs = await getStageInfo(this.stages[item]);
+        designOfStage.face_code = this.data[item].code;
         designs.push(designOfStage);
       } catch (error) {
         console.log(error);
@@ -1584,18 +1586,33 @@ class TShirtDesigner {
 
     const designInfo: DesignInfo = {
       productId: this.productId,
-      colorValue: this.colorValue,
+      //colorValue: this.colorValue,
       variantId: this.variantId,
-      colorData: Object.fromEntries(this.colorData),
-      sizeIdDefault: this.sizeIdDefault,
-      variantSizeColorData: this.variantSizeColorData != null ? Object.fromEntries(this.variantSizeColorData) : null,
+      //colorData: Object.fromEntries(this.colorData),
+      //sizeIdDefault: this.sizeIdDefault,
+      //variantSizeColorData: this.variantSizeColorData != null ? Object.fromEntries(this.variantSizeColorData) : null,
       faces: this.data,
-      backgroundColor: this.backgroundColor,
+      //backgroundColor: this.backgroundColor,
       designs: designs,
     };
 
     return designInfo;
   }
+
+
+  public getTotalObjectInAllStage() {
+    let total = 0;
+    for (const item of this.stages) {
+      if (item.layer)
+        total += item.layer?.getChildren().length;
+    }
+
+    return total;
+  }
+
+
+
+
   public exportStage = async (stageConfig: StageConfig, image: HTMLImageElement): Promise<string> => {
     if (!stageConfig.stage || !stageConfig.layer) return '';
     const tempCanvas = document.createElement('canvas');
@@ -2076,7 +2093,6 @@ class TShirtDesigner {
       };
 
       for (const item in this.data) {
-        //console.log('importDesignFromJson', item);
         const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
         if (imageDom) {
           this.updateStagePosition(this.stages[item], this.data[item], imageDom);
@@ -2095,7 +2111,6 @@ class TShirtDesigner {
 
     } catch (error) {
       console.error('Error importing design:', error);
-      throw new Error('Invalid design file format');
     }
   }
 

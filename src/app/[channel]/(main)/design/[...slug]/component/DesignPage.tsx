@@ -30,20 +30,25 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TShirtDesigner from "../utils/design";
-import { type DesignInfo, type PrintFaceData } from "..//utils/type";
+import { type DesignInfo, type PrintFaceData } from "../utils/type";
 import { getMetaDtataFromColorVariant, getVariantIdFromColorSize } from "../utils/data";
-import { addItem, UpdateDesign, checkUser } from "../utils/checkout";
+import { checkUser } from "../utils/checkout";
 import { fetchProductDetail } from "../utils/test";
 import "react-toastify/dist/ReactToastify.css";
 import { useDesign } from "../utils/useDesign";
 import { cn } from "@/lib/utils";
 import { redoStackHistory2, undoStackHistory2, destroyStackHistory2, NodeHistory2 } from "../utils/designHistory2";
 import { ChangeProductModal } from "./ChangeProduct";
+import { AdditionalServicePopup } from "./AdditionalService"
+import { PrintingTechnology } from "@/gql/graphql";
+import { addCartMultiItem, UpdateDesignMultiItem } from "../utils/addToCartMultiItemAction";
+import { AddCartType, PriceOfVariantDesign } from "../utils/type";
+//import { PrintDetail, PrintingInfo } from "./type"
 
 interface DesignPageProps {
   variantId: string;
   productId: string;
-  colorId: string;
+  //colorId: string;
   designInfor: DesignInfo | null;
   typeDesign: number;
   channel: string;
@@ -57,6 +62,7 @@ function DesignPage(param: DesignPageProps) {
   const { selected, setSelected } = useDesign();
   const [variantSizeColor, setVariantSizeColor] = useState<Map<string, object> | null>(new Map());
   const [sizeIdDefault, setSizeIdDefault] = useState<string>();
+  const [quantity, setQuantity] = useState<number>();
 
   const [colorData, setColorData] = useState<Map<string, object>>(new Map());
   const [data, setData] = useState<PrintFaceData[]>([]);
@@ -64,9 +70,10 @@ function DesignPage(param: DesignPageProps) {
   const [loading, setLoading] = useState(true);
   let sort_data = data.sort((a, b) => a.z_index - b.z_index);
   const designerRef = useRef<TShirtDesigner | null>(null);
+  const variantIdRef = useRef<string>(param.variantId);
   //const [importError, setImportError] = useState<string | null>(null);
   const [productId, setProductId] = useState<string>(param.productId);
-  const [colorId, setColorId] = useState<string>(param.colorId);
+  const [colorId, setColorId] = useState<string>();
   const [variantId, setVariantId] = useState<string | null>(null);
   const [showObjectMenu, setShowObjectMenu] = useState(false);
   const [menuIndex, setMenuIndex] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>(0);
@@ -94,6 +101,38 @@ function DesignPage(param: DesignPageProps) {
   useEffect(() => {
     isDestroyHistortRef.current = isDestroyHistort;
   }, [isDestroyHistort]);
+  const [isShowAddionalService, setIsShowAddionalService] = useState<boolean>(false);
+  const [printTech, setPrintTech] = useState<PrintingTechnology>(PrintingTechnology.None);
+  const printTechRef = useRef<PrintingTechnology>(PrintingTechnology.None);
+  useEffect(() => {
+    printTechRef.current = printTech;
+
+  }, [printTech]);
+
+  const handlerCheckoutRef = useRef<() => void>(() => { });
+  const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set());
+  const selectedServicesRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    selectedServicesRef.current = selectedServices;
+  }, [selectedServices]);
+
+  const [priceOfVariantDesign, setPriceOfVariantDesign] = useState<Set<PriceOfVariantDesign>>(new Set());
+  const priceOfVariantDesignRef = useRef<Set<PriceOfVariantDesign>>(new Set());
+  useEffect(() => {
+    priceOfVariantDesignRef.current = priceOfVariantDesign;
+  }, [priceOfVariantDesign]);
+
+
+  const [variantIds, setVariantIds] = useState<Set<AddCartType>>(new Set());
+  const variantIdsRef = useRef<Set<AddCartType>>(new Set());
+  useEffect(() => {
+    variantIdsRef.current = variantIds;
+  }, [variantIds]);
+
+  const [isUpdate, setIsUpdate] = useState<boolean | null>(null);
+  const [isAddToCart, setIsAddToCart] = useState<boolean | null>(null);
+
+
 
   const [frameState, setFrameState] = useState({
     width: 160,
@@ -108,32 +147,37 @@ function DesignPage(param: DesignPageProps) {
     let result: Map<string, object>;
     let variantSizeColor: Map<string, object> | null = null;
     let sizeIdDefault: string = "";
-    if (param.designInfor?.colorData != null) {
+    let colorId: string = "";
+
+    /*if (param.designInfor?.colorData != null) {
       result = new Map(Object.entries(param.designInfor.colorData)); //param.designInfor.colorData;
       sizeIdDefault = param.designInfor.sizeIdDefault ?? "";
       variantSizeColor =
         param.designInfor.variantSizeColorData != null
           ? new Map(Object.entries(param.designInfor.variantSizeColorData))
           : null;
-    } else {
-      const data = await fetchProductDetail(productId, param.variantId, param.channel);
-      result = data.listColorVariant;
-      sizeIdDefault = data.sizeIdDefault;
-      variantSizeColor = data.listVariantSizeColor;
-    }
+    } else {*/
+    const data = await fetchProductDetail(productId, param.variantId, param.channel);
+    result = data.listColorVariant;
+    sizeIdDefault = data.sizeIdDefault;
+    variantSizeColor = data.listVariantSizeColor;
+    colorId = data.colorId;
+    //}
     setColorData(result);
     setSizeIdDefault(sizeIdDefault);
     setVariantSizeColor(variantSizeColor);
+    setColorId(colorId);
   };
 
   const updateVariant = (colorId: string, productId: string, colorData: Map<string, object>) => {
     const result = getMetaDtataFromColorVariant(colorId, colorData);
     setData(result);
     setProductId(productId);
-    setColorId(colorId);
+    //setColorId(colorId);
     // const variant = getVariantIdFromColorVariant(colorId, colorData);
     // setVariantId(variant);
     setVariantId(param.variantId);
+    setVariantIdOfUpdate(param.variantId);
   };
 
   useEffect(() => {
@@ -159,7 +203,7 @@ function DesignPage(param: DesignPageProps) {
     if (!colorLoading) {
       const fetchData = async () => {
         try {
-          updateVariant(colorId, productId, colorData);
+          updateVariant(colorId || "", productId, colorData);
           setLoading(false);
         } catch (error) {
           console.error("Error fetching data:", error);
@@ -168,10 +212,9 @@ function DesignPage(param: DesignPageProps) {
       };
 
       fetchData();
+
     }
   }, [colorLoading, colorData]);
-
-
 
   useEffect(() => {
     if (!loading) {
@@ -180,11 +223,11 @@ function DesignPage(param: DesignPageProps) {
         data.sort((a, b) => a.z_index - b.z_index),
         productId,
         variantId,
-        colorId,
+        colorId || "",
         param.typeDesign,
-        colorData,
-        sizeIdDefault,
-        variantSizeColor,
+        //colorData,
+        //sizeIdDefault,
+        // variantSizeColor,
         setMenuIndex,
         setResizeWidth,
         setResizeHeight,
@@ -249,7 +292,7 @@ function DesignPage(param: DesignPageProps) {
 
       // Xử lý sự kiện click cho thumbnail
       const handleThumbnailClick = (e: Event) => {
-        if (
+        /*if (
           designerRef.current != null &&
           designerRef.current.currentStage.stage &&
           designerRef.current.currentStage.stage?.getChildren().length > 0
@@ -266,7 +309,8 @@ function DesignPage(param: DesignPageProps) {
               });
             }
           }
-        }
+        }*/
+        handleCaptureDesignImage();
         const target = e.currentTarget as HTMLDivElement;
         const view = target.getAttribute("data-view");
 
@@ -336,6 +380,7 @@ function DesignPage(param: DesignPageProps) {
             };*/
             const jsonObject = JSON.parse(json);
             localStorage.removeItem("designRelativeInfor");
+            localStorage.removeItem("changeProductFrom");
             //console.log('jsonObject', jsonObject);
 
             /*const designs: object[][] = [];
@@ -622,10 +667,6 @@ function DesignPage(param: DesignPageProps) {
     }
   }
 
-
-
-
-
   const colors = [
     "#FFFFFF",
     "#000000",
@@ -735,8 +776,26 @@ function DesignPage(param: DesignPageProps) {
     }
   };
 
+  const handleCaptureDesignImage = () => {
+    if (designerRef.current == null || designerRef.current == undefined) {
+      return;
+    }
+    for (const item in designerRef.current.data) {
+      if (designerRef.current.stages[item] == designerRef.current.currentStage) {
+        const domImage = document.getElementById(
+          designerRef.current.data[item].code + "Image",
+        ) as HTMLImageElement;
+        designerRef.current.exportStage(designerRef.current.currentStage, domImage).then((base64) => {
+          if (designerRef.current != null) {
+            designerRef.current.faceImage[designerRef.current.data[item].code] = base64;
+          }
+        });
+      }
+    }
+  }
+
   const handleThumbnailClick = (e: Event) => {
-    if (designerRef.current != null) {
+    /*if (designerRef.current != null) {
       for (const item in designerRef.current.data) {
         if (designerRef.current.stages[item] == designerRef.current.currentStage) {
           const domImage = document.getElementById(
@@ -749,7 +808,8 @@ function DesignPage(param: DesignPageProps) {
           });
         }
       }
-    }
+    }*/
+    handleCaptureDesignImage();
     const target = e.currentTarget as HTMLDivElement;
     const view = target.getAttribute("data-view");
 
@@ -907,6 +967,7 @@ function DesignPage(param: DesignPageProps) {
       designerRef.current?.exportRelativeDesignToJson()
         .then((data) => {
           localStorage.setItem("designRelativeInfor", JSON.stringify(data));
+          localStorage.setItem("changeProductFrom", param.variantId);
         })
         .catch((error) => {
           console.error("Error exporting design data:", error);
@@ -919,6 +980,7 @@ function DesignPage(param: DesignPageProps) {
       setIsShowDialog(!isShowDialog);
     }
   }, [showProductModal]);
+
 
 
 
@@ -943,6 +1005,25 @@ function DesignPage(param: DesignPageProps) {
           exportRelativeDesignToJson={designerRef.current?.exportRelativeDesignToJson}
           fromDevice={2}
           typeDesign={param.typeDesign == 1 ? 1 : 3}
+        />
+      )}
+
+      {(isShowAddionalService == true) && (
+        <AdditionalServicePopup
+          variantUpdateId={variantIdOfUpdate || ""}
+          productId={productId}
+          channel={param.channel}
+          images={designerRef.current?.faceImage || {}}
+          variantId={variantIdRef.current || ""}
+          printTech={printTechRef.current}
+          quantity={quantity || 1}
+          is_update={isUpdate}
+          is_add_to_cart={isAddToCart}
+          serviceIds={setSelectedServices}
+          priceOfVariantDesigns={setPriceOfVariantDesign}
+          variantIds={setVariantIds}
+          onClose={() => setIsShowAddionalService(false)}
+          handlerCheckout={() => handlerCheckoutRef.current()}
         />
       )}
 
@@ -1080,19 +1161,55 @@ function DesignPage(param: DesignPageProps) {
                         key={key}
                         onClick={() => {
                           if (designerRef.current) {
+                            if (variantSizeColor) {
+                              const variantIdUpdate = getVariantIdFromColorSize(key, sizeIdDefault, variantSizeColor);
+                              setVariantIdOfUpdate(variantIdUpdate);
+                            }
                             setLoading(true);
                             handleChangeProductColor(key);
                             designerRef.current.createNodeHistory();
+                            const result = getMetaDtataFromColorVariant(key, colorData);
+                            sort_data = result.sort((a, b) => a.z_index - b.z_index);
+
+                            for (const item of result) {
+                              const imageDom = document.getElementById(
+                                item.code + "Image",
+                              ) as HTMLImageElement;
+                              const thumbnailDom = document.getElementById(`thumb-${item.code}`);
+                              imageDom.src = item.image;
+                              if (thumbnailDom) {
+                                thumbnailDom.setAttribute("src", item.image);
+                              }
+                            }
+                            const thumbnails = document.querySelectorAll(".thumbnail");
+                            thumbnails.forEach((thumb) => {
+                              thumb.addEventListener("click", handleThumbnailClick);
+                            });
+
+                            designerRef.current.data = result;
+                            //designerRef.current.colorValue = key;
+                            if (variantSizeColor) {
+                              const selectVariant = getVariantIdFromColorSize(
+                                key,
+                                sizeIdDefault,
+                                variantSizeColor,
+                              );
+
+                              if (selectVariant !== undefined) {
+                                setVariantId(selectVariant);
+                              }
+                            }
+                            setColorId(colorId);
                             setLoading(false);
                           }
                         }}
                         className={cn(
                           "flex h-8 w-8 items-center justify-center rounded-md border-2 hover:border-black/50",
-                          { "border-black": designerRef.current?.colorValue === key },
+                          { "border-black": colorId === key },
                         )}
                         style={{ backgroundColor: (value as { color_value: string }).color_value }}
                       >
-                        {designerRef.current?.colorValue === key && <Check />}
+                        {colorId === key && <Check />}
                       </div>
                     ))}
                   </div>
@@ -1981,131 +2098,7 @@ function DesignPage(param: DesignPageProps) {
                 />
               );
             })}
-
-          {/* {(param.typeDesign == 1 || (param.typeDesign == 2 && variantId != variantIdOfUpdate)) && (
-            <Button
-              sx={{
-                backgroundColor: "#743C54",
-                color: "#ffffff",
-                "&:hover": {
-                  backgroundColor: "#2b2966",
-                },
-                width: "100%",
-                mt: "20px",
-                textTransform: "none",
-              }}
-              onClick={async () => {
-                const isLogin = await checkUser();
-
-                if (isLogin == false) {
-                  window.location.replace(`/${param.channel}/login`);
-                }
-                setSpinner(true);
-                const json = localStorage.getItem("cart");
-
-                if (json != null && json !== undefined) {
-                  const cartItem = JSON.parse(json) as {
-                    params: any; // Loại của params có thể thay đổi tuỳ theo nhu cầu
-                    selectedVariantId: string;
-                    quantity: number;
-                  };
-
-                  if (designerRef.current != null) {
-                    let metaData = null;
-                    const printFace: { data: string[] } = { data: [] };
-                    let hasObjectInStage = false;
-                    if (designerRef.current.stages != null) {
-                    }
-                    for (const stage of designerRef.current.stages) {
-                      if (
-                        stage.layer?.getChildren().length != null &&
-                        stage.layer?.getChildren().length > 0
-                      ) {
-                        hasObjectInStage = true;
-                        break;
-                      }
-                    }
-                    if (hasObjectInStage == true) {
-                      metaData = (await designerRef.current.exportDesignToJson()) as any;
-
-                      for (const item of metaData.designs) {
-                        if (item.designs.length > 0) {
-                          printFace.data.push(item.face_code);
-                        }
-                      }
-                      if (printFace.data.length > 0) {
-                        metaData.face_code = printFace;
-                      }
-                    }
-                    let result = false;
-                    if (param.typeDesign == 1) {
-                      result = (await addItem(
-                        cartItem.params,
-                        variantId,
-                        cartItem.quantity,
-                        JSON.stringify(metaData, null, 2),
-                      )) as boolean;
-                    } else {
-                      result = (await addItem(
-                        cartItem.params,
-                        variantId,
-                        1,
-                        JSON.stringify(metaData, null, 2),
-                      )) as boolean;
-                    }
-                    if (result === true) {
-                      toast.success("Design added to cart successfully");
-                    } else {
-                      toast.error("An error occurred during processing. Please try again later");
-                    }
-                  }
-                }
-                setSpinner(false);
-              }}
-            >
-              Add to Cart
-            </Button>
-          )}
-
-
-
-
-          {param.typeDesign === 2 && variantId === variantIdOfUpdate && (
-            <Button
-              sx={{
-                backgroundColor: "#743C54",
-                color: "#ffffff",
-                "&:hover": {
-                  backgroundColor: "#2b2966",
-                },
-                width: "100%",
-                mt: "20px",
-                textTransform: "none",
-              }}
-              onClick={async () => {
-                setSpinner(true);
-                const cartId = localStorage.getItem("cartId");
-                if (cartId != null && cartId != undefined) {
-                  if (designerRef.current != null) {
-                    const metaData = await designerRef.current.exportDesignToJson();
-
-                    const result = await UpdateDesign(cartId, JSON.stringify(metaData, null, 2));
-                    if (result == true) {
-                      toast.success("Design updated successfully");
-                    } else {
-                      toast.error("An error occurred during processing. Please try again later");
-                    }
-                    //localStorage.removeItem('cartId');
-                  }
-                  //window.location.replace(`/${param.channel}/cart`);
-                }
-                setSpinner(false);
-              }}
-            >
-              Update
-            </Button>
-          )} */}
-          {(param.typeDesign == 1) && (
+          {(param.typeDesign == 1 || param.typeDesign == 4) && (
             <Button
               sx={{
                 backgroundColor: "#2c3c50",
@@ -2118,12 +2111,14 @@ function DesignPage(param: DesignPageProps) {
                 textTransform: "none",
               }}
               onClick={async () => {
+                handleCaptureDesignImage();
+
                 const isLogin = await checkUser();
 
                 if (isLogin == false) {
                   window.location.replace(`/${param.channel}/login`);
                 }
-                setSpinner(true);
+                //setSpinner(true);
                 const json = localStorage.getItem("cart");
 
                 if (json != null && json !== undefined) {
@@ -2133,56 +2128,68 @@ function DesignPage(param: DesignPageProps) {
                     quantity: number;
                   };
 
-                  if (designerRef.current != null) {
-                    let metaData = null;
-                    const printFace: { data: string[] } = { data: [] };
-                    let hasObjectInStage = false;
-                    if (designerRef.current.stages != null) {
-                    }
-                    for (const stage of designerRef.current.stages) {
-                      if (
-                        stage.layer?.getChildren().length != null &&
-                        stage.layer?.getChildren().length > 0
-                      ) {
-                        hasObjectInStage = true;
-                        break;
-                      }
-                    }
-                    if (hasObjectInStage == true) {
-                      metaData = (await designerRef.current.exportDesignToJson()) as any;
+                  setQuantity(cartItem.quantity);
 
-                      for (const item of metaData.designs) {
-                        if (item.designs.length > 0) {
-                          printFace.data.push(item.face_code);
-                        }
-                      }
-                      if (printFace.data.length > 0) {
-                        metaData.face_code = printFace;
-                      }
+                  let totalObjectInsert = designerRef.current?.getTotalObjectInAllStage();
+                  if (totalObjectInsert && totalObjectInsert > 0) {
+                    setPrintTech(PrintingTechnology.Dtg);
+
+                    const printTechRaw = localStorage.getItem("printTechOfDesign");
+
+                    if (printTechRaw == PrintingTechnology.Silk) {
+                      setPrintTech(PrintingTechnology.Silk);
+                      //alert(`1 ${printTechRaw}`);
                     }
-                    let result = false;
-                    result = (await addItem(
-                      cartItem.params,
-                      variantId,
-                      cartItem.quantity,
-                      JSON.stringify(metaData, null, 2),
-                    )) as boolean;
-                    if (result === true) {
-                      toast.success("Design added to cart successfully");
-                    } else {
-                      toast.error("An error occurred during processing. Please try again later");
+                    else {
+                      setPrintTech(PrintingTechnology.Dtg);
                     }
                   }
+                  else {
+                    setPrintTech(PrintingTechnology.None);
+                  }
+
+
+                  const handleAddToCart = async () => {
+                    console.log('priceOfVariantDesignRef', priceOfVariantDesignRef.current);
+
+                    setSpinner(true);
+                    if (designerRef.current != null) {
+
+                      let metaData = null;
+
+                      if (totalObjectInsert && totalObjectInsert > 0) {
+                        metaData = (await designerRef.current.exportDesignToJson()) as any;
+                      }
+
+                      const items = Array.from(variantIdsRef.current);
+
+
+                      const result = await addCartMultiItem(param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
+                      if (result.success) {
+                        toast.success("Design added to cart successfully");
+                      } else {
+                        toast.error("An error occurred during processing. Please try again later");
+                      }
+                    }
+                    setSpinner(false);
+                  }
+
+                  handlerCheckoutRef.current = handleAddToCart;
+
+                  if (param.typeDesign == 4) {
+                    setIsUpdate(true);
+                  }
+                  else if (param.typeDesign == 1) {
+                    setIsAddToCart(true);
+                  }
+                  setIsShowAddionalService(true);
                 }
-                setSpinner(false);
+                //setSpinner(false);
               }}
             >
               Add to Cart
             </Button>
           )}
-
-
-
 
           {(param.typeDesign === 2 || param.typeDesign === 3) && (
             <Button
@@ -2197,209 +2204,78 @@ function DesignPage(param: DesignPageProps) {
                 textTransform: "none",
               }}
               onClick={async () => {
-                setSpinner(true);
+                handleCaptureDesignImage();
+                //setSpinner(true)
+                const rawQuanlity = localStorage.getItem("cart_quantity");
+
+                let cartQuanlity = 0;
+                if (rawQuanlity) {
+                  cartQuanlity = JSON.parse(rawQuanlity) as number;
+                }
+
+                setQuantity(cartQuanlity);
+                setIsUpdate(true);
+                let totalObjectInsert = designerRef.current?.getTotalObjectInAllStage();
+                if (totalObjectInsert && totalObjectInsert > 0) {
+                  setPrintTech(PrintingTechnology.Dtg);
+
+                  const printTechRaw = localStorage.getItem("printTechOfDesign");
+                  if (printTechRaw == PrintingTechnology.Silk) {
+                    setPrintTech(PrintingTechnology.Silk);
+                  }
+                  else {
+                    setPrintTech(PrintingTechnology.Dtg);
+                  }
+                }
+                else {
+                  setPrintTech(PrintingTechnology.None);
+                }
+
                 const checkoutLineId = localStorage.getItem("checkoutLineId");
                 const checkoutId = localStorage.getItem("checkoutId");
 
-                if (param.typeDesign === 3) {
-                  setVariantIdOfUpdate(variantId);
-                }
-                if (checkoutLineId != null && checkoutLineId != undefined && checkoutId != null && variantId != null) {
-                  if (designerRef.current != null) {
-                    const metaData = await designerRef.current.exportDesignToJson();
-                    if (variantId === variantIdOfUpdate) {
-                      const result = await UpdateDesign(checkoutLineId, JSON.stringify(metaData, null, 2), checkoutId);
+                // if (param.typeDesign === 3) {
+                //   setVariantIdOfUpdate(variantId);
+                // }
+                const handleUpdateCart = async () => {
+                  ///setSpinner(true);
+                  if (checkoutLineId != null && checkoutLineId != undefined && checkoutId != null && variantId != null) {
+                    if (designerRef.current != null) {
+                      let metaData = null;
 
+                      if (totalObjectInsert && totalObjectInsert > 0) {
+                        metaData = (await designerRef.current.exportDesignToJson()) as any;
+                      }
+
+                      const items = Array.from(variantIdsRef.current)
+                      let variantUpdate = param.variantId;
+                      if (param.typeDesign == 2) {
+                        const variantFromChangProduct = localStorage.getItem("changeProductFrom");
+                        if (variantFromChangProduct) {
+                          variantUpdate = variantFromChangProduct;
+                          variantIdRef.current = variantFromChangProduct;
+                        }
+                      }
+                      const result = await UpdateDesignMultiItem(variantUpdate, param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
                       if (result == true) {
                         toast.success("Design updated successfully");
                       } else {
                         toast.error("An error occurred during processing. Please try again later");
                       }
                     }
-                    else {
-                      const result = await UpdateDesign(checkoutLineId, JSON.stringify(metaData, null, 2), checkoutId, true, variantId, param.channel);
-                      if (result == true) {
-                        toast.success("Design updated successfully");
-                      } else {
-                        toast.error("An error occurred during processing. Please try again later");
-                      }
-                    }
-
-                    //localStorage.removeItem('cartId');
                   }
-                  //window.location.replace(`/${param.channel}/cart`);
                 }
-                setSpinner(false);
+
+                handlerCheckoutRef.current = handleUpdateCart;
+
+                setIsShowAddionalService(true);
+                //setSpinner(false);
               }}
             >
               Update
             </Button>
           )}
         </div>
-
-        {/* <Paper
-          id="leftMenu"
-          className="hidden h-full w-full max-w-[120px] flex-col gap-1 gap-y-2 !bg-[#743c54] px-2 lg:flex"
-          elevation={3}
-        >
-          {sort_data.map((item: PrintFaceData, index: number) => (
-            <Box
-              key={item.code}
-              sx={{ display: "flex", flexDirection: "column", gap: 0.5, marginTop: "10px" }}
-            >
-              <Box>
-                <Box
-                  className={index === 0 ? "thumbnail active" : "thumbnail"}
-                  data-view={item.code}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 0,
-                    cursor: "pointer",
-                    marginBottom: "20px",
-                  }}
-                >
-                  <Box
-                    id={`thumb-${item.code}`}
-                    component="img"
-                    src={item.image}
-                    alt={`${item.code}View`}
-                    sx={{
-                      width: "80%",
-                      height: "80%",
-                      objectFit: "cover",
-                      borderRadius: "4px",
-                      background: "white",
-                      margin: "auto",
-                    }}
-                  />
-                  <Typography
-                    variant="caption"
-                    sx={{ fontSize: "15px", textAlign: "center", color: "#ffffff" }}
-                  >
-                    <strong>{item.name}</strong>
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-          ))}
-
-          {(param.typeDesign == 1 || (param.typeDesign == 2 && variantId != variantIdOfUpdate)) && (
-            <Button
-              sx={{
-                backgroundColor: "#000000",
-                color: "#ffffff",
-                "&:hover": {
-                  backgroundColor: "#2b2966",
-                },
-                width: "100%",
-                mt: "20px",
-                textTransform: "none",
-              }}
-              onClick={async () => {
-                const isLogin = await checkUser();
-
-                if (isLogin == false) {
-                  window.location.replace(`/${param.channel}/login`);
-                }
-                setSpinner(true);
-                const json = localStorage.getItem("cart");
-
-
-                if (json != null && json !== undefined) {
-                  const cartItem = JSON.parse(json) as {
-                    params: any; // Loại của params có thể thay đổi tuỳ theo nhu cầu
-                    selectedVariantId: string;
-                    quantity: number;
-                  };
-
-                  if (designerRef.current != null) {
-                    let metaData = null;
-                    const printFace: { data: string[] } = { data: [] };
-                    let hasObjectInStage = false;
-                    if (designerRef.current.stages != null) {
-                    }
-                    for (const i of designerRef.current.stages) {
-                      if (i.layer?.getChildren().length != null && i.layer?.getChildren().length > 0) {
-                        hasObjectInStage = true;
-                        break;
-                      }
-                    }
-                    if (hasObjectInStage == true) {
-                      metaData = await designerRef.current.exportDesignToJson() as any;
-
-                      console.log('okokokokokokokokko', metaData);
-                      for (const item of metaData.designs) {
-                        if (item.designs.length > 0) {
-                          printFace.data.push(item.face_code)
-                        }
-                      }
-                      if (printFace.data.length > 0) {
-                        metaData.face_code = printFace;
-                      }
-                    }
-                    let result = false;
-                    if (param.typeDesign == 1) {
-
-                      result = (await addItem(
-                        cartItem.params,
-                        variantId,
-                        cartItem.quantity,
-                        JSON.stringify(metaData, null, 2),
-                      )) as boolean;
-                    } else {
-                      result = (await addItem(cartItem.params, variantId, 1, JSON.stringify(metaData, null, 2))) as boolean;
-                    }
-                    if (result === true) {
-                      toast.success("Design added to cart successfully");
-                    } else {
-                      toast.error("An error occurred during processing. Please try again later");
-                    }
-                  }
-                }
-                setSpinner(false);
-              }}
-            >
-              Add to Cart
-            </Button>
-          )}
-
-          {param.typeDesign === 2 && variantId === variantIdOfUpdate && (
-            <Button
-              sx={{
-                backgroundColor: "#000000",
-                color: "#ffffff",
-                "&:hover": {
-                  backgroundColor: "#2b2966",
-                },
-                width: "100%",
-                mt: "20px",
-                textTransform: "none",
-              }}
-              onClick={async () => {
-                setSpinner(true);
-                const cartId = localStorage.getItem("cartId");
-                if (cartId != null && cartId != undefined) {
-                  if (designerRef.current != null) {
-                    const metaData = await designerRef.current.exportDesignToJson();
-
-                    const result = await UpdateDesign(cartId, JSON.stringify(metaData, null, 2));
-                    if (result == true) {
-                      toast.success("Design updated successfully");
-                    } else {
-                      toast.error("An error occurred during processing. Please try again later");
-                    }
-                    //localStorage.removeItem('cartId');
-                  }
-                  //window.location.replace(`/${param.channel}/cart`);
-                }
-                setSpinner(false);
-              }}
-            >
-              Update
-            </Button>
-          )}
-        </Paper> */}
 
         <Pen
           className="absolute right-1 top-1 z-10 block h-12 w-12 rounded-full bg-[#2c344b] p-3 lg:hidden"
@@ -2422,7 +2298,7 @@ function DesignPage(param: DesignPageProps) {
           className="fixed bottom-20 right-1 z-10 block h-12 w-12 rounded-full bg-[#8C3859] p-3 lg:hidden"
           stroke="white"
         /> */}
-      </Box>
+      </Box >
       <div
         className={`fixed inset-0 z-50 h-screen transform bg-white transition-transform duration-300 ease-in-out lg:hidden ${isShowDialog ? "translate-x-0" : "-translate-x-full"
           }`}
@@ -2509,19 +2385,56 @@ function DesignPage(param: DesignPageProps) {
                       key={key}
                       onClick={() => {
                         if (designerRef.current) {
+                          if (variantSizeColor) {
+                            const variantIdUpdate = getVariantIdFromColorSize(key, sizeIdDefault, variantSizeColor);
+                            setVariantIdOfUpdate(variantIdUpdate);
+                          }
+
                           setLoading(true);
                           handleChangeProductColor(key);
                           designerRef.current.createNodeHistory();
+                          const result = getMetaDtataFromColorVariant(key, colorData);
+                          sort_data = result.sort((a, b) => a.z_index - b.z_index);
+
+                          for (const item of result) {
+                            const imageDom = document.getElementById(
+                              item.code + "Image",
+                            ) as HTMLImageElement;
+                            const thumbnailDom = document.getElementById(`thumb-${item.code}`);
+                            imageDom.src = item.image;
+                            if (thumbnailDom) {
+                              thumbnailDom.setAttribute("src", item.image);
+                            }
+                          }
+                          const thumbnails = document.querySelectorAll(".thumbnail");
+                          thumbnails.forEach((thumb) => {
+                            thumb.addEventListener("click", handleThumbnailClick);
+                          });
+
+                          designerRef.current.data = result;
+
+                          if (variantSizeColor) {
+                            const selectVariant = getVariantIdFromColorSize(
+                              key,
+                              sizeIdDefault,
+                              variantSizeColor,
+                            );
+
+                            if (selectVariant !== undefined) {
+                              setVariantId(selectVariant);
+                            }
+                          }
+                          setColorId(key);
                           setLoading(false);
                         }
                       }}
                       className={cn(
                         "flex h-8 w-8 items-center justify-center rounded-md border-2 hover:border-black/50",
-                        { "border-black": designerRef.current?.colorValue === key },
+                        { "border-black": colorId === key },
                       )}
                       style={{ backgroundColor: (value as { color_value: string }).color_value }}
                     >
-                      {designerRef.current?.colorValue === key && <Check />}
+                      {colorId && <Check />}
                     </div>
                   ))}
                 </div>
@@ -3621,71 +3534,80 @@ function DesignPage(param: DesignPageProps) {
           <Button
             className="flex h-12 w-12  items-center justify-center rounded-full bg-[#2c344b] p-2"
             onClick={async () => {
+              handleCaptureDesignImage();
+
               const isLogin = await checkUser();
+
               if (isLogin == false) {
                 window.location.replace(`/${param.channel}/login`);
               }
-              setSpinner(true);
+              //setSpinner(true);
               const json = localStorage.getItem("cart");
+
               if (json != null && json !== undefined) {
                 const cartItem = JSON.parse(json) as {
-                  // Ép kiểu trực tiếp ở đây
                   params: any; // Loại của params có thể thay đổi tuỳ theo nhu cầu
                   selectedVariantId: string;
                   quantity: number;
                 };
 
-                if (designerRef.current != null) {
-                  let metaData = null;
-                  const printFace: { data: string[] } = { data: [] };
-                  let hasObjectInStage = false;
-                  if (designerRef.current.stages != null) {
+                setQuantity(cartItem.quantity);
+
+                let totalObjectInsert = designerRef.current?.getTotalObjectInAllStage();
+                if (totalObjectInsert && totalObjectInsert > 0) {
+                  setPrintTech(PrintingTechnology.Dtg);
+
+                  const printTechRaw = localStorage.getItem("printTechOfDesign");
+
+                  if (printTechRaw == PrintingTechnology.Silk) {
+                    setPrintTech(PrintingTechnology.Silk);
+                    //alert(`1 ${printTechRaw}`);
                   }
-                  for (const stage of designerRef.current.stages) {
-                    if (stage.layer?.getChildren().length != null && stage.layer?.getChildren().length > 0) {
-                      hasObjectInStage = true;
-                      break;
-                    }
-                  }
-                  if (hasObjectInStage == true) {
-                    metaData = (await designerRef.current.exportDesignToJson()) as any;
-                    for (const item of metaData.designs) {
-                      if (item.designs.length > 0) {
-                        printFace.data.push(item.face_code);
-                      }
-                    }
-                    if (printFace.data.length > 0) {
-                      metaData.face_code = printFace;
-                    }
-                  }
-                  let result = false;
-                  // console.log(cartItem.params,
-                  //   variantId,
-                  //   cartItem.quantity);
-                  if (param.typeDesign == 1) {
-                    result = (await addItem(
-                      cartItem.params,
-                      variantId,
-                      cartItem.quantity,
-                      JSON.stringify(metaData, null, 2),
-                    )) as boolean;
-                  } else {
-                    result = (await addItem(
-                      cartItem.params,
-                      variantId,
-                      1,
-                      JSON.stringify(metaData, null, 2),
-                    )) as boolean;
-                  }
-                  if (result === true) {
-                    toast.success("Design added to cart successfully");
-                  } else {
-                    toast.error("An error occurred during processing. Please try again later");
+                  else {
+                    setPrintTech(PrintingTechnology.Dtg);
                   }
                 }
+                else {
+                  setPrintTech(PrintingTechnology.None);
+                }
+
+
+                const handleAddToCart = async () => {
+                  //alert(printTechRef.current);
+                  //alert(`22222 ${printTechRef.current}`);
+                  setSpinner(true);
+                  if (designerRef.current != null) {
+
+                    let metaData = null;
+
+                    if (totalObjectInsert && totalObjectInsert > 0) {
+                      metaData = (await designerRef.current.exportDesignToJson()) as any;
+                    }
+
+                    const items = Array.from(variantIdsRef.current);
+
+
+                    const result = await addCartMultiItem(param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
+                    if (result.success) {
+                      toast.success("Design added to cart successfully");
+                    } else {
+                      toast.error("An error occurred during processing. Please try again later");
+                    }
+                  }
+                  setSpinner(false);
+                }
+
+                handlerCheckoutRef.current = handleAddToCart;
+
+                if (param.typeDesign == 4) {
+                  setIsUpdate(true);
+                }
+                else if (param.typeDesign == 1) {
+                  setIsAddToCart(true);
+                }
+                setIsShowAddionalService(true);
               }
-              setSpinner(false);
-              setIsShowFaceDialog(false);
+              //setSpinner(false);
             }}
           >
             <ShoppingCart
@@ -3698,35 +3620,72 @@ function DesignPage(param: DesignPageProps) {
         {(param.typeDesign === 2) && (
           <Button
             onClick={async () => {
-              setSpinner(true);
+              handleCaptureDesignImage();
+              //setSpinner(true)
+              const rawQuanlity = localStorage.getItem("cart_quantity");
+
+              let cartQuanlity = 0;
+              if (rawQuanlity) {
+                cartQuanlity = JSON.parse(rawQuanlity) as number;
+              }
+
+              setQuantity(cartQuanlity);
+              setIsUpdate(true);
+              let totalObjectInsert = designerRef.current?.getTotalObjectInAllStage();
+              if (totalObjectInsert && totalObjectInsert > 0) {
+                setPrintTech(PrintingTechnology.Dtg);
+
+                const printTechRaw = localStorage.getItem("printTechOfDesign");
+                if (printTechRaw == PrintingTechnology.Silk) {
+                  setPrintTech(PrintingTechnology.Silk);
+                }
+                else {
+                  setPrintTech(PrintingTechnology.Dtg);
+                }
+              }
+              else {
+                setPrintTech(PrintingTechnology.None);
+              }
+
               const checkoutLineId = localStorage.getItem("checkoutLineId");
               const checkoutId = localStorage.getItem("checkoutId");
-              if (checkoutLineId != null && checkoutLineId != undefined && checkoutId != null && variantIdOfUpdate != null) {
-                if (designerRef.current != null) {
-                  const metaData = await designerRef.current.exportDesignToJson();
-                  if (variantId === variantIdOfUpdate) {
-                    const result = await UpdateDesign(checkoutLineId, JSON.stringify(metaData, null, 2), checkoutId);
 
+              // if (param.typeDesign === 3) {
+              //   setVariantIdOfUpdate(variantId);
+              // }
+              const handleUpdateCart = async () => {
+                ///setSpinner(true);
+                if (checkoutLineId != null && checkoutLineId != undefined && checkoutId != null && variantId != null) {
+                  if (designerRef.current != null) {
+                    let metaData = null;
+
+                    if (totalObjectInsert && totalObjectInsert > 0) {
+                      metaData = (await designerRef.current.exportDesignToJson()) as any;
+                    }
+
+                    const items = Array.from(variantIdsRef.current)
+                    let variantUpdate = param.variantId;
+                    if (param.typeDesign == 2) {
+                      const variantFromChangProduct = localStorage.getItem("changeProductFrom");
+                      if (variantFromChangProduct) {
+                        variantUpdate = variantFromChangProduct;
+                        variantIdRef.current = variantFromChangProduct;
+                      }
+                    }
+                    const result = await UpdateDesignMultiItem(variantUpdate, param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
                     if (result == true) {
                       toast.success("Design updated successfully");
                     } else {
                       toast.error("An error occurred during processing. Please try again later");
                     }
                   }
-                  else {
-                    const result = await UpdateDesign(checkoutLineId, JSON.stringify(metaData, null, 2), checkoutId, true, variantIdOfUpdate, param.channel);
-                    if (result == true) {
-                      toast.success("Design updated successfully");
-                    } else {
-                      toast.error("An error occurred during processing. Please try again later");
-                    }
-                  }
-
-                  //localStorage.removeItem('cartId');
                 }
-                //window.location.replace(`/${param.channel}/cart`);
               }
-              setSpinner(false);
+
+              handlerCheckoutRef.current = handleUpdateCart;
+
+              setIsShowAddionalService(true);
+              //setSpinner(false);
             }}
           >
             <ShoppingCart

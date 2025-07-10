@@ -1,25 +1,32 @@
 "use client";
+import { PrintingTechnology } from "@/gql/graphql";
+import { getCheckout } from "./action"
 type DesignButtonProps = {
-	colorId: string;
 	variantId: string;
 	productId: string;
 	params: Record<string, string>;
 	selectedVariantId: string;
 	quantity: number;
+	checkout: string;
+	lineId: string;
 };
 
-export function DesignButton({ productId, colorId, variantId, params, selectedVariantId, quantity }: DesignButtonProps) {
+export function DesignButton({ productId, variantId, params, selectedVariantId, quantity, checkout, lineId }: DesignButtonProps) {
 	return (
 		<button
 			type="button"
 			onClick={async () => {
+				const result = await getCheckout(checkout, lineId);
+
 				const cartInfo = JSON.stringify({
 					params: params,
 					selectedVariantId: selectedVariantId,
 					quantity: quantity,
 				});
 				localStorage.setItem('cart', cartInfo);
-				window.location.replace(`design/1/${productId}/${colorId}/${variantId}`);
+				localStorage.setItem("services", JSON.stringify(result.printing_info_metadata.value));
+				localStorage.setItem("printTechOfDesign", PrintingTechnology.Dtg);
+				window.location.replace(`design/4/${productId}/${variantId}`);
 			}}
 		>
 			<span

@@ -1,0 +1,31 @@
+query PublicPrintingAdditionalServicesOfDesign(
+  $channel: String!,
+  $first: Int,
+  $after: String
+) {
+  publicPrintingAdditionalServices(
+    channel: $channel,
+    first: $first,
+    after: $after
+  ) {
+    edges {
+      node {
+        id
+        name
+        price
+        currency
+        channel {
+          id
+          slug
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+  }
+}

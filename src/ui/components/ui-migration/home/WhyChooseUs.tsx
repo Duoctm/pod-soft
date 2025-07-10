@@ -17,24 +17,31 @@ const OPTIONS: EmblaOptionsType = { loop: true, align: "start" }
 const PRODUCTS = [
     {
         "id": "1",
-        "title": "Highest Quality ",
-        "description": "Our DTG printer offer vibrant colors, sharp details, and a soft feel. It’s perfect for complex designs and photo-quality prints that won’t crack or peel over time.",
-        "icon": "/icons/highest-qty.svg",
-        "image": "/images/hightest-qty.webp",
+        "title": "Huge Inventory",
+        "description": "We have a huge inventory of the promo industry’s favorite and best selling apparel.",
+        "icon": "/icons/warehouse.svg",
+        "image": "/images/warehouse.webp",
     },
     {
         "id": "2",
-        "title": "Speed",
-        "description": "We use our own custom technology to speed up ordering and production, ensuring fast, efficient service with top-quality results.",
-        "icon": "/icons/speed.svg",
-        "image": "/images/speed.webp",
+        "title": "Less Waste",
+        "description": "We are at the forefront of digital printing. Our method produces a lot less waste than traditional decoration methods.",
+        "icon": "/icons/recycle.svg",
+        "image": "/images/recycle.webp",
     },
     {
         "id": "3",
-        "title": "Competitive Pricing ",
-        "description": "Our pricing is competitive, giving you great value without sacrificing quality. We’re reliable, easy to work with, and committed to helping your business grow—making us a strong partner you can count on. ",
-        "icon": "/icons/competitive-pricing.svg",
-        "image": "/images/competitive-pricing.webp",
+        "title": "Line Brother",
+        "description": "With top of the line Brother DTG machines, we get your order out, fast and looking mint.",
+        "icon": "/icons/printer.svg",
+        "image": "/images/printer.webp",
+    },
+    {
+        "id": "4",
+        "title": "5 Locations",
+        "description": "With 5 locations across the continental US we can ensure that your print will be faster and better than anyone else.",
+        "icon": "/icons/locations.svg",
+        "image": "/images/locations.webp"
     }
 ]
 

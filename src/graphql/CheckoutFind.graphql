@@ -21,6 +21,7 @@ query CheckoutFind($id: ID!) {
 					url
 					alt
 				}
+				quantityAvailable
 				product {
 					id
 					name

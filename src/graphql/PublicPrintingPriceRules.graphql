@@ -1,0 +1,35 @@
+query PublicPrintingPriceRules(
+  $filter: PrintingPriceRuleFilterInput
+  $sortBy: PrintingPriceRuleSortingInput
+  $channel: String!
+) {
+  publicPrintingPriceRules(
+    filter: $filter
+    sortBy: $sortBy
+    first: 1000
+    channel: $channel
+  ) {
+    edges {
+      node {
+        id
+        name
+        description
+        objectType
+        objectId
+        minColors
+        maxColors
+        printSide
+        currency
+        price
+        status
+        usedForCalculation
+        condition {
+          id
+          printingTechnology
+          maxQuantity
+          minQuantity
+        }
+      }
+    }
+  }
+}

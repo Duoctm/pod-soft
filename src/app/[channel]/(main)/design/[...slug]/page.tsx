@@ -21,8 +21,8 @@ function Page({ params }: PageProps) {
   const { slug = [] } = params;
   const type = Number(decodeURIComponent(slug[0]));
   const productId = decodeURIComponent(slug[1]);
-  const colorId = decodeURIComponent(slug[2]);
-  const variantId = decodeURIComponent(slug[3]);
+  //  const colorId = decodeURIComponent(slug[2]);
+  const variantId = decodeURIComponent(slug[2]);
 
   const [colorDataMap, setColorDataMap] = useState<DesignInfo | null>(null);
 
@@ -65,7 +65,7 @@ function Page({ params }: PageProps) {
       <DesignPage
         variantId={variantId}
         productId={productId}
-        colorId={colorId}
+        //  colorId={colorId}
         designInfor={colorDataMap}
         channel={params.channel}
         typeDesign={type}

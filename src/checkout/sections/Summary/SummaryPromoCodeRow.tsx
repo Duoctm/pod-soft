@@ -11,12 +11,13 @@ interface SummaryPromoCodeRowProps extends SummaryMoneyRowProps {
 	promoCodeId?: string;
 	editable: boolean;
 	id: string;
-	update: () => void;	
+	update: () => void;
 }
 
 export const SummaryPromoCodeRow: React.FC<SummaryPromoCodeRowProps> = ({
 	promoCode,
 	update,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	promoCodeId,
 	editable,
 	id,
@@ -25,13 +26,13 @@ export const SummaryPromoCodeRow: React.FC<SummaryPromoCodeRowProps> = ({
 
 	const [isPending, startTransition] = useTransition();
 
-	const handleDelete =  () => {
+	const handleDelete = () => {
 		if (isPending) return;
 		startTransition(() => {
-			removePromodeCode(id, promoCode as string);
+			void removePromodeCode(id, promoCode as string);
 		});
 		toast.success("Promo code removed successfully");
-		update();	
+		update();
 	};
 
 	return (

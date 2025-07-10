@@ -18,6 +18,7 @@ export async function addItem(
   selectedVariantID: string | null,
   quantity: number,
   metadata: string | null,
+  sericeIdS: string[]
 ) {
   "use server";
 
@@ -70,10 +71,16 @@ export async function addItem(
     }
 
     //const checkoutLineId = result?.checkoutLinesAdd?.checkout?.lines?.[0]?.id;
+
     if (metadata != null && metadata != "") {
+      const printingInfoMetadata = await createNewPrintingInfoMetadata(metadata, sericeIdS);
       await updateCheckoutLineMetadata(checkoutLineId ?? "", [{
         key: "design",
         value: metadata,
+      },
+      {
+        key: "printing_info",
+        value: printingInfoMetadata ?? "",
       }]);
     }
 
@@ -94,15 +101,15 @@ async function addItemToUpdateDesign(
   selectedVariantID: string,
   quantity: number,
   metadata: string | null,
-  //checkoutId?: string,
-  channel: string
+  sericeIdS: string[],
+  //checkoutId: string,
+  channel: string,
 ) {
   "use server";
 
   try {
 
     // TODO: error handling
-    console.log('sdahlkihujhSDHKSdfh', selectedVariantID);
     const result = await executeGraphQL(CheckoutAddLineDocument, {
       variables: {
         id: await Checkout.getIdFromCookies(channel),
@@ -130,9 +137,14 @@ async function addItemToUpdateDesign(
     }
 
     if (metadata != null && metadata != "") {
+      const printingInfoMetadata = await createNewPrintingInfoMetadata(metadata, sericeIdS);
       await updateCheckoutLineMetadata(checkoutLineId, [{
         key: "design",
         value: metadata,
+      },
+      {
+        key: "printing_info",
+        value: printingInfoMetadata ?? "",
       }]);
     }
 
@@ -148,18 +160,39 @@ async function addItemToUpdateDesign(
   //return checkoutLineId; // Trả về checkoutId
 }
 
+const createNewPrintingInfoMetadata = async (metadataDesign: string, serviceIds: string[]) => {
+  const objectDesign = JSON.parse(metadataDesign) as any;
+  const printFace: string[] = [];
+  let printing_technology = "NONE"
+  if (objectDesign) {
+    for (const item of objectDesign.designs) {
+      if (item.designs.length > 0) {
+        printFace.push(item.face_code);
+      }
+    }
+    if (printFace.length > 0) {
+      printing_technology = "DTG"
+    }
+  }
+  return JSON.stringify({
+    print_side: "ALL",
+    printing_technology: printing_technology,
+    additional_service_ids: serviceIds
+  })
+};
+
 
 
 export async function UpdateDesign(
   checkoutLineIdParam: string,
   metadata: string,
+  sericeIdS: string[],
   checkoutId: string,
   deferenceVariant?: boolean, // Thêm tham số sameVariant để xác định có cùng variant hay không
   newVarianId?: string,
   channel?: string,
 ) {
   "use server";
-
   try {
     let checkoutLineId = checkoutLineIdParam;
     let quantity = 1;
@@ -177,9 +210,8 @@ export async function UpdateDesign(
           break;
         }
       }
-      console.log("hahahahahhaha", newVarianId);
 
-      await addItemToUpdateDesign(newVarianId, quantity, metadata, channel);
+      await addItemToUpdateDesign(newVarianId, quantity, metadata, sericeIdS, channel);
 
       await Checkout.saveIdToCookie(channel, checkoutId);
 
@@ -187,10 +219,22 @@ export async function UpdateDesign(
 
     }
     else {
-      await updateCheckoutLineMetadata(checkoutLineId ?? "", [{
-        key: "design",
-        value: metadata,
-      }]);
+      //const metadataOriginals = await fetchCheckoutLineMetadata(checkoutId, checkoutLineId);
+      const printingInfo = await createNewPrintingInfoMetadata(metadata, sericeIdS);
+      const updatedMetadata = [
+        {
+          key: "printing_info",
+          value: printingInfo ?? "",
+        },
+        {
+          key: "design",
+          value: metadata,
+        }
+      ];
+
+      console.log(updatedMetadata);
+
+      await updateCheckoutLineMetadata(checkoutLineId ?? "", updatedMetadata);
     }
     return true;
   }

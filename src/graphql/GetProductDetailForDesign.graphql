@@ -6,6 +6,9 @@ query GetProductDetailForDesign($id: ID!, $channel: String!) {
         id
         name
         sku
+        product{
+          id
+        }
         attributes {
           attribute {
             id
@@ -22,6 +25,23 @@ query GetProductDetailForDesign($id: ID!, $channel: String!) {
         metadata {
           key
           value
+        }
+        media {
+          id
+          alt
+          url(format: WEBP, size: 1080)
+        }
+        pricing {
+          price {
+            gross {
+              amount
+              currency
+            }
+            net {
+              amount
+              currency
+            }
+          }
         }
       }
     }

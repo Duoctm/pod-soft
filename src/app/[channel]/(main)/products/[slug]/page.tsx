@@ -1,5 +1,6 @@
 'use client'
-import ProductDetailComponent from "./productDetail"
+
+import { ProductDetail } from "./productDetailRefactored";
 
 interface PageProps {
     params: {
@@ -8,14 +9,12 @@ interface PageProps {
     };
 }
 
-const ProductDetail: React.FC<PageProps> = ({ params }) => {
+const ProductDetailPage: React.FC<PageProps> = ({ params }) => {
     return (
-        <div className="bg-[#fafafa]">
-            <ProductDetailComponent
-                params={params}
-            />
-        </div>
+        <ProductDetail
+            params={params}
+        />
     );
 };
 
-export default ProductDetail;
+export default ProductDetailPage;
