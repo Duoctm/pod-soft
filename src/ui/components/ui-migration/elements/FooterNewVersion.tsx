@@ -4,6 +4,8 @@ import Link from 'next/link'
 import React from 'react'
 import Wrapper from '../../wrapper'
 
+
+
 const FooterNewVersion = () => {
     return (
         <div className='min-h-[30vh] flex flex-col items-center justify-center px-4 md:px-0 py-8 md:py-10 lg:py-14 bg-[#1E2737] relative'>

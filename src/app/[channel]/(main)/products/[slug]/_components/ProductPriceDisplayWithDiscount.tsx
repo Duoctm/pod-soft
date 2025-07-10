@@ -111,6 +111,17 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
                         </span>
                     </div>
                 );
+            } else {
+                // Member price is 0 - show contact message
+                return (
+                    <div className="flex flex-col">
+                        <div className="bg-[#FA9633]/10 border border-orange-300 rounded-lg px-4 py-2">
+                            <span className="text-lg font-semibold text-orange-700">
+                                Contact for Quote
+                            </span>
+                        </div>
+                    </div>
+                );
             }
         } else {
             // Guest user - show retail price (rulesForDisplay)
@@ -131,6 +142,17 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
                         </span>
                     </div>
                 );
+            } else {
+                // Retail price is 0 - show contact message for guest users
+                return (
+                    <div className="flex flex-col">
+                        <div className="bg-[#FA9633]/10 border border-[#FA9633] rounded-lg px-4 py-2">
+                            <span className="text-lg font-semibold text-[#FA9633]">
+                                Contact for Quote
+                            </span>
+                        </div>
+                    </div>
+                );
             }
         }
     }
@@ -145,6 +167,19 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
     // Fallback to default pricing from productPriceRules
     const currentPrice = productPriceRules[currentColor!];
     if (currentPrice) {
+        // Check if price is 0, show contact message
+        if (currentPrice.price === 0) {
+            return (
+                <div className="flex flex-col">
+                    <div className="bg-[#FA9633]/10 border border-[#FA9633] rounded-lg px-4 py-2">
+                        <span className="text-lg font-semibold text-[#FA9633]">
+                            Contact for Quote
+                        </span>
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div className="flex flex-col">
                 <span className="ml-2 text-3xl font-extrabold text-black md:text-4xl lg:text-5xl">

@@ -21,13 +21,25 @@ const ProductPriceDisplay: React.FC<ProductPriceDisplayProps> = ({
         );
     }
 
+    const currentPrice = productPriceRules[currentColor!];
+
+    // If price is 0, show contact message
+    if (currentPrice.price === 0) {
+        return (
+            <div className="flex flex-col">
+                <div className="bg-[#FA9633]/10 border border-[#FA9633] rounded-lg px-4 py-2">
+                    <span className="text-lg font-semibold text-[#FA9633]">
+                        Contact for Quote
+                    </span>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <span className="ml-2 text-3xl font-extrabold text-black md:text-4xl lg:text-5xl">
-            {productPriceRules[currentColor!].price ? (
-                formatMoney(
-                    productPriceRules[currentColor!].price,
-                    productPriceRules[currentColor!].currency,
-                )
+            {currentPrice.price ? (
+                formatMoney(currentPrice.price, currentPrice.currency)
             ) : (
                 <Loader className="h-6 w-6 animate-spin" />
             )}

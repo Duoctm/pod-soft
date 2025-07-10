@@ -154,25 +154,9 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         }
     }, [currentColor, selectedVariant, initializePricing, printTechnology, productPriceRules]);
 
-    // Handle quantity changes only
-    useEffect(() => {
-        if (!currentColor || !selectedVariant) return;
-        const colorSizes = sizeQuantities[currentColor];
-        if (!colorSizes || Object.keys(colorSizes).length === 0) return;
-        const qty = Object.values(colorSizes).map(item => item.quantity).reduce((a, b) => a + b, 0);
-        if (qty === 0) return;
-
-        console.log('📊 Quantity-based useEffect triggered:', {
-            currentColor,
-            qty,
-            printTechnology
-        });
-
-        // Convert string to PrintingTechnology enum
-        const selectedPrintingTechnology = convertStringToPrintingTechnology(printTechnology);
-
-        void fetchPrintingPriceRules(selectedVariant.id, currentColor, qty, selectedPrintingTechnology);
-    }, [currentColor, selectedVariant, sizeQuantities, fetchPrintingPriceRules, printTechnology]);
+    // Handle quantity changes only - REMOVED to prevent duplicate API calls
+    // This useEffect was causing multiple API calls when quantity changes
+    // The API call is now handled directly in handleQuantityChange
 
     useEffect(() => {
         if (!productDetail || !productDetail.variants?.length) return;
@@ -285,35 +269,46 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
 
         console.log('📊 handleQuantityChange called:', {
             size,
-            quantity: validQty,
+            originalQuantity: quantity,
+            validQty,
             currentColor,
             printTechnology,
-            selectedVariant: selectedVariant.id
+            selectedVariant: selectedVariant.id,
+            timestamp: new Date().toISOString()
         });
 
         setSizeQuantities((prev) => {
             const colorSizes = { ...(prev[currentColor] || {}) };
             if (quantity === 0) {
                 delete colorSizes[size];
+                console.log('🗑️ Removed size entry for:', size);
             } else {
                 colorSizes[size] = {
                     quantity: validQty,
                     variantId: selectedVariant?.id || "",
                 };
+                console.log('📝 Updated size entry:', { size, quantity: validQty });
             }
-            return {
+
+            const newState = {
                 ...prev,
                 [currentColor]: colorSizes,
             };
+
+            console.log('📦 New sizeQuantities state:', newState);
+            return newState;
         });
 
         // Convert string to PrintingTechnology enum for quantity change
         const selectedPrintingTechnology = convertStringToPrintingTechnology(printTechnology);
 
-        console.log('🔄 Fetching price rules with current technology:', {
+        console.log('� About to fetch price rules:', {
+            variantId: selectedVariant.id,
+            colorId: currentColor,
+            quantity: validQty,
             printTechnology,
             convertedTechnology: selectedPrintingTechnology,
-            quantity: validQty
+            enumValue: String(selectedPrintingTechnology)
         });
 
         void fetchPrintingPriceRules(selectedVariant.id, currentColor, validQty, selectedPrintingTechnology);

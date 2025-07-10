@@ -15,14 +15,49 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
         rules: Pick<PrintingPriceRuleCountableEdge, "node" | "__typename">[],
         quantity: number,
     ) => {
-        if (!rules || rules.length === 0) return null;
+        if (!rules || rules.length === 0) {
+            console.log('❌ No rules provided to findPrintingPriceRule');
+            return null;
+        }
+
+        console.log('🔍 findPrintingPriceRule searching for quantity:', quantity, {
+            availableRules: rules.map(rule => ({
+                minQuantity: rule.node.condition?.minQuantity,
+                maxQuantity: rule.node.condition?.maxQuantity,
+                price: rule.node.price,
+                usedForCalculation: rule.node.usedForCalculation
+            }))
+        });
+
         const foundRule = rules.find((item) => {
-            if (!item.node.condition) return false;
+            if (!item.node.condition) {
+                console.log('⚠️ Rule without condition found');
+                return false;
+            }
             const min = item.node.condition.minQuantity;
             const max = item.node.condition.maxQuantity;
-            if (min == null) return false;
-            return quantity >= min && (typeof max === "undefined" || max === null || quantity <= max);
+            if (min == null) {
+                console.log('⚠️ Rule without minQuantity found');
+                return false;
+            }
+            const matches = quantity >= min && (typeof max === "undefined" || max === null || quantity <= max);
+            console.log('🔎 Rule check:', {
+                min,
+                max,
+                quantity,
+                matches,
+                price: item.node.price
+            });
+            return matches;
         })?.node || null;
+
+        console.log('✅ Final found rule:', foundRule ? {
+            price: foundRule.price,
+            currency: foundRule.currency,
+            minQuantity: foundRule.condition?.minQuantity,
+            maxQuantity: foundRule.condition?.maxQuantity
+        } : null);
+
         return foundRule;
     }, []);
 
@@ -117,8 +152,15 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
 
                 // Separate rules into calculation and display arrays
                 const rulesForCalculation = edges.filter(item => item.node.usedForCalculation);
-                const rulesForDisplayFiltered = edges.filter(item => !item.node.usedForCalculation && item.node.condition?.minQuantity === 1);
-                console.log('Rules separation:', rulesForDisplayFiltered)
+                // For display rules (public/retail prices), don't restrict to minQuantity=1
+                // This allows quantity-based pricing for non-logged users
+                const rulesForDisplayFiltered = edges.filter(item => !item.node.usedForCalculation);
+
+                console.log('🏷️ Rules separation for hasUser =', hasUser, {
+                    rulesForCalculation: rulesForCalculation.length,
+                    rulesForDisplay: rulesForDisplayFiltered.length,
+                    totalEdges: edges.length
+                });
                 // Lọc rulesForDisplay chỉ lấy rule có minQuantity=1 và maxQuantity=10
                 // const rulesForDisplayFiltered = edges.filter(item => {
                 //     if (item.node.usedForCalculation) return false;
@@ -136,8 +178,29 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
                 // hasUser = false: Show retail/public prices (rulesForDisplay)
                 const rulesToUse = hasUser ? rulesForCalculation : rulesForDisplayFiltered;
 
+                console.log('💰 Price calculation for quantity:', qty, {
+                    hasUser,
+                    rulesToUseLength: rulesToUse.length,
+                    rulesToUse: rulesToUse.map(rule => ({
+                        usedForCalculation: rule.node.usedForCalculation,
+                        minQuantity: rule.node.condition?.minQuantity,
+                        maxQuantity: rule.node.condition?.maxQuantity,
+                        price: rule.node.price
+                    }))
+                });
+
                 if (rulesToUse.length > 0) {
                     const priceRule = findPrintingPriceRule(rulesToUse, qty);
+                    console.log('🎯 Found price rule:', {
+                        priceRule: priceRule ? {
+                            price: priceRule.price,
+                            currency: priceRule.currency,
+                            minQuantity: priceRule.condition?.minQuantity,
+                            maxQuantity: priceRule.condition?.maxQuantity
+                        } : null,
+                        quantity: qty
+                    });
+
                     setProductPriceRules((prev) => ({
                         ...prev,
                         [colorId]: {
