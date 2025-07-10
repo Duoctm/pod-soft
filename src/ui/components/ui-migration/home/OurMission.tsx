@@ -13,6 +13,9 @@ const OurMission = () => {
                     At ZoomPrints, we get you the freshest digital prints, fast: just 1 day.
                     Our team is all about giving you the best service and top-quality prints every time from anywhere in the US. We stay ahead of the game, always pushing tech forward and keeping it green for the industry.
                 </p>
+                <div className='flex w-full justify-end max-w-3xl'>
+                    <span className='text-white text-sm !font-light'>*Orders of 144 and lower single side print.</span>
+                </div>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8 lg:mt-8 min-h-0 md:min-h-[261px] h-full'>
                     {/* IMAGE BLOCK */}
                     <div className='relative w-full aspect-[16/9] md:aspect-auto md:h-auto'>
