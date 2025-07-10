@@ -1,14 +1,14 @@
 /* eslint-disable import/no-default-export */
 import React from 'react'
 
-const Banner = () => {
+const WorkingDirectly = () => {
     return (
-        <div className='w-full py-4 flex items-center justify-center bg-[#F58A71] absolute top-0 left-0 right-0 '>
+        <div className='w-full py-4 flex items-center justify-center bg-[#F58A71]'>
             <p className='font-semibold text-xl md:text-2xl xl:text-[30px] text-[#263246]'>
-                EXPERTS IN PROMOTIONAL APPAREL PRODUCTS
+                WORKING DIRECTLY WITH DISTRIBUTORS
             </p>
         </div>
     )
 }
 
-export default Banner
+export default WorkingDirectly

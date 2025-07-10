@@ -27,8 +27,8 @@ const OurMission = () => {
                     {/* TEXT BLOCK */}
                     <div className='bg-[#F58A71] text-white rounded-2xl flex items-center justify-center p-4 md:p-6 lg:p-8 text-center aspect-[16/9] md:aspect-auto'>
                         <p className='text-sm'>
-                            At ZoomPrints, we get you the freshest digital prints, fast: just 1 day.
-                            Our team is all about giving you the best service and top-quality prints every time from anywhere in the US. We stay ahead of the game, always pushing tech forward and keeping it green for the industry.
+                            Our digital printing offers hassle-free, detailed, and colorful designs—perfect for small or one-off orders. With no screens needed and water-based inks, it&apos;s eco-friendly and low-waste.
+                            Plus, we have everything in stock, so your order is always ready to go.
                         </p>
                     </div>
                 </div>

@@ -6,8 +6,10 @@ import Popular from "@/ui/components/home/Popular";
 import B2BPrinting from "@/ui/components/ui-migration/home/B2BPrinting";
 import HeroNewVersion from "@/ui/components/ui-migration/home/Hero";
 import OurMission from "@/ui/components/ui-migration/home/OurMission";
-import OurProduct from "@/ui/components/ui-migration/home/OurProduct";
+// import OurProduct from "@/ui/components/ui-migration/home/OurProduct";
+import TopProducts from "@/ui/components/ui-migration/home/TopProducts";
 import WhyChooseUs from "@/ui/components/ui-migration/home/WhyChooseUs";
+import WorkingDirectly from "@/ui/components/ui-migration/home/WorkingDirectly";
 
 
 export const metadata = {
@@ -37,7 +39,9 @@ export default async function Page({ params }: { params: { channel: string } }) 
 			{version === "2" && (
 				<>
 					<HeroNewVersion channel={params.channel} />
-					<OurProduct channel={params.channel} />
+					{/* <OurProduct channel={params.channel} /> */}
+					<WorkingDirectly />
+					<TopProducts channel={params.channel} />
 					<OurMission />
 					<B2BPrinting />
 					<WhyChooseUs />
