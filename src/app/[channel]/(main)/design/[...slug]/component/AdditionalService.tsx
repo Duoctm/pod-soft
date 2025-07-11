@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { getAdditionalService, getPrintingPriceRules } from "../utils/action";
-import { PrintingTechnology } from "@/gql/graphql";
-import { fetchRawProductDetail } from "../utils/getProductDetailForDesign";
-import { Service, VariantPrice, VariantSelect, VariantPriceDropdown } from "./type";
-import { getCheckoutList } from "../../../cart/actions"
+import React, { useState, useEffect, useRef } from "react";
 import { ChevronDown } from 'lucide-react';
-import { AddCartType, PriceOfVariantDesign } from "../utils/type"
+import { getAdditionalService, getPrintingPriceRules } from "../utils/action";
+import { fetchRawProductDetail } from "../utils/getProductDetailForDesign";
+import { getCheckoutList } from "../../../cart/actions"
+import { type AddCartType, type PriceOfVariantDesign } from "../utils/type"
+import { type Service, type VariantPrice, type VariantSelect, type VariantPriceDropdown } from "./type";
+import { PrintingTechnology, PrintSide } from "@/gql/graphql";
 
 interface PopupProps {
     productId: string,
@@ -24,6 +24,8 @@ interface PopupProps {
     variantIds: React.Dispatch<React.SetStateAction<Set<AddCartType>>>;
     onClose: () => void;
     handlerCheckout: (() => void) | null;
+    setPrintTechFromParent: React.Dispatch<React.SetStateAction<PrintingTechnology>>;
+
 }
 
 const AdditionalServicePopup: React.FC<PopupProps> = ({
@@ -41,6 +43,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
     variantIds,
     onClose,
     handlerCheckout,
+    setPrintTechFromParent
 }) => {
     const [step, setStep] = useState<"selectVariants" | "priceSummary">("selectVariants");
     //console.log(images);
@@ -72,6 +75,14 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
     const [listVariantShowSelects, setListVariantShowSelects] = useState<VariantSelect[]>([]); // danh sach duoc chon se duoc show len
     const [variantsDropdown, setVariantsDropdown] = useState<VariantPriceDropdown[]>([]); // du lieu dropdown xuong
     const [priceOfVariantDesign, setPriceOfVariantDesign] = useState<PriceOfVariantDesign[]>([]);
+
+    const [printTechChild, setPrintTech] = useState<PrintingTechnology>(printTech);
+
+    const printTechChildRef = useRef<PrintingTechnology>(printTech);
+    useEffect(() => {
+        printTechChildRef.current = printTechChild;
+
+    }, [printTechChild]);
 
     //const variantsSelected = listVariantIds;
 
@@ -230,21 +241,60 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 
             const numberVarianId = extractNumericId(item.variantId);
 
-            const resultPricePrintingRules = await getPrintingPriceRules(Number(numberVarianId), [
-                printTech,
-                PrintingTechnology.None,
-            ], channel);
+            const resultPricePrintingRules: any[] = []
+
+            const printSides = [PrintSide.Front, PrintSide.Back, PrintSide.None];
+
+            for (const p of printSides) {
+                const data = await getPrintingPriceRules(Number(numberVarianId), [
+                    printTechChildRef.current,
+                    PrintingTechnology.None,
+                ], channel, p);
+                if (data && Array.isArray(data)) {
+                    resultPricePrintingRules.push(...data);
+                }
+
+            }
+
+            console.log('ruleeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', resultPricePrintingRules);
 
 
             let blankPrice = 0;
             let printPrice = 0;
             let unitTotalPrice = 0;
-            let quantity = item.quanlity;
+            const quantity = item.quanlity;
             let blankSalePrice = 0;
             let printSalePrice = 0;
             let saleUnitTotalPrice = 0;
 
             if (resultPricePrintingRules) {
+                for (const rule of resultPricePrintingRules) {
+                    const condition = rule.node.condition;
+                    if (condition && condition.minQuantity !== null &&
+                        condition.maxQuantity !== null &&
+                        condition.minQuantity &&
+                        condition.maxQuantity &&
+                        condition.printingTechnology !== null &&
+                        quantity >= condition.minQuantity &&
+                        quantity <= condition.maxQuantity
+                    ) {
+                        if (rule.node.usedForCalculation == false) {
+                            if (condition.printingTechnology === PrintingTechnology.None && rule.node.price && rule.node.printSide == PrintSide.None) {
+                                blankPrice = rule.node.price;
+                            }
+                        }
+                        else {
+                            if (
+                                condition.printingTechnology === PrintingTechnology.None && rule.node.price && rule.node.printSide == PrintSide.None) {
+                                blankSalePrice = rule.node.price;
+                            }
+                        }
+                    }
+                }
+
+                let unitTotalPriceTemp = 0;
+                let saleUnitTotalPriceTemp = 0;
+
                 for (const rule of resultPricePrintingRules) {
                     const condition = rule.node.condition;
                     if (
@@ -258,33 +308,30 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                         quantity <= condition.maxQuantity
                     ) {
                         if (rule.node.usedForCalculation == false) {
-                            if (
-                                condition.printingTechnology === PrintingTechnology.None &&
-                                rule.node.price
-                            ) {
-                                blankPrice = rule.node.price;
+
+                            if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Front) {
+                                unitTotalPriceTemp += rule.node.price;
                             }
-                            if (condition.printingTechnology === printTech && rule.node.price) {
-                                unitTotalPrice = rule.node.price;
-                                printPrice = rule.node.price - blankPrice;
+
+                            if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Back) {
+                                unitTotalPriceTemp += rule.node.price;
                             }
                         }
                         else {
-                            if (
-                                condition.printingTechnology === PrintingTechnology.None &&
-                                rule.node.price
-                            ) {
-                                blankSalePrice = rule.node.price;
+                            if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Front) {
+                                saleUnitTotalPriceTemp += rule.node.price;
                             }
-
-                            if (condition.printingTechnology === printTech && rule.node.price) {
-                                printSalePrice = rule.node.price - blankSalePrice;
-                                saleUnitTotalPrice = rule.node.price;
-
+                            if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Back) {
+                                saleUnitTotalPriceTemp += rule.node.price;
                             }
                         }
                     }
                 }
+
+                printSalePrice = saleUnitTotalPriceTemp - blankSalePrice;
+                printPrice = unitTotalPriceTemp - blankPrice;
+                saleUnitTotalPrice = saleUnitTotalPriceTemp;
+                unitTotalPrice = unitTotalPriceTemp;
             }
             const nameImage = getImageAndName(item.variantId);
 
@@ -477,7 +524,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 
                             const listVariantSelectId = listVariantSelect.map(item => item.variantId);
 
-                            let productVariantItems: any[] = [];
+                            const productVariantItems: any[] = [];
                             const variantShowSelect: VariantSelect[] = [];
                             // const result = await fetchRawProductDetail(listVariantSelect[1].productId, channel);
                             // console.log('reeeeeeeeee', result.product?.variants);
@@ -635,7 +682,10 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                 aria-modal="true"
                 className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
             >
-                <div className="w-full sm:w-[90vw] md:w-[80vw] h-full sm:h-[90vh] bg-white rounded-none sm:rounded-xl shadow-lg relative flex flex-col overflow-hidden">
+                <div className={`${step === "selectVariants"
+                    ? "w-full sm:w-[500px] md:w-[600px] h-auto sm:h-auto"
+                    : "w-full sm:w-[90vw] md:w-[80vw] h-full sm:h-[90vh]"
+                    } bg-white rounded-none sm:rounded-xl shadow-lg relative flex flex-col overflow-hidden`}>
                     {/* Close button */}
                     <button
                         onClick={onClose}
@@ -648,7 +698,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                     {/* Bước chọn variant */}
                     {step === "selectVariants" && (
                         <div className="p-6 flex flex-col h-full">
-                            <h2 className="text-xl font-semibold mb-4">Select Variants</h2>
+                            <h2 className="text-xl font-semibold mb-4">Copy the design onto other variants?</h2>
                             <div className="flex-1 overflow-y-auto">
                                 {listVariantShowSelects.map((variant) => (
                                     <label
@@ -667,10 +717,31 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                             onChange={() => toggleVariant(variant.variantId)} // truyền cả object
                                             className="accent-[#783c54]"
                                         />
-
                                     </label>
                                 ))}
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium mb-1">
+                                        Printing Technology
+                                    </label>
+                                    <select
+                                        value={printTechChild}
+                                        onChange={(e) => {
+                                            //alert(e.target.value);
+                                            setPrintTechFromParent(e.target.value as PrintingTechnology)
+                                            setPrintTech(e.target.value as PrintingTechnology);
+                                        }}
+                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                    >
+                                        <option value="" disabled>
+                                            Select a printing technology
+                                        </option>
+                                        <option value={PrintingTechnology.Dtg}>DTG</option>
+                                        <option value={PrintingTechnology.Silk}>SILK</option>
+                                    </select>
+                                </div>
                             </div>
+
+
                             <div className="mt-4 flex justify-center">
                                 <button
                                     onClick={async () => {
@@ -724,7 +795,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 
 
 
-                                        if (printTech == PrintingTechnology.Silk) {
+                                        if (printTechChildRef.current == PrintingTechnology.Silk) {
                                             if (typeof handlerCheckout === "function") {
                                                 handlerCheckout();
                                             }
@@ -743,6 +814,70 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                 </button>
                             </div>
                         </div>
+                        // <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-hidden p-6">
+                        //     <h2 className="text-2xl font-bold mb-4 text-center">Select Variants</h2>
+
+                        //     <div className="overflow-y-auto space-y-4 max-h-[60vh] pr-2">
+                        //         {listVariantShowSelects.map((variant) => (
+                        //             <label
+                        //                 key={variant.variantId}
+                        //                 className="flex items-center gap-4 border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition cursor-pointer"
+                        //             >
+                        //                 <img
+                        //                     src={variant.image}
+                        //                     alt={variant.name}
+                        //                     className="w-14 h-20 object-cover rounded border"
+                        //                 />
+                        //                 <div className="flex-1">
+                        //                     <p className="text-base font-medium">{variant.name}</p>
+                        //                 </div>
+                        //                 <input
+                        //                     type="checkbox"
+                        //                     checked={selectedVariants.some((v) => v.variantId === variant.variantId)}
+                        //                     onChange={() => toggleVariant(variant.variantId)}
+                        //                     className="accent-[#783c54] w-5 h-5"
+                        //                 />
+                        //             </label>
+                        //         ))}
+
+                        //         <div className="mt-2">
+                        //             <label className="block text-sm font-semibold mb-2">Printing Technology</label>
+                        //             <select
+                        //                 onChange={(e) => {
+                        //                     setPrintTechFromParent(e.target.value as PrintingTechnology);
+                        //                     setPrintTech(e.target.value as PrintingTechnology);
+                        //                 }}
+                        //                 className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-[#783c54] focus:border-[#783c54]"
+                        //             >
+                        //                 <option value="" disabled selected>
+                        //                     Select a printing technology
+                        //                 </option>
+                        //                 <option value={PrintingTechnology.Dtg}>DTG</option>
+                        //                 <option value={PrintingTechnology.Silk}>SILK</option>
+                        //             </select>
+                        //         </div>
+                        //     </div>
+
+                        //     <div className="mt-6 flex justify-center">
+                        //         <button
+                        //             onClick={async () => {
+                        //                 // ... xử lý dữ liệu
+                        //                 if (printTechChildRef.current == PrintingTechnology.Silk) {
+                        //                     handlerCheckout?.();
+                        //                 } else {
+                        //                     setStep("priceSummary");
+                        //                 }
+                        //             }}
+                        //             disabled={selectedVariants.length === 0}
+                        //             className={`w-40 px-4 py-2 rounded-md text-white text-center font-medium transition ${selectedVariants.length === 0
+                        //                 ? "bg-gray-400 cursor-not-allowed"
+                        //                 : "bg-[#2c3c50] hover:bg-[#1f2c3f]"
+                        //                 }`}
+                        //         >
+                        //             Next
+                        //         </button>
+                        //     </div>
+                        // </div>
                     )}
 
                     {/* Bước tính giá */}

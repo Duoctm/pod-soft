@@ -136,8 +136,10 @@ export function CartPage({ params }: CartPageProps) {
 			if (checkoutData) {
 				setCheckout(checkoutData.checkout as CheckoutType);
 				setItems(checkoutData.checkout.lines as CheckoutLine[]);
+				if (checkoutData?.checkout?.lines?.length > 0) {
+					localStorage.setItem("cartUpdateDesign", JSON.stringify(checkoutData));
+				}
 			}
-			console.log(checkoutData?.checkout.lines)
 			setCheckoutId(checkoutData?.checkoutId as string);
 		} catch (error) {
 			console.error("Failed to fetch checkout:", error);

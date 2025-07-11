@@ -1,6 +1,6 @@
 'use server';
 
-import { PrintingTechnology, PublicPrintingAdditionalServicesOfDesignDocument, PublicPrintingPriceRulesDocument, Status } from "@/gql/graphql";
+import { type PrintingTechnology, type PrintSide, PublicPrintingAdditionalServicesOfDesignDocument, PublicPrintingPriceRulesDocument, Status } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
 
 
@@ -15,14 +15,14 @@ async function getAdditionalService(channel: string, first: number, after: strin
     return data;
 }
 
-async function getPrintingPriceRules(objectId: number, printTech: PrintingTechnology[], channel: string) {
-
+async function getPrintingPriceRules(objectId: number, printTech: PrintingTechnology[], channel: string, printSide: PrintSide) {
     const data = await executeGraphQL(PublicPrintingPriceRulesDocument, {
         variables: {
             filter: {
                 status: Status.Active,
                 objectId: objectId,
                 printingTechnologies: printTech,
+                printSide: printSide
             },
             sortBy: null,
             channel: channel
