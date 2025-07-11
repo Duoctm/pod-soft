@@ -45,16 +45,12 @@ const ProductActions: React.FC<ProductActionsProps> = ({
     return (
         <div className="flex flex-grow gap-2">
             {!fromDesign && (
-                <div className="flex flex-1 items-center justify-between gap-2">
-                    <div className="flex items-center justify-between gap-2">
-
-                        {(selectedVariant?.metadata?.find((i) => i.key === "custom_json") && (isShowDesignButton == true)) && (
+                <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:gap-2">
+                        {(selectedVariant?.metadata?.find((i) => i.key === "custom_json") && isShowDesignButton) && (
                             <div onClick={onNavigateToDesign} className="w-full sm:w-auto">
-                                <button className="flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#F58A71] px-5 
-                      py-2 text-sm font-semibold text-white shadow-lg 
-                      transition-all duration-300 hover:scale-105 hover:bg-[#F58A71]/90 
-                      focus:outline-none focus:ring-2
-                      focus:ring-[#F58A71] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                <button
+                                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#F58A71] px-5 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-[#F58A71]/90 focus:outline-none focus:ring-2 focus:ring-[#F58A71] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                                 >
                                     <Pen className="h-4 w-4" />
                                     Design
@@ -65,13 +61,13 @@ const ProductActions: React.FC<ProductActionsProps> = ({
                         <button
                             id="add-to-cart-button"
                             className={cn(
-                                "flex w-full transform items-center justify-center gap-2 rounded-lg bg-[#F58A71] px-5 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-[#F58A71]/90 focus:outline-none focus:ring-2 focus:ring-[#F58A71] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto",
+                                "flex w-full items-center justify-center gap-2 rounded-lg bg-[#F58A71] px-5 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-[#F58A71]/90 focus:outline-none focus:ring-2 focus:ring-[#F58A71] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto",
                                 addtoCartLoading ? "cursor-not-allowed opacity-50" : ""
                             )}
                             onClick={onAddToCart}
                         >
                             {addtoCartLoading ? (
-                                <Loader2 className="h-6 w-6 animate-spin" />
+                                <Loader2 className="h-6 animate-spin" />
                             ) : (
                                 <>
                                     <ShoppingCart className="h-5 w-5" />
@@ -79,19 +75,19 @@ const ProductActions: React.FC<ProductActionsProps> = ({
                                 </>
                             )}
                         </button>
-
                     </div>
-                    {user ? (
-                        <div className="w-full sm:w-auto">
-                            <button
-                                className="flex w-full transform items-center justify-center gap-2 rounded-lg hover:bg-[#8B3958] px-5 py-2 text-sm font-semibold border hover:text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 focus:outline-none focus:ring-2 focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                                onClick={() => onShowMarginPrice()}
-                            >
-                                <Info className="h-4 w-4" />
-                                Provider Info
-                            </button>
-                        </div>
-                    ) : null}
+                    {user && (
+
+                        <button
+                            type="button"
+                            className="flex items-center justify-center gap-2 rounded-lg border px-5 py-2 text-sm font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto"
+                            onClick={onShowMarginPrice}
+                        >
+                            <Info className="h-4 w-4" />
+                            <span className="whitespace-nowrap">Provider Info</span>
+                        </button>
+
+                    )}
                 </div>
             )}
             {fromDesign === true && (

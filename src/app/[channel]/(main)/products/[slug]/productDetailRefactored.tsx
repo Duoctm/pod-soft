@@ -98,7 +98,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
     // Custom hooks
     const { productDetail, loading, selectedVariant, setSelectedVariant, getProductDetail } = useProductDetail(slug, channel);
     const { user, hasUser, fetchUser } = useUser();
-    const { productPriceRules, listProductPriceRules, fetchPrintingPriceRules, initializePricing, resetPricing: _resetPricing } = usePrintingPriceRules(channel, hasUser);
+    const { productPriceRules, listProductPriceRules, fetchPrintingPriceRules, initializePricing, resetPricing: _resetPricing, getPriceForColorAndSize: _getPriceForColorAndSize } = usePrintingPriceRules(channel, hasUser);
     const { publicPrintingAdditionalServices, services, serviceDetails, getPublicPrintingAdditionalServices, handleSetOptions } = useAdditionalServices(channel);
 
     // Local state
@@ -134,25 +134,74 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
     }, [slug, channel, hasUser, getProductDetail, variantParam]);
 
     // Initialize pricing when color and variant are available - but only once
+    // Using refs to avoid dependency loops with productPriceRules
+    const priceCacheInit = React.useRef(productPriceRules);
+    priceCacheInit.current = productPriceRules;
+
     useEffect(() => {
         if (!currentColor || !selectedVariant) return;
 
         console.log('🔄 Initialize pricing check:', {
             currentColor,
             selectedVariant: selectedVariant.id,
-            hasExistingPrice: !!productPriceRules[currentColor],
+            hasExistingPrice: !!priceCacheInit.current[currentColor],
             printTechnology
         });
 
         // Convert string to PrintingTechnology enum
         const selectedPrintingTechnology = convertStringToPrintingTechnology(printTechnology);
 
-        // Initialize immediately if no pricing exists
-        if (!productPriceRules[currentColor]) {
-            console.log('🆕 No existing price, initializing...');
-            void initializePricing(selectedVariant.id, currentColor, selectedPrintingTechnology);
+        // Initialize immediately if no pricing exists for current color
+        // Check both general color pricing and specific color-size pricing
+        const generalPriceKey = currentColor;
+        const specificPriceKey = selectedSize ? `${currentColor}-${selectedSize}` : null;
+
+        const hasGeneralPrice = !!priceCacheInit.current[generalPriceKey];
+        const hasSpecificPrice = specificPriceKey ? !!priceCacheInit.current[specificPriceKey] : false;
+
+        if (!hasGeneralPrice && !hasSpecificPrice) {
+            console.log('🆕 No existing price, initializing...', {
+                currentColor,
+                selectedSize,
+                generalPriceKey,
+                specificPriceKey,
+                hasGeneralPrice,
+                hasSpecificPrice
+            });
+            void initializePricing(selectedVariant.id, currentColor, selectedPrintingTechnology, false, selectedSize || undefined);
         }
-    }, [currentColor, selectedVariant, initializePricing, printTechnology, productPriceRules]);
+    }, [currentColor, selectedVariant, initializePricing, printTechnology, selectedSize]); // Removed productPriceRules dependency
+
+    // Fetch price when selected size changes (backup for cases not handled by handleSizeSelect)
+    // Using refs to avoid dependency loops with productPriceRules
+    const priceCache = React.useRef(productPriceRules);
+    priceCache.current = productPriceRules;
+
+    useEffect(() => {
+        if (!selectedSize || !currentColor || !selectedVariant) return;
+
+        // Get current quantity for this size
+        const currentQuantity = sizeQuantities[currentColor]?.[selectedSize]?.quantity || 0;
+
+        // Only fetch if there's a quantity for this size AND we don't have cached price
+        const priceKey = `${currentColor}-${selectedSize}`;
+        const hasCachedPrice = !!priceCache.current[priceKey];
+
+        if (currentQuantity > 0 && !hasCachedPrice) {
+            const selectedPrintingTechnology = convertStringToPrintingTechnology(printTechnology);
+            console.log('🔄 useEffect: Selected size changed, no cached price, refetching:', {
+                selectedSize,
+                currentColor,
+                currentQuantity,
+                priceKey,
+                hasCachedPrice,
+                printTechnology,
+                variantId: selectedVariant.id
+            });
+
+            void fetchPrintingPriceRules(selectedVariant.id, currentColor, currentQuantity, selectedPrintingTechnology, selectedSize);
+        }
+    }, [selectedSize, currentColor, selectedVariant, sizeQuantities, printTechnology, fetchPrintingPriceRules]); // Removed productPriceRules dependency
 
     // Handle quantity changes only - REMOVED to prevent duplicate API calls
     // This useEffect was causing multiple API calls when quantity changes
@@ -179,6 +228,9 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             setSelectedVariant(defaultVariant);
         }
     }, [productDetail, currentColor, sizeQuantities, setSelectedVariant]);
+
+    // Removed debug useEffect to prevent infinite loops
+    // Debug info is now logged directly when state changes occur
 
     // Handlers
     const handleColorSizeChange = useCallback((
@@ -244,24 +296,53 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             // Convert string to PrintingTechnology enum
             const selectedPrintingTechnology = convertStringToPrintingTechnology(newPrintTech);
 
-            // Get current quantity or default to 1
+            // Get current color for fetch
             const currentColorForFetch = selected.color || currentColor;
-            const colorSizes = sizeQuantities[currentColorForFetch || ''];
-            let qty = 1; // Default quantity
 
-            if (colorSizes && Object.keys(colorSizes).length > 0) {
-                const totalQty = Object.values(colorSizes).map(item => item.quantity).reduce((a, b) => a + b, 0);
-                if (totalQty > 0) {
-                    qty = totalQty;
-                }
-            }
-
-            // Immediately fetch pricing with new technology
-            setTimeout(() => {
-                void fetchPrintingPriceRules(variant.id, currentColorForFetch!, qty, selectedPrintingTechnology);
-            }, 100); // Small delay to ensure state is updated
+            // Reset pricing to force UI update with new technology
+            void initializePricing(variant.id, currentColorForFetch!, selectedPrintingTechnology, true, selected.size || undefined);
         }
-    }, [currentColor, printTechnology, sizeQuantities, fetchPrintingPriceRules, setSelectedVariant]);
+    }, [currentColor, printTechnology, setSelectedVariant, initializePricing]);
+
+    // Handler for size selection with automatic price refetch
+    const handleSizeSelect = useCallback(async (size: string) => {
+        console.log('👆 handleSizeSelect called:', {
+            size,
+            currentColor,
+            selectedVariant: selectedVariant?.id,
+            printTechnology
+        });
+
+        // Set the selected size first
+        setSelectedSize(size);
+
+        // Check if this size already has quantity for current color
+        if (currentColor && selectedVariant) {
+            const existingQuantity = sizeQuantities[currentColor]?.[size]?.quantity || 0;
+
+            if (existingQuantity > 0) {
+                // Always fetch price for existing quantity to ensure up-to-date pricing
+                const selectedPrintingTechnology = convertStringToPrintingTechnology(printTechnology);
+
+                console.log('🔄 Size has existing quantity, force refetching price:', {
+                    size,
+                    existingQuantity,
+                    currentColor,
+                    printTechnology,
+                    selectedPrintingTechnology
+                });
+
+                // Force fetch by calling the API directly
+                void fetchPrintingPriceRules(
+                    selectedVariant.id,
+                    currentColor,
+                    existingQuantity,
+                    selectedPrintingTechnology,
+                    size
+                );
+            }
+        }
+    }, [currentColor, selectedVariant, sizeQuantities, printTechnology, fetchPrintingPriceRules]);
 
     const handleQuantityChange = useCallback(async (size: string, quantity: number) => {
         if (!currentColor || !selectedVariant) return;
@@ -302,16 +383,17 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         // Convert string to PrintingTechnology enum for quantity change
         const selectedPrintingTechnology = convertStringToPrintingTechnology(printTechnology);
 
-        console.log('� About to fetch price rules:', {
+        console.log('💰 About to fetch price rules:', {
             variantId: selectedVariant.id,
             colorId: currentColor,
+            size: size,
             quantity: validQty,
             printTechnology,
             convertedTechnology: selectedPrintingTechnology,
             enumValue: String(selectedPrintingTechnology)
         });
 
-        void fetchPrintingPriceRules(selectedVariant.id, currentColor, validQty, selectedPrintingTechnology);
+        void fetchPrintingPriceRules(selectedVariant.id, currentColor, validQty, selectedPrintingTechnology, size);
     }, [selectedVariant, currentColor, fetchPrintingPriceRules, printTechnology]);
 
     const handleClickAddToCart = useCallback(async () => {
@@ -343,9 +425,28 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             return;
         }
 
-        // Helper function to calculate pricing info
-        const calculatePricingInfo = (quantity: number) => {
+        // Helper function to calculate pricing info for a specific size and quantity
+        const calculatePricingInfoForSizeAndQuantity = (variantId: string, quantity: number) => {
             if (!listProductPriceRules || !currentColor) return null;
+
+            // Find size for this variant
+            const variant = productDetail?.variants?.find((v) => v.id === variantId);
+            const size = variant?.attributes?.find((a) => a.attribute?.name === "SIZE")?.values?.[0]?.name;
+
+            if (!size) return null;
+
+            // Get the specific price for this color-size combination
+            const priceKey = `${currentColor}-${size}`;
+            const specificPrice = productPriceRules[priceKey];
+
+            console.log('💰 calculatePricingInfoForSizeAndQuantity:', {
+                variantId,
+                size,
+                priceKey,
+                specificPrice,
+                quantity,
+                currentColor
+            });
 
             const findPriceRule = (rules: Pick<PrintingPriceRuleCountableEdge, "node" | "__typename">[], qty: number) => {
                 return rules.find((item) => {
@@ -360,7 +461,8 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             const memberPriceRule = findPriceRule(listProductPriceRules.rulesForCalculation, quantity);
             const retailPriceRule = findPriceRule(listProductPriceRules.rulesForDisplay, quantity);
 
-            const memberPrice = memberPriceRule?.price || 0;
+            // Use the fetched price for this specific size if available, otherwise fallback to price rule calculation
+            const memberPrice = specificPrice?.price || memberPriceRule?.price || 0;
             const retailPrice = retailPriceRule?.price || 0;
 
             let discountPercentage = 0;
@@ -372,8 +474,9 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                 memberPrice: memberPrice,
                 retailPrice: retailPrice,
                 discountPercentage,
-                currency: memberPriceRule?.currency || retailPriceRule?.currency || "USD",
-                hasDiscount: discountPercentage > 0
+                currency: specificPrice?.currency || memberPriceRule?.currency || retailPriceRule?.currency || "USD",
+                hasDiscount: discountPercentage > 0,
+                size: size
             };
         };
 
@@ -381,8 +484,8 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             const variant = productDetail?.variants?.find((v) => v.id === item.variantId);
             const originalMetadata = variant?.metadata ?? [];
 
-            // Calculate pricing info for this item
-            const pricingInfo = calculatePricingInfo(1);
+            // Calculate pricing info for this specific item
+            const pricingInfo = calculatePricingInfoForSizeAndQuantity(item.variantId, item.quantity);
 
             const metadata = [
                 ...originalMetadata,
@@ -415,6 +518,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                         currency: pricingInfo.currency,
                         has_discount: pricingInfo.hasDiscount,
                         color: currentColor,
+                        size: pricingInfo.size,
                         quantity: item.quantity
                     })
                 });
@@ -452,7 +556,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             ...prev,
             [currentColor]: {},
         }));
-    }, [channel, params, sizeQuantities, currentColor, printTechnology, services, serviceDetails, productDetail, listProductPriceRules]);
+    }, [channel, params, sizeQuantities, currentColor, printTechnology, services, serviceDetails, productDetail, listProductPriceRules, productPriceRules]);
 
     const handleNavigateToDesign = useCallback(async () => {
 
@@ -631,7 +735,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                     onShowSizeGuide={() => setShowSizeGuide(true)}
                     onColorSizeChange={handleColorSizeChange}
                     onQuantityChange={handleQuantityChange}
-                    onSelectSize={setSelectedSize}
+                    onSelectSize={handleSizeSelect}
                     onSetOptions={handleSetOptions}
                     onAddToCart={handleClickAddToCart}
                     onNavigateToDesign={handleNavigateToDesign}

@@ -1,13 +1,14 @@
 "use server";
 
-import { CheckoutLineUpdateDocument, CheckoutLineUpdateMutationVariables, CheckoutLineUpdateMutation } from '@/gql/graphql';
+import { CheckoutLineUpdateDocument, type CheckoutLineUpdateMutationVariables, type CheckoutLineUpdateMutation } from '@/gql/graphql';
 import { executeGraphQL } from "@/lib/graphql";
 
 
 export const CheckoutLineUpdate = async ({
     id,
     lineId,
-    quantity
+    quantity,
+    metadata,
 }: CheckoutLineUpdateMutationVariables) => {
     "use server";
     const { checkoutLinesUpdate } = await executeGraphQL<
@@ -15,7 +16,7 @@ export const CheckoutLineUpdate = async ({
         CheckoutLineUpdateMutationVariables
     >(CheckoutLineUpdateDocument, {
         cache: "no-cache",
-        variables: { id, lineId, quantity },
+        variables: { id, lineId, quantity, metadata },
     });
     return checkoutLinesUpdate;
 };

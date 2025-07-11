@@ -1,5 +1,5 @@
-mutation CheckoutLineUpdate($id: ID!, $lineId: ID!, $quantity: Int!) {
-	checkoutLinesUpdate(id: $id, lines: {quantity: $quantity, lineId: $lineId}) {
+mutation CheckoutLineUpdate($id: ID!, $lineId: ID!, $quantity: Int!, $metadata: [MetadataInput!]) {
+	checkoutLinesUpdate(id: $id, lines: { quantity: $quantity, lineId: $lineId, metadata: $metadata }) {
 		checkout {
 			lines {
 				id

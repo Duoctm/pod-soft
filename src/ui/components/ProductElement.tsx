@@ -7,7 +7,7 @@ import { LinkWithChannel } from "../atoms/LinkWithChannel";
 import { ProductImageWrapper } from "@/ui/atoms/ProductImageWrapper";
 
 import type { ProductListItemFragment } from "@/gql/graphql";
-import { formatMoneyRange } from "@/lib/utils";
+// import { formatMoneyRange } from "@/lib/utils";
 
 
 type ProductDescription = {
@@ -90,13 +90,13 @@ export default function ProductElement({
 
 
 								</div>
-								<p className="font-bold text-base leading-[18px] " data-testid="ProductElement_PriceRange">
+								{/* <p className="font-bold text-base leading-[18px] " data-testid="ProductElement_PriceRange">
 									From:{" "}
 									{formatMoneyRange({
 										start: product?.pricing?.priceRange?.start?.gross,
 										stop: product?.pricing?.priceRange?.stop?.gross,
 									})}
-								</p>
+								</p> */}
 							</div>
 						</div>
 					</div>
@@ -136,13 +136,13 @@ export default function ProductElement({
 									})) : ""
 								}
 							</div>
-							<p className="font-bold text-base leading-[18px] " data-testid="ProductElement_PriceRange">
+							{/* <p className="font-bold text-base leading-[18px] " data-testid="ProductElement_PriceRange">
 								From:{" "}
 								{formatMoneyRange({
 									start: product?.pricing?.priceRange?.start?.gross,
 									stop: product?.pricing?.priceRange?.stop?.gross,
 								})}
-							</p>
+							</p> */}
 						</div>
 					</div>
 				</div>

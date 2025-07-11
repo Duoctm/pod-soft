@@ -1,56 +1,54 @@
 "use client";
-//import { fetchCheckoutLineMetadata } from "./data";
 import { getCheckout } from "./action";
+import { cn } from "@/lib/utils";
+
 type ViewDesignButtonProps = {
 	lineId: string;
-	checkout: any;
-	params: any;
+	checkout: string;
+	params: { channel: string };
+	metadata?: any; // Thêm prop metadata nếu có thể truyền vào
 };
 
-export function ViewDesignButton({ lineId, checkout, params }: ViewDesignButtonProps) {
+export function ViewDesignButton({ lineId, checkout, params, metadata }: ViewDesignButtonProps) {
+	// Nếu metadata chưa có, không render nút
+	if (!metadata) return null;
+
 	return (
-		<>
-			<button
-				type="button"
-				onClick={async () => {
-					const result = await getCheckout(checkout, lineId);
+		<button
+			type="button"
+			onClick={async () => {
+				const result = await getCheckout(checkout, lineId);
 
-					// const result = await getCheckout(checkout);
-					// console.log('result', result);
-					localStorage.setItem(
-						"cart",
-						JSON.stringify({
-							params: params,
-						}),
-					);
-					//const metadata = (await fetchCheckoutLineMetadata(checkout, lineId)) as any;
-					const metadata = JSON.parse((result.design_metadata.value)) as any;
+				localStorage.setItem(
+					"cart",
+					JSON.stringify({
+						params: params,
+					}),
+				);
 
-					localStorage.setItem("designInfor", JSON.stringify(metadata));
-					localStorage.setItem("checkoutLineId", lineId);
-					localStorage.setItem("checkoutId", checkout);
-					localStorage.setItem("services", JSON.stringify(result.printing_info_metadata.value));
-					localStorage.setItem("cart_quantity", JSON.stringify(result.quantity || 0));
+				const metadata = JSON.parse((result.design_metadata.value)) as any;
 
-					const metadataStr = result.printing_info_metadata.value as string;
+				localStorage.setItem("designInfor", JSON.stringify(metadata));
+				localStorage.setItem("checkoutLineId", lineId);
+				localStorage.setItem("checkoutId", checkout);
+				localStorage.setItem("services", JSON.stringify(result.printing_info_metadata.value));
+				localStorage.setItem("cart_quantity", JSON.stringify(result.quantity || 0));
 
-					const parsed = JSON.parse(metadataStr) as { printing_technology?: string };
+				const metadataStr = result.printing_info_metadata.value as string;
+				const parsed = JSON.parse(metadataStr) as { printing_technology?: string };
 
-					if (parsed.printing_technology) {
-						localStorage.setItem("printTechOfDesign", parsed.printing_technology);
-					}
+				if (parsed.printing_technology) {
+					localStorage.setItem("printTechOfDesign", parsed.printing_technology);
+				}
 
-
-					window.location.replace(`design/2/${metadata.productId}/${metadata.variantId}`);
-				}}
-				className="whitespace-nowrap rounded-full border border-black bg-white px-4 py-1 text-sm md:border-none md:font-medium md:text-blue-500 md:underline"
-
-
-			// className="rounded-md font-semibold px-3 py-1 text-sm bg-white text-[#8B3958] border border-[#8B3958] hover:bg-[#7A314F] hover:text-white hover:border-[#7A314F] focus:outline-none focus:ring-2 focus:ring-[#7A314F] focus:ring-offset-2 disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-300"
-			>
-				View Design
-			</button>
-			|
-		</>
+				window.location.replace(`design/2/${metadata.productId}/${metadata.variantId}`);
+			}}
+			className={cn(
+				"inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors",
+				{}
+			)}
+		>
+			View Design
+		</button>
 	);
 }

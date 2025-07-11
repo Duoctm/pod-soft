@@ -13,7 +13,7 @@ interface ProductInfoProps {
     productDetail: Product | null;
     loading: boolean;
     currentColor: string | null;
-    productPriceRules: { [colorId: string]: { price: number; currency: string } };
+    productPriceRules: { [priceKey: string]: { price: number; currency: string } }; // Updated: now uses priceKey instead of colorId
     listProductPriceRules: {
         rulesForCalculation: Pick<PrintingPriceRuleCountableEdge, "node" | "__typename">[];
         rulesForDisplay: Pick<PrintingPriceRuleCountableEdge, "node" | "__typename">[];
@@ -78,6 +78,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                     <ProductPriceDisplayWithDiscount
                         loading={loading}
                         currentColor={currentColor}
+                        selectedSize={selectedSize}
                         productPriceRules={productPriceRules}
                         listProductPriceRules={listProductPriceRules}
                         hasUser={hasUser}

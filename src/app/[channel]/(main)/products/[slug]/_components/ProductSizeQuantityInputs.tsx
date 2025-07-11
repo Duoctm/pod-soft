@@ -26,7 +26,12 @@ const ProductSizeQuantityInputs: React.FC<Props> = ({
 		<div className="flex flex-wrap gap-2">
 			{sizeList.map((size) => (
 				<div key={size} className="flex flex-col items-center">
-					<span className="mb-1 font-semibold">{size}</span>
+					<span
+						className="mb-1 font-semibold cursor-pointer hover:text-[#F58A71]"
+						onClick={() => onSelectSize?.(size)}
+					>
+						{size}
+					</span>
 
 					<input
 						type="text"
@@ -46,6 +51,7 @@ const ProductSizeQuantityInputs: React.FC<Props> = ({
 							}`}
 						disabled={selectedSize !== size}
 						onFocus={() => onSelectSize?.(size)}
+						onClick={() => onSelectSize?.(size)}
 					/>
 
 				</div>

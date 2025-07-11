@@ -4,7 +4,7 @@ import { PrintingTechnology, PrintSide, type PrintingPriceRuleCountableEdge } fr
 
 export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
     const [productPriceRules, setProductPriceRules] = useState<{
-        [colorId: string]: { price: number; currency: string };
+        [priceKey: string]: { price: number; currency: string }; // Changed: now stores by colorId-size key
     }>({});
     const [listProductPriceRules, setListProductPriceRules] = useState<{
         rulesForCalculation: Pick<PrintingPriceRuleCountableEdge, "node" | "__typename">[];
@@ -62,12 +62,17 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
     }, []);
 
     const fetchPrintingPriceRules = useCallback(
-        async (variantId: string, colorId: string, qty: number, selectedPrintingTechnology?: PrintingTechnology) => {
+        async (variantId: string, colorId: string, qty: number, selectedPrintingTechnology?: PrintingTechnology, size?: string) => {
             if (!variantId || !colorId || typeof qty !== "number") return;
+
+            // Create price key: if size provided, use colorId-size, otherwise just colorId for backward compatibility
+            const priceKey = size ? `${colorId}-${size}` : colorId;
 
             console.log('🔄 fetchPrintingPriceRules called with:', {
                 variantId,
                 colorId,
+                size,
+                priceKey,
                 qty,
                 selectedPrintingTechnology,
                 hasUser
@@ -88,17 +93,21 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
                 if (!objectId) return;
 
                 // Determine printing technology - use selected or default to None
-                const printingTechnology = selectedPrintingTechnology !== undefined ? selectedPrintingTechnology : PrintingTechnology.None;
+                const originalPrintingTechnology = selectedPrintingTechnology !== undefined ? selectedPrintingTechnology : PrintingTechnology.None;
 
-                console.log('🎯 Final printing technology for API:', {
+                // For pricing display: if Silk is selected, use None pricing (since Silk price is 0 in database)
+                // But keep the original technology for add to cart functionality
+                const printingTechnologyForPricing = originalPrintingTechnology === PrintingTechnology.Silk ? PrintingTechnology.None : originalPrintingTechnology;
+
+                console.log('🎯 Printing technology logic:', {
                     input: selectedPrintingTechnology,
                     inputType: typeof selectedPrintingTechnology,
                     inputIsUndefined: selectedPrintingTechnology === undefined,
-                    final: printingTechnology,
-                    finalString: String(printingTechnology),
-                    isNone: printingTechnology === PrintingTechnology.None,
-                    isDtg: printingTechnology === PrintingTechnology.Dtg,
-                    isSilk: printingTechnology === PrintingTechnology.Silk,
+                    original: originalPrintingTechnology,
+                    forPricing: printingTechnologyForPricing,
+                    originalString: String(originalPrintingTechnology),
+                    pricingString: String(printingTechnologyForPricing),
+                    isSilkSelected: originalPrintingTechnology === PrintingTechnology.Silk,
                     enumValues: {
                         None: PrintingTechnology.None,
                         Dtg: PrintingTechnology.Dtg,
@@ -106,18 +115,18 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
                     }
                 });
 
-                // Set printSide: if printingTechnology is None, use PrintSide.None, else undefined (or your default)
-                const printSide = printingTechnology === PrintingTechnology.None ? PrintSide.None : PrintSide.All;
+                // Set printSide: if printingTechnologyForPricing is None, use PrintSide.None, else PrintSide.All
+                const printSide = printingTechnologyForPricing === PrintingTechnology.None ? PrintSide.None : PrintSide.All;
 
                 // Prepare API call parameters based on hasUser
                 const apiParams = hasUser ? {
                     channel: channel,
-                    printingTechnologies: [printingTechnology],
+                    printingTechnologies: [printingTechnologyForPricing],
                     printSide: printSide,
                     objectIds: [objectId],
                 } : {
                     channel: channel,
-                    printingTechnologies: [printingTechnology],
+                    printingTechnologies: [printingTechnologyForPricing],
                     usedForCalculation: false,
                     printSide: printSide,
                     objectIds: [objectId],
@@ -133,7 +142,7 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
                 });
 
                 // If no results with current technology, try with None to test
-                if ((!publicPrintingPriceRules?.edges || publicPrintingPriceRules.edges.length === 0) && printingTechnology !== PrintingTechnology.None) {
+                if ((!publicPrintingPriceRules?.edges || publicPrintingPriceRules.edges.length === 0) && printingTechnologyForPricing !== PrintingTechnology.None) {
                     console.log('🔄 No results found, trying with PrintingTechnology.None for debugging...');
 
                     const testParams = { ...apiParams, printingTechnologies: [PrintingTechnology.None] };
@@ -203,7 +212,7 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
 
                     setProductPriceRules((prev) => ({
                         ...prev,
-                        [colorId]: {
+                        [priceKey]: {
                             price: priceRule?.price || 0,
                             currency: priceRule?.currency || "USD",
                         },
@@ -215,7 +224,7 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
                         const priceRule = findPrintingPriceRule(fallbackRules, qty);
                         setProductPriceRules((prev) => ({
                             ...prev,
-                            [colorId]: {
+                            [priceKey]: {
                                 price: priceRule?.price || 0,
                                 currency: priceRule?.currency || "USD",
                             },
@@ -224,7 +233,7 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
                         // No rules at all
                         setProductPriceRules((prev) => ({
                             ...prev,
-                            [colorId]: { price: 0, currency: "USD" },
+                            [priceKey]: { price: 0, currency: "USD" },
                         }));
                     }
                 }
@@ -237,32 +246,62 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
 
     // Function to reset pricing when printing technology changes
     const resetPricing = useCallback(() => {
+        console.log('🔄 Resetting pricing data');
         setProductPriceRules({});
         setListProductPriceRules(null);
     }, []);
 
+    // Function to reset pricing for specific color/size when printing technology changes
+    // const resetPricingForColor = useCallback((colorId: string, size?: string) => {
+    //     const priceKey = size ? `${colorId}-${size}` : colorId;
+    //     console.log('🔄 Resetting pricing for:', priceKey);
+    //     setProductPriceRules((prev) => {
+    //         const newState = { ...prev };
+    //         delete newState[priceKey];
+    //         return newState;
+    //     });
+    // }, []);
+
     // New function to initialize pricing with default quantity - optimized
     const initializePricing = useCallback(
-        async (variantId: string, colorId: string, selectedPrintingTechnology?: PrintingTechnology, forceRefresh = false) => {
+        async (variantId: string, colorId: string, selectedPrintingTechnology?: PrintingTechnology, forceRefresh = false, size?: string) => {
+            // Create price key: if size provided, use colorId-size, otherwise just colorId for backward compatibility
+            const priceKey = size ? `${colorId}-${size}` : colorId;
+
             console.log('initializePricing called with:', {
                 variantId,
                 colorId,
+                size,
+                priceKey,
                 selectedPrintingTechnology,
-                hasExistingPrice: !!productPriceRules[colorId],
                 forceRefresh
             });
 
-            // Skip if we already have pricing for this color and not forcing refresh
-            if (productPriceRules[colorId] && !forceRefresh) {
-                console.log('Already have price for', colorId, '- skipping');
-                return;
+            // Use a function to check current state instead of dependency
+            if (!forceRefresh) {
+                setProductPriceRules((prev) => {
+                    // Skip if we already have pricing for this priceKey
+                    if (prev[priceKey]) {
+                        console.log('Already have price for', priceKey, '- skipping');
+                        return prev;
+                    }
+                    // Continue with fetch since we don't have the price (fire and forget)
+                    void fetchPrintingPriceRules(variantId, colorId, 1, selectedPrintingTechnology, size);
+                    return prev;
+                });
+            } else {
+                // Force refresh - always fetch
+                await fetchPrintingPriceRules(variantId, colorId, 1, selectedPrintingTechnology, size);
             }
-
-            // Fetch with quantity = 1 for initial pricing
-            await fetchPrintingPriceRules(variantId, colorId, 1, selectedPrintingTechnology);
         },
-        [fetchPrintingPriceRules, productPriceRules],
+        [fetchPrintingPriceRules], // Remove productPriceRules dependency
     );
+
+    // Helper function to get price for specific color and size
+    const getPriceForColorAndSize = useCallback((colorId: string, size?: string) => {
+        const priceKey = size ? `${colorId}-${size}` : colorId;
+        return productPriceRules[priceKey] || null;
+    }, [productPriceRules]);
 
     return {
         productPriceRules,
@@ -270,5 +309,6 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
         fetchPrintingPriceRules,
         initializePricing,
         resetPricing,
+        getPriceForColorAndSize, // New helper function
     };
 };

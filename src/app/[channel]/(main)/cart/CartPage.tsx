@@ -9,11 +9,15 @@ import { ViewDesignButton } from "./ViewDesignButton";
 import { DesignButton } from "./DesignButton";
 import { CheckoutLineUpdate } from "./CheckoutLineUpdate";
 import { getCheckoutList } from "./actions";
+import { useCartPricing } from "./hooks/useCartPricing";
+import { usePrintingTechnology } from "./hooks/usePrintingTechnology";
+import { type PricingInfoUpdate, updatePricingInfo } from "./utils/updatePricingInfo";
 import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
 import { formatMoney, getHrefForVariant } from "@/lib/utils";
-import { PrintingTechnology, type CheckoutLine, type Checkout } from "@/gql/graphql";
+import { PrintingTechnology, type CheckoutLine, type Checkout, type MetadataItem } from "@/gql/graphql";
 import Wrapper from "@/ui/components/wrapper";
 import { useDebounce } from "@/hooks/useDebounce";
+import { getUser } from "@/actions/user";
 
 export type CheckoutType = Pick<Checkout, "__typename" | "id" | "email" | "lines" | "totalPrice">;
 
@@ -72,7 +76,8 @@ const QuantityInput = ({
 			value={inputValue}
 			onChange={handleChange}
 			min="1"
-			className="w-16 rounded-md border border-gray-300 p-0 text-center"
+			className="min-w-[3rem] px-2 py-1 text-center border-0 focus:outline-none focus:ring-0"
+			style={{ width: `${Math.max(3, inputValue.length + 1)}rem` }}
 			max={item.variant.quantityAvailable || 9999} // Giới hạn tối đa theo stock
 		/>
 	);
@@ -121,6 +126,7 @@ export function CartPage({ params }: CartPageProps) {
 	const [items, setItems] = useState<CheckoutLine[]>([]);
 	const [checkoutId, setCheckoutId] = useState<string>("");
 	const [loading, setLoading] = useState(false);
+	const { calculatePricingForQuantity } = useCartPricing(params.channel);
 
 	const fetchCheckout = useCallback(async () => {
 		//await checkTokenServerAction();
@@ -145,14 +151,35 @@ export function CartPage({ params }: CartPageProps) {
 	}, [fetchCheckout]);
 
 	const handleQuantityChange = useCallback(
-		async (lineId: string, newQuantity: number) => {
+		async (lineId: string, newQuantity: number, variantId: string, printingTechnology?: PrintingTechnology, currentMetadata?: MetadataItem[]) => {
 			if (newQuantity <= 0) return;
+
+			const userData = await getUser();
+
+			const result = await calculatePricingForQuantity(
+				variantId,
+				printingTechnology as PrintingTechnology,
+				newQuantity,
+				Boolean(userData), // Assuming no user for calculation, adjust as needed
+			)
+			const dataUpdate: PricingInfoUpdate = {
+				retailPrice: result?.retailPrice || 0,
+				memberPrice: result?.memberPrice || 0,
+				discountPercentage: result?.discountPercentage || 0,
+			}
+
+			console.log(currentMetadata)
+			const metadataUpdate = updatePricingInfo(currentMetadata as MetadataItem[], dataUpdate);
+
+
+			console.log("Calculated pricing for quantity:", metadataUpdate);
 
 			setLoading(true);
 			try {
-				await CheckoutLineUpdate({ id: checkoutId, lineId, quantity: newQuantity });
+
+				await CheckoutLineUpdate({ id: checkoutId, lineId, quantity: newQuantity, metadata: metadataUpdate });
 				setItems((prev) =>
-					prev.map((item) => (item.id === lineId ? { ...item, quantity: newQuantity } : item)),
+					prev.map((item) => (item.id === lineId ? { ...item, quantity: newQuantity, metadata: metadataUpdate } : item)),
 				);
 				await fetchCheckout();
 			} catch (error) {
@@ -168,6 +195,7 @@ export function CartPage({ params }: CartPageProps) {
 	// 	() => checkout.lines.reduce((total, item) => total + item.quantity, 0),
 	// 	[checkout.lines],
 	// );
+
 
 
 	const handleCheckOrderIncludeValue = (items: CheckoutLine[], value: PrintingTechnology) => {
@@ -191,85 +219,103 @@ export function CartPage({ params }: CartPageProps) {
 	const renderCartItem = (item: CheckoutLine) => {
 		const pricingInfo = parsePricingInfoFromMetadata(item);
 		const hasDiscount = pricingInfo?.has_discount && pricingInfo.retail_price > pricingInfo.member_price;
+		const unitPrice = pricingInfo ? pricingInfo.member_price : item.totalPrice.gross.amount / item.quantity;
+		// const originalUnitPrice = pricingInfo ? pricingInfo.retail_price : unitPrice;
+		const totalPrice = pricingInfo ? pricingInfo.member_price * item.quantity : item.totalPrice.gross.amount;
+		const originalTotalPrice = pricingInfo ? pricingInfo.retail_price * item.quantity : totalPrice;
+		const savings = hasDiscount ? originalTotalPrice - totalPrice : 0;
+		const currency = pricingInfo?.currency || item.totalPrice.gross.currency;
+
+
+		// eslint-disable-next-line react-hooks/rules-of-hooks
+		const printingTechnology = usePrintingTechnology(item.metadata)
+		const currentMetadata = item.metadata
+
+		console.log("🚀 CartPage.tsx:234 - currentMetadata:", currentMetadata);
+
+
+
+
 		return (
-			<div key={item.id} className="flex flex-1 flex-col py-4">
-				<li className="flex gap-x-2">
-					<div className="relative aspect-square h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border bg-neutral-50 sm:h-32 sm:w-32">
+			<div key={item.id} className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 mb-4">
+				<div className="flex items-start gap-4">
+					{/* Product Image */}
+					<div className="relative w-16 h-16 flex-shrink-0 overflow-hidden rounded-lg border bg-gray-50">
 						{item.variant?.media && (
 							<Image
 								src={item.variant.media[0].url || ""}
 								alt={item.variant.media[0].alt ?? ""}
 								fill
 								loading="lazy"
-								className="h-full w-full object-contain object-center"
+								className="object-contain object-center"
 							/>
 						)}
 					</div>
-					<div className="relative flex flex-1 flex-col justify-between">
-						<div className="flex flex-col justify-between justify-items-start gap-4 md:flex-row">
-							<div>
+
+					{/* Product Info */}
+					<div className="flex-1 min-w-0">
+						<div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+							{/* Left: Product Name and Details */}
+
+							<div className="flex-1">
 								<LinkWithChannel
 									href={getHrefForVariant({
 										productSlug: item.variant.product.slug,
 										variantId: item.variant.id,
 									})}
+									className="hover:text-[#8B3958] transition-colors"
 								>
-									<h2 className="font-medium text-neutral-700">{item.variant?.product?.name}</h2>
+									<h3 className="font-semibold text-gray-900 text-sm leading-tight">{item.variant?.product?.name}</h3>
 								</LinkWithChannel>
-								<p className="mt-1 text-sm text-neutral-500">{item.variant?.product?.category?.name}</p>
-								{item.variant.name !== item.variant.id && Boolean(item.variant.name) && (
-									<p className="mt-1 text-sm text-neutral-500">Variant: {item.variant.name}</p>
-								)}
+								<div className="mt-1 space-y-0.5">
+									{item.variant.name !== item.variant.id && Boolean(item.variant.name) && (
+										<p className="text-xs text-gray-600">Size: {item.variant.name}</p>
+									)}
+									{item.variant?.product?.category?.name && (
+										<p className="text-xs text-gray-600">Material: {item.variant.product.category.name}</p>
+									)}
+								</div>
 							</div>
-							<div className="text-left font-semibold text-neutral-900 md:text-right flex flex-col items-end">
-								{pricingInfo ? (
-									<>
-										<div className="flex items-center gap-2">
-											<span className="text-lg font-bold text-[#B12704]">
-												{formatMoney(pricingInfo.member_price, pricingInfo.currency)}
-											</span>
-											{hasDiscount && (
-												<span className="text-sm text-neutral-400 line-through">
-													{formatMoney(pricingInfo.retail_price, pricingInfo.currency)}
-												</span>
-											)}
-											{hasDiscount && (
-												<span className="ml-2 rounded bg-[#FFD814] px-2 py-0.5 text-xs font-bold text-[#B12704]">
-													-{pricingInfo.discount_percentage}%
-												</span>
-											)}
-										</div>
-										<div className="text-xs text-neutral-500">per unit</div>
-									</>
-								) : (
-									<span>{formatMoney(item.totalPrice.gross.amount / item.quantity, item.totalPrice.gross.currency)} / per unit</span>
+
+							{/* Right: Unit Price */}
+							<div className="text-right flex-shrink-0">
+								<div className="text-xs text-gray-500 mb-1">Unit Price: {formatMoney(unitPrice, currency)}</div>
+								<div className="text-lg font-bold text-black">{formatMoney(totalPrice, currency)}</div>
+								{hasDiscount && savings > 0 && (
+									<div className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 mt-1">
+										Save {formatMoney(savings, currency)} ({pricingInfo.discount_percentage}%)
+									</div>
 								)}
 							</div>
 						</div>
 
-						<div className="flex flex-col items-start justify-start gap-y-2 md:flex-row md:items-center">
-							<div className="flex items-center gap-2 font-bold">
+						{/* Quantity Control Row */}
+						<div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+							{/* Quantity Control */}
+							<div className="flex items-center space-x-2">
 								<button
 									type="button"
-									onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-									className="lex items-center justify-center rounded-md border border-gray-300 px-2 hover:bg-gray-100"
+									onClick={() => handleQuantityChange(item.id, item.quantity - 1, item.variant.id, printingTechnology as PrintingTechnology, currentMetadata)}
+									className="w-8 h-8 flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 									disabled={item.quantity <= 1}
 								>
-									-
+									−
 								</button>
-								<QuantityInput item={item} handleQuantityChange={handleQuantityChange} />
+								<QuantityInput item={item} handleQuantityChange={(id, quantity) => handleQuantityChange(id, quantity, item.variant.id, printingTechnology as PrintingTechnology, currentMetadata)} />
 								<button
 									type="button"
-									onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-									className="flex items-center justify-center rounded-md border border-gray-300 px-2 hover:bg-gray-100"
+									onClick={() => handleQuantityChange(item.id, item.quantity + 1, item.variant.id, printingTechnology as PrintingTechnology, currentMetadata)}
+									className="w-8 h-8 flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors"
 								>
 									+
 								</button>
+								<span className="text-xs text-gray-500 ml-2">units</span>
 							</div>
 
-							<div className="hidden items-center justify-center gap-2 md:flex">
+							{/* Actions */}
+							<div className="flex items-center gap-2">
 								{Array.isArray(item.metadata) && item.metadata.length > 0 && (
-									<ViewDesignButton lineId={item.id} checkout={checkoutId} params={params} />
+									<ViewDesignButton lineId={item.id} checkout={checkoutId} params={params} metadata={item.metadata} />
 								)}
 								{Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && (
 									<DesignButton
@@ -282,7 +328,6 @@ export function CartPage({ params }: CartPageProps) {
 										selectedVariantId={item.variant.id}
 									/>
 								)}
-								|
 								<DeleteLineButton
 									checkoutId={checkoutId}
 									lineId={item.id}
@@ -291,55 +336,10 @@ export function CartPage({ params }: CartPageProps) {
 										setItems((prev) => prev.filter((line) => line.id !== item.id))
 									}}
 								/>
-								|
 							</div>
-							<div className="my-2 flex items-center justify-center gap-2 md:hidden">
-								{Array.isArray(item.metadata) && item.metadata.length > 0 && (
-									<ViewDesignButton lineId={item.id} checkout={checkoutId} params={params} />
-								)}
-								{Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && (
-									<DesignButton
-										variantId={item.variant.id}
-										productId={item.variant.product.id}
-										params={params}
-										quantity={1}
-										lineId={item.id}
-										checkout={checkoutId}
-										selectedVariantId={item.variant.id}
-									/>
-								)}
-								<DeleteLineButton
-									checkoutId={checkoutId}
-									lineId={item.id}
-									onRemove={() => setItems((prev) => prev.filter((line) => line.id !== item.id))}
-								/>
-							</div>
-						</div>
-						<div className="flex flex-row justify-end mt-2">
-							{pricingInfo ? (
-								<div className="flex flex-col items-end">
-									<span className="text-sm text-neutral-900 font-semibold">
-										Subtotal: {formatMoney(pricingInfo.member_price * item.quantity, pricingInfo.currency)}
-									</span>
-									{hasDiscount && (
-										<span className="text-md text-neutral-400 line-through">
-											{formatMoney(pricingInfo.retail_price * item.quantity, pricingInfo.currency)}
-										</span>
-									)}
-									{hasDiscount && (
-										<span className="text-md text-green-600 font-medium">
-											You save {formatMoney((pricingInfo.retail_price - pricingInfo.member_price) * item.quantity, pricingInfo.currency)}
-										</span>
-									)}
-								</div>
-							) : (
-								<span className="text-md text-neutral-900 font-semibold">
-									Subtotal: {formatMoney(item.totalPrice.gross.amount, item.totalPrice.gross.currency)}
-								</span>
-							)}
 						</div>
 					</div>
-				</li>
+				</div>
 			</div>
 		);
 	};
@@ -374,66 +374,94 @@ export function CartPage({ params }: CartPageProps) {
 	}, [items]);
 
 	return (
-		<Wrapper className="mx-auto min-h-screen">
+		<Wrapper className="mx-auto min-h-screen py-4">
 			<ToastContainer />
-			<h1 className="mt-8 text-3xl font-bold text-neutral-900">Shopping Cart</h1>
 			{!checkout || !items || items.length < 1 ? (
 				!loading ? (
-					<section className="mx-auto max-w-7xl py-2">
-						{/* <h1 className="mt-8 text-3xl font-bold text-neutral-900">Your Shopping Cart is empty</h1> */}
-						<p className="my-4 text-sm text-neutral-500">
-							Looks like you haven&apos;t added any items to the cart yet.
-						</p>
-						<LinkWithChannel
-							href="/products"
-							className="inline-block max-w-full rounded border border-transparent bg-[#8B3958] px-6 py-2 text-center font-medium text-[#FFFFFF] hover:bg-[#7A314F] aria-disabled:cursor-not-allowed aria-disabled:bg-[#C59CAE] sm:px-16"
-						>
-							Explore products
-						</LinkWithChannel>
-					</section>
+					<div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8 text-center">
+						<div className="max-w-md mx-auto">
+							<div className="text-gray-400 mb-4">
+								<svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8l1 5h10M9 19v1a1 1 0 001 1h1a1 1 0 001-1v-1" />
+								</svg>
+							</div>
+							<h2 className="text-2xl font-semibold text-gray-900 mb-2">Your cart is empty</h2>
+							<p className="text-gray-600 mb-6">
+								Looks like you haven&apos;t added any items to the cart yet.
+							</p>
+							<LinkWithChannel
+								href="/products"
+								className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#8B3958] hover:bg-[#7A314F] transition-colors"
+							>
+								Explore products
+							</LinkWithChannel>
+						</div>
+					</div>
 				) : (
-					<div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-900"></div>
+					<div className="flex justify-center items-center h-64">
+						<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B3958]"></div>
+					</div>
 				)
 			) : (
-				<form className="mt-2 flex w-full flex-1 flex-col-reverse gap-x-4 gap-y-4 md:flex-row ">
-					<ul
-						data-testid="CartProductList"
-						role="list"
-						className="flex flex-1 flex-col divide-y divide-neutral-200 border-neutral-200"
-					>
-						<p className="w-full py-2 pr-4 text-end font-medium">Price</p>
-						{items.map(renderCartItem)}
-					</ul>
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+					{/* Left Side - Cart Items */}
+					<div className="lg:col-span-2">
+						<div className="flex items-center justify-between">
+							<h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
+							<p className="text-base font-light  text-gray-900 mb-4">({cartTotals.totalQuantity}) Items </p>
+						</div>
+						<div className="space-y-4">
+							{items.map(renderCartItem)}
+						</div>
+					</div>
 
-					<div className="h-full w-full rounded border bg-neutral-50 p-6   px-4 py-2  md:max-w-xs lg:sticky lg:top-40 ">
-						<div className="">
-							<div className="flex items-center justify-between gap-2 py-2">
-								<div>
-									<p className="font-semibold text-neutral-900">{`Subtotal ( ${cartTotals.totalQuantity} items ) : `}</p>
-								</div>
-								<div className="font-medium text-neutral-900 flex flex-col items-end">
-									{cartTotals.hasAnyDiscount && cartTotals.totalMember !== cartTotals.totalRetail && (
-										<span className="text-neutral-400 line-through text-sm">
-											{formatMoney(cartTotals.totalRetail, cartTotals.currency)}
-										</span>
-									)}
-									<span className="text-lg font-bold text-[#B12704]">
-										{formatMoney(cartTotals.totalMember, cartTotals.currency)}
-									</span>
+					{/* Right Side - Order Summary */}
+					<div className="lg:col-span-1">
+						<div className="sticky top-8">
+							{/* Order Summary */}
+							<div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 mb-6">
+								<h2 className="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
+
+								<div className="space-y-3">
+									{/* Subtotal */}
+									<div className="flex justify-between text-gray-600">
+										<span>Subtotal ({cartTotals.totalQuantity} items)</span>
+										<span>{formatMoney(cartTotals.totalRetail, cartTotals.currency)}</span>
+									</div>
+
+									{/* Total Savings */}
 									{cartTotals.hasAnyDiscount && cartTotals.totalDiscount > 0 && (
-										<span className="text-xs text-green-600 font-medium">
-											You save {formatMoney(cartTotals.totalDiscount, cartTotals.currency)}
-										</span>
+										<div className="flex justify-between text-green-600 font-medium">
+											<span>Total Savings</span>
+											<span>-{formatMoney(cartTotals.totalDiscount, cartTotals.currency)}</span>
+										</div>
 									)}
+									<hr className="my-4" />
+
+									{/* Total */}
+									<div className="flex justify-between text-xl font-bold text-gray-900">
+										<span>Total</span>
+
+										<span className="text-[#B12704]">{formatMoney(cartTotals.totalMember, cartTotals.currency)}</span>
+									</div>
+								</div>
+
+								{/* Action Buttons */}
+								<div className="mt-6 space-y-3">
+									<CheckoutLink
+										checkoutId={checkoutId}
+										disabled={!checkout.lines.length}
+										channel={params.channel}
+										className="w-full py-3 text-lg font-semibold"
+										includePrintingTechnology={handleCheckOrderIncludeValue(items, PrintingTechnology.Silk)}
+									/>
 								</div>
 							</div>
 						</div>
-						<div className="mt-2 text-center">
-							<CheckoutLink checkoutId={checkoutId} disabled={!checkout.lines.length} channel={params.channel} className="w-full" includePrintingTechnology={handleCheckOrderIncludeValue(items, PrintingTechnology.Silk)} />
-						</div>
 					</div>
-				</form>
+				</div>
 			)}
+
 		</Wrapper>
 	);
 }

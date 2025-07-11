@@ -17,7 +17,6 @@ export const DeleteLineButton = ({ lineId, checkoutId, onRemove }: Props) => {
 		<button
 			type="button"
 			disabled={isPending}
-			// className="flex text-sm font-semibold bg-red-500 text-white hover:bg-red-600 px-3 py-1 rounded-md"
 			onClick={() => {
 				if (isPending) return;
 				startTransition(() => {
@@ -25,16 +24,13 @@ export const DeleteLineButton = ({ lineId, checkoutId, onRemove }: Props) => {
 					onRemove?.();
 				});
 			}}
+			className="inline-flex items-center px-3 py-1.5 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 			aria-disabled={isPending}
 		>
 			{isPending ? (
-				<Loader className="spin h-10 w-10" />
+				<Loader className="w-4 h-4 animate-spin" />
 			) : (
-				<span
-					className="text-sm md:text-blue-500 md:underline md:font-medium  border md:border-none  border-black bg-white  px-2 rounded-full py-1"
-				>
-					Delete
-				</span>
+				"Delete"
 			)}
 			<span className="sr-only">line from cart</span>
 		</button>

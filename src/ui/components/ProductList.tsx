@@ -1,3 +1,4 @@
+/* eslint-disable import/no-default-export */
 import React from "react";
 import ProductElement from "./ProductElement";
 import { type ProductListItemFragment } from "@/gql/graphql";
