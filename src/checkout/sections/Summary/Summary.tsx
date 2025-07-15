@@ -72,7 +72,11 @@ function aggregatePricing(lines: SummaryLine[]) {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 		const metadata = (line as any).metadata;
 		if (!line || !Array.isArray(metadata)) return;
+
+		console.log("🚀 Summary.tsx:78 - info:", metadata);
+
 		const info = parsePricingInfo(metadata as { key: string; value: string }[]);
+
 		if (info) {
 			totalRetail += info.retail_price * info.quantity;
 			totalMember += info.member_price * info.quantity;
@@ -113,6 +117,9 @@ export const Summary: FC<SummaryProps> = ({
 	onPlaceOrder,
 	show
 }) => {
+
+	console.log(lines)
+
 	const { totalRetail, totalSavings, currency } = aggregatePricing(lines);
 	const saleDiscount = totalSavings;
 	const voucherDiscount = discount?.amount || 0;
@@ -248,7 +255,7 @@ export const Summary: FC<SummaryProps> = ({
 						type="submit"
 						className={`flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${loading
 							? "cursor-not-allowed bg-gray-400 hover:bg-gray-500 focus:ring-gray-500 "
-							: "bg-[#8B3958] text-white hover:bg-[#7A314F] focus:ring-[#7A314F] "
+							: "bg-[#F58A71] text-white hover:bg-[#F58A71]/60 focus:ring-[#F58A71] "
 							}`}
 						disabled={loading}
 					>

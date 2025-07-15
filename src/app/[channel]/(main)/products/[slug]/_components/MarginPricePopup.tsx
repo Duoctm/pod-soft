@@ -58,48 +58,55 @@ const MarginPricePopup: React.FC<MarginPricePopupProps> = ({ open, onClose, titl
     });
 
     return (
-        <Dialog open={open} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center px-4 mx-4">
+        <Dialog open={open} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center px-4 mx-4 ">
             <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
             <div className="relative bg-white rounded-lg shadow-lg w-full max-w-7xl mx-auto p-6 z-50">
                 {/* Close button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                    className="absolute top-4 right-4 text-gray-500 hover:text-[#F58A71] text-2xl font-bold transition-colors duration-200"
                     aria-label="Đóng"
                 >
                     ×
                 </button>
-                <Dialog.Title className="text-xl font-semibold mb-6 capitalize text-start">Printed By {title}</Dialog.Title>
-                <div className="overflow-x-auto">
-                    <table className="table-auto border-collapse border border-gray-300 w-full min-w-[900px]">
-                        <thead>
-                            <tr className="bg-gray-100">
-                                <th className="border px-4 py-2 text-center">Color</th>
-                                <th className="border px-4 py-2 text-center">Size</th>
+                <Dialog.Title className="text-xl font-semibold mb-6 capitalize text-start text-gray-900">Printed By {title}</Dialog.Title>
+                <div className="border border-gray-300 rounded-md overflow-hidden shadow-sm">
+                    <table className="table-fixed border-collapse w-full min-w-[900px]">
+                        <thead className="bg-gradient-to-r from-[#F58A71] to-[#E07B6A] text-white w-full table table-fixed">
+                            <tr>
+                                <th className="border border-[#F58A71] px-4 py-3 text-center font-semibold">Color</th>
+                                <th className="border border-[#F58A71] px-4 py-3 text-center font-semibold">Size</th>
                                 {headersByTech.map(({ tech, ranges }) =>
                                     ranges.map((range, idx) => (
-                                        <th key={tech + idx} className="border px-4 py-2 text-center">
+                                        <th key={tech + idx} className="border border-[#F58A71] px-4 py-3 text-center font-semibold">
                                             {range.label}
                                         </th>
                                     ))
                                 )}
                             </tr>
                         </thead>
-                        <tbody>
+
+                        {/* Scrollable tbody */}
+                        <tbody
+                            className="block max-h-[500px] overflow-y-auto w-full"
+                            style={{ display: "block" }}
+                        >
                             {variantValues.map(({ name, size }, vIdx) => (
-                                <tr key={vIdx} className="hover:bg-gray-50 transition">
-                                    <td className="border px-4 py-2 text-center">
+                                <tr key={vIdx} className="table table-fixed w-full hover:bg-orange-50 transition-colors duration-200 border-b border-gray-100">
+                                    <td className="border border-gray-200 px-4 py-3 text-center">
                                         <div
-                                            className='w-6 h-6 rounded-full border-2 ring-2 mx-auto'
+                                            className="w-6 h-6 rounded-full border-2 border-gray-300 ring-2 ring-transparent hover:ring-[#F58A71] transition-all duration-200 mx-auto cursor-pointer"
                                             style={{ backgroundColor: name.split("-")[1] }}
                                             title={name}
                                         ></div>
                                     </td>
-                                    <td className="border px-4 py-2 text-center">{size}</td>
+                                    <td className="border border-gray-200 px-4 py-3 text-center font-medium text-gray-800">{size}</td>
                                     {headersByTech.map(({ tech, ranges }) =>
                                         ranges.map((range, idx) => (
-                                            <td key={tech + idx} className="border px-4 py-2 text-center">
-                                                {formatMoney(range.rule.price as number, range.rule.currency as string)}
+                                            <td key={tech + idx} className="border border-gray-200 px-4 py-3 text-center">
+                                                <span className="font-semibold text-[#F58A71]">
+                                                    {formatMoney(range.rule.price as number, range.rule.currency as string)}
+                                                </span>
                                             </td>
                                         ))
                                     )}
@@ -108,6 +115,7 @@ const MarginPricePopup: React.FC<MarginPricePopupProps> = ({ open, onClose, titl
                         </tbody>
                     </table>
                 </div>
+
             </div>
         </Dialog>
     )

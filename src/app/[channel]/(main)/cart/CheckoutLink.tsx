@@ -142,7 +142,7 @@ export const CheckoutLink = ({
 		if (res?.success) {
 			toast.success("Your order has been submitted. Our team will contact you soon with a tailored quote.");
 		} else {
-			toast.error("Failed to submit support request. Please try again.");
+			toast.warn("Your order is currently processing, please wait.");
 		}
 
 		setOpenDialogWarningOrder(false);
@@ -170,11 +170,11 @@ export const CheckoutLink = ({
 				// aria-disabled={disabled}
 				onClick={handleClick}
 				className={cn(
-					"flex items-center justify-center max-w-full rounded border border-transparent bg-[#8B3958] px-6 py-2 text-center font-medium text-[#FFFFFF] hover:cursor-pointer hover:bg-[#7A314F] aria-disabled:cursor-not-allowed aria-disabled:bg-[#C59CAE] sm:px-16",
+					"flex items-center justify-center max-w-full rounded border border-transparent bg-[#F58A71] px-6 py-2 text-center font-medium text-[#FFFFFF] hover:cursor-pointer hover:bg-[#F58A71]/60 aria-disabled:cursor-not-allowed aria-disabled:bg-[#C59CAE] sm:px-16",
 					className,
 					{
 						"opacity-50 cursor-not-allowed": disabled || loading,
-						"hover:bg-[#8B3958]": !disabled && !loading,
+						"hover:bg-[#F58A71]/60": !disabled && !loading,
 					}
 				)}
 			>
