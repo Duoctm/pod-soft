@@ -4,6 +4,7 @@ export type PricingInfoUpdate = {
     memberPrice: number;
     retailPrice: number;
     discountPercentage: number;
+    quantity?: number; // Optional, default to 1 if not provided
 };
 
 type ExistingPricingInfo = {
@@ -38,6 +39,7 @@ export function updatePricingInfo(
                     member_price: newPricing.memberPrice,
                     retail_price: newPricing.retailPrice,
                     discount_percentage: newPricing.discountPercentage,
+                    quantity: newPricing.quantity || 1,
                 };
 
                 return {

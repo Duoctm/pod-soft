@@ -54,23 +54,6 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
     const priceKey = selectedSize && currentColor ? `${currentColor}-${selectedSize}` : currentColor;
     const currentPricing = priceKey ? productPriceRules[priceKey] : null;
 
-    console.log('🎨 ProductPriceDisplayWithDiscount render:', {
-        selectedSize,
-        currentColor,
-        priceKey,
-        currentPricing,
-        hasListRules: !!listProductPriceRules,
-        effectiveQuantity
-    });
-
-    // Debug log for component render (reduced logging to prevent performance issues)
-    console.log('🎨 ProductPriceDisplayWithDiscount render:', {
-        selectedSize,
-        currentColor,
-        priceKey,
-        hasPricing: !!currentPricing
-    });
-
     // Show loading only if explicitly loading or if we have no pricing data at all
     if (loading && !listProductPriceRules && !currentPricing) {
         return (
@@ -96,8 +79,6 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
             );
         }
 
-        console.log('💰 Displaying size-specific price for:', selectedSize);
-
         // For logged in users, try to show discount comparison with retail price
         if (hasUser && listProductPriceRules) {
             const retailPriceRule = findPriceFromRules(listProductPriceRules.rulesForDisplay, 1);
@@ -110,21 +91,18 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
 
                 return (
                     <div className="flex flex-col">
+
                         <div className="flex items-center gap-2">
-                            {/* Discount percentage */}
-                            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                                -{discountPercentage}%
-                            </span>
                             {/* Member price (main) */}
-                            <span className="text-4xl font-extrabold text-[#8B3958] md:text-5xl xl:text-5xl">
+                            <span className="text-3xl font-extrabold text-[#F58A71] md:text-4xl xl:text-5xl">
                                 {formatMoney(memberPrice, currentPricing.currency)}
                             </span>
-                        </div>
-                        {/* List Price (crossed out) */}
-                        <div className="flex items-center gap-1 mt-1">
-                            <span className="text-sm text-gray-500">List Price:</span>
                             <span className="text-xl text-gray-500 line-through">
                                 {formatMoney(retailPrice, currentPricing.currency)}
+                            </span>
+                            {/* Discount percentage */}
+                            <span className="bg-[#F58A71] text-white px-2 py-1 rounded-md text-sm font-medium">
+                                -{discountPercentage}%
                             </span>
                         </div>
 
@@ -149,7 +127,6 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
 
     // PRIORITY 2: Fallback to general pricing rules if no size-specific pricing
     if (listProductPriceRules && currentColor) {
-        console.log('⚠️ Using general pricing rules fallback');
         if (hasUser) {
             // Logged in user - show member price (rulesForCalculation)
             const memberPriceRule = findPriceFromRules(listProductPriceRules.rulesForCalculation, effectiveQuantity);
@@ -165,24 +142,21 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
                     const discountPercentage = Math.round(((retailPrice - memberPrice) / retailPrice) * 100);
 
                     return (
-                        <div className="flex flex-col">
+                        <div className="flex items-start">
                             <div className="flex items-center gap-2">
-                                {/* Discount percentage */}
-                                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                                    -{discountPercentage}%
-                                </span>
-                                {/* Member price (main) */}
+
                                 <span className="text-4xl font-extrabold text-[#8B3958] md:text-5xl xl:text-5xl">
                                     {formatMoney(memberPrice, memberPriceRule?.currency || "USD")}
                                 </span>
-                            </div>
-                            {/* List Price (crossed out) */}
-                            <div className="flex items-center gap-1 mt-1">
-                                <span className="text-sm text-gray-500">List Price:</span>
                                 <span className="text-xl text-gray-500 line-through">
                                     {formatMoney(retailPrice, memberPriceRule?.currency || "USD")}
                                 </span>
+
+                                <span className="bg-[#F58A71] text-white px-2 py-1 rounded-md text-sm font-medium">
+                                    -{discountPercentage}%
+                                </span>
                             </div>
+
                         </div>
                     );
                 } else {

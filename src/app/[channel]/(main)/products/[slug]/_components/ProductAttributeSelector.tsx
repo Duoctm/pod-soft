@@ -45,7 +45,7 @@ const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> = ({
 	return (
 		<div className="my-6">
 			<h2 className="mb-2 text-sm font-semibold">{name}</h2>
-			<div className="flex flex-wrap gap-1 md:gap-2">
+			<div className={"flex flex-wrap gap-1 md:gap-2"}>
 				{sortedValues
 					.filter((value) => value !== null)
 					.map((value) => {
@@ -59,7 +59,7 @@ const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> = ({
 								value && (
 									<div className="group relative" key={value}>
 										<button
-											className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all duration-150
+											className={`flex h-7 w-7 items-center justify-center rounded-full border-2 transition-all duration-150
                         ${isSelected
 													? "scale-110 border-[#F58A71] shadow-lg ring-2 ring-[#F58A71]"
 													: "border-slate-300 hover:scale-105 hover:border-[#F58A71]"
