@@ -155,7 +155,7 @@ const SupportPage = ({ channel }: { channel: string }) => {
                     onSubmit={handleSubmit}
                 >
                     {({ errors, touched, setFieldValue }) => (
-                        <Form className="w-full max-w-2xl space-y-6 px-4">
+                        <Form className="w-full max-w-2xl space-y-6 p-4 pb-4">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div>
                                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
@@ -285,7 +285,7 @@ const SupportPage = ({ channel }: { channel: string }) => {
                                                             <h4 className="font-medium">{value.question}</h4>
                                                         </AccordionSummary>
                                                         <AccordionDetails>
-                                                            <div className="flex flex-1 items-center justify-between">
+                                                            <div className="flex flex-1 items-center justify-between pb-4">
                                                                 <p className="text-sm text-gray-700">{value.result}</p>
                                                                 <button
                                                                     type="button"
