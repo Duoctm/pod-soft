@@ -136,10 +136,24 @@ export async function addCartMultiItem(
 }
 
 
-function createNewPrintingInfoMetadata(metadataDesign: string, serviceIds: string[], printTech: string) {
-    const objectDesign = JSON.parse(metadataDesign) as any;
+function createNewPrintingInfoMetadata(
+    metadataDesign: string,
+    serviceIds: string[],
+    printTech: string
+): Array<{
+    face_code: string;
+    printing_technology: string;
+    additional_service_ids: string[];
+}> {
+    const objectDesign = JSON.parse(metadataDesign) as {
+        designs: Array<{
+            face_code: string;
+            designs: any[];
+        }>;
+    };
+
     const printFace: string[] = [];
-    let printing_technology = "NONE"
+    let printing_technology = "NONE";
     if (objectDesign) {
         for (const item of objectDesign.designs) {
             if (item.designs.length > 0) {
@@ -147,19 +161,22 @@ function createNewPrintingInfoMetadata(metadataDesign: string, serviceIds: strin
             }
         }
         if (printFace.length > 0) {
-            if (printTech == PrintingTechnology.Silk) {
+            if (printTech === PrintingTechnology.Silk) {
                 printing_technology = PrintingTechnology.Silk;
-            }
-            else {
+            } else {
                 printing_technology = PrintingTechnology.Dtg;
             }
         }
     }
-    return [{
-        print_side: "ALL",
-        printing_technology: printing_technology,
-        additional_service_ids: serviceIds
-    }];
+    objectDesign.designs.map(i => {
+        console.log(i.face_code)
+    })
+
+    return objectDesign.designs.map(i => ({
+        face_code: (i.face_code).toLocaleUpperCase(),
+        printing_technology,
+        additional_service_ids: serviceIds,
+    }));
 };
 
 function createNewPricingInfoMetadata(variantId: string, priceInfo: PriceOfVariantDesign[]) {
