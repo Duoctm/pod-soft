@@ -148,8 +148,10 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             printTechnology
         });
 
-        // Convert string to PrintingTechnology enum
-        const selectedPrintingTechnology = convertStringToPrintingTechnology(printTechnology);
+        // For DTG, use None technology for pricing
+        const selectedPrintingTechnology = printTechnology === "DTG"
+            ? PrintingTechnology.None
+            : convertStringToPrintingTechnology(printTechnology);
 
         // Initialize immediately if no pricing exists for current color
         // Check both general color pricing and specific color-size pricing
@@ -166,7 +168,9 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                 generalPriceKey,
                 specificPriceKey,
                 hasGeneralPrice,
-                hasSpecificPrice
+                hasSpecificPrice,
+                printTechnology,
+                usingNoneForDTG: printTechnology === "DTG"
             });
             void initializePricing(selectedVariant.id, currentColor, selectedPrintingTechnology, false, selectedSize || undefined);
         }
@@ -188,7 +192,10 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         const hasCachedPrice = !!priceCache.current[priceKey];
 
         if (currentQuantity > 0 && !hasCachedPrice) {
-            const selectedPrintingTechnology = convertStringToPrintingTechnology(printTechnology);
+            // For DTG, use None technology for pricing
+            const selectedPrintingTechnology = printTechnology === "DTG"
+                ? PrintingTechnology.None
+                : convertStringToPrintingTechnology(printTechnology);
             console.log('🔄 useEffect: Selected size changed, no cached price, refetching:', {
                 selectedSize,
                 currentColor,
@@ -196,7 +203,8 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                 priceKey,
                 hasCachedPrice,
                 printTechnology,
-                variantId: selectedVariant.id
+                variantId: selectedVariant.id,
+                usingNoneForDTG: printTechnology === "DTG"
             });
 
             void fetchPrintingPriceRules(selectedVariant.id, currentColor, currentQuantity, selectedPrintingTechnology, selectedSize);
@@ -293,11 +301,19 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                 variantId: variant.id
             });
 
-            // Convert string to PrintingTechnology enum
-            const selectedPrintingTechnology = convertStringToPrintingTechnology(newPrintTech);
+            // For DTG, use None technology for pricing
+            const selectedPrintingTechnology = newPrintTech === "DTG"
+                ? PrintingTechnology.None
+                : convertStringToPrintingTechnology(newPrintTech);
 
             // Get current color for fetch
             const currentColorForFetch = selected.color || currentColor;
+
+            console.log('🔄 Using printing technology for pricing:', {
+                originalTech: newPrintTech,
+                pricingTech: selectedPrintingTechnology,
+                usingNoneForDTG: newPrintTech === "DTG"
+            });
 
             // Reset pricing to force UI update with new technology
             void initializePricing(variant.id, currentColorForFetch!, selectedPrintingTechnology, true, selected.size || undefined);
@@ -322,14 +338,18 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
 
             if (existingQuantity > 0) {
                 // Always fetch price for existing quantity to ensure up-to-date pricing
-                const selectedPrintingTechnology = convertStringToPrintingTechnology(printTechnology);
+                // For DTG, use None technology for pricing
+                const selectedPrintingTechnology = printTechnology === "DTG"
+                    ? PrintingTechnology.None
+                    : convertStringToPrintingTechnology(printTechnology);
 
                 console.log('🔄 Size has existing quantity, force refetching price:', {
                     size,
                     existingQuantity,
                     currentColor,
                     printTechnology,
-                    selectedPrintingTechnology
+                    selectedPrintingTechnology,
+                    usingNoneForDTG: printTechnology === "DTG"
                 });
 
                 // Force fetch by calling the API directly
@@ -381,7 +401,10 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         });
 
         // Convert string to PrintingTechnology enum for quantity change
-        const selectedPrintingTechnology = convertStringToPrintingTechnology(printTechnology);
+        // For DTG, use None technology for pricing
+        const selectedPrintingTechnology = printTechnology === "DTG"
+            ? PrintingTechnology.None
+            : convertStringToPrintingTechnology(printTechnology);
 
         console.log('💰 About to fetch price rules:', {
             variantId: selectedVariant.id,
@@ -390,10 +413,12 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             quantity: validQty,
             printTechnology,
             convertedTechnology: selectedPrintingTechnology,
-            enumValue: String(selectedPrintingTechnology)
+            enumValue: String(selectedPrintingTechnology),
+            usingNoneForDTG: printTechnology === "DTG"
         });
 
         void fetchPrintingPriceRules(selectedVariant.id, currentColor, validQty, selectedPrintingTechnology, size);
+
     }, [selectedVariant, currentColor, fetchPrintingPriceRules, printTechnology]);
 
     const handleClickAddToCart = useCallback(async () => {
@@ -444,7 +469,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         }
 
         // Helper function to calculate pricing info for a specific size and quantity
-        const calculatePricingInfoForSizeAndQuantity = (variantId: string, quantity: number) => {
+        const calculatePricingInfoForSizeAndQuantity = async (variantId: string, quantity: number) => {
             if (!listProductPriceRules || !currentColor) return null;
 
             // Find size for this variant
@@ -453,7 +478,33 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
 
             if (!size) return null;
 
-            // Get the specific price for this color-size combination
+            // If printTechnology is DTG, fetch pricing with None technology
+            if (printTechnology === "DTG") {
+                console.log('🔄 DTG detected, fetching pricing with None technology:', {
+                    variantId,
+                    currentColor,
+                    size,
+                    quantity,
+                    originalPrintTech: printTechnology
+                });
+
+                await fetchPrintingPriceRules(variantId, currentColor, quantity, PrintingTechnology.None, size);
+            } else {
+                // For other printing technologies, fetch with the current technology
+                const selectedPrintingTechnology = convertStringToPrintingTechnology(printTechnology);
+                console.log('🔄 Fetching pricing for technology:', {
+                    variantId,
+                    currentColor,
+                    size,
+                    quantity,
+                    printTechnology,
+                    selectedPrintingTechnology
+                });
+
+                await fetchPrintingPriceRules(variantId, currentColor, quantity, selectedPrintingTechnology, size);
+            }
+
+            // Get the specific price for this color-size combination (after fetch)
             const priceKey = `${currentColor}-${size}`;
             const specificPrice = productPriceRules[priceKey];
 
@@ -463,7 +514,9 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                 priceKey,
                 specificPrice,
                 quantity,
-                currentColor
+                currentColor,
+                printTechnology,
+                usedNoneForDTG: printTechnology === "DTG"
             });
 
             const findPriceRule = (rules: Pick<PrintingPriceRuleCountableEdge, "node" | "__typename">[], qty: number) => {
@@ -498,13 +551,13 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             };
         };
 
-        const newItems = items.map((item) => {
+        const newItems = await Promise.all(items.map(async (item) => {
             const variant = productDetail?.variants?.find((v) => v.id === item.variantId);
             const originalMetadata = variant?.metadata ?? [];
 
             // Calculate pricing info for this specific item
-            const pricingInfo = calculatePricingInfoForSizeAndQuantity(item.variantId, item.quantity);
-
+            const pricingInfo = await calculatePricingInfoForSizeAndQuantity(item.variantId, item.quantity);
+            console.log(services)
             const metadata = [
                 ...originalMetadata,
                 {
@@ -512,14 +565,18 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                     value: JSON.stringify([
                         {
                             print_side: "NONE",
-                            printing_technology: printTechnology || "NONE",
-                            additional_service_ids: services || [],
+                            printing_technology: "NONE",
+                            additional_service_ids: [],
                         },
                     ]),
                 },
                 {
                     key: "service_detail",
                     value: JSON.stringify(serviceDetails)
+                },
+                {
+                    key: "line_additional_services",
+                    value: JSON.stringify(services || [])
                 }
             ];
 
@@ -527,6 +584,8 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             if (pricingInfo) {
                 // Remove any old pricing_info key if exists
                 const filtered = metadata.filter(m => m.key !== "pricing_info");
+
+
                 filtered.push({
                     key: "pricing_info",
                     value: JSON.stringify({
@@ -552,7 +611,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                 quantity: item.quantity,
                 metadata
             };
-        });
+        }));
 
         try {
             const result = await addCart(params, newItems);
@@ -574,7 +633,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             ...prev,
             [currentColor]: {},
         }));
-    }, [channel, params, sizeQuantities, currentColor, printTechnology, services, serviceDetails, productDetail, listProductPriceRules, productPriceRules]);
+    }, [channel, params, sizeQuantities, currentColor, printTechnology, services, serviceDetails, productDetail, listProductPriceRules, productPriceRules, fetchPrintingPriceRules]);
 
     const handleNavigateToDesign = useCallback(async () => {
 
@@ -691,6 +750,10 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                         {
                             key: "service_detail",
                             value: JSON.stringify(decodedServiceDetails)
+                        },
+                        {
+                            key: "line_additional_services",
+                            value: JSON.stringify(services || [])
                         }
                     ],
                 };

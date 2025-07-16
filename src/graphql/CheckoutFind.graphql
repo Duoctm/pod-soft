@@ -15,6 +15,10 @@ query CheckoutFind($id: ID!) {
 				key
 				value
 			}
+			undiscountedUnitPrice {
+				amount
+				currency
+			}
 			variant {
 				quantityAvailable
 				media {

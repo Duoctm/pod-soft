@@ -42,7 +42,7 @@ export const AddressSchema = Yup.object().shape({
 	zipCode: Yup.string()
 		.trim()
 		.required("Zip code is required")
-		.max(20, "Zip code cannot exceed 20 characters")
+		.max(6, "Zip code cannot exceed 6 characters")
 		.matches(zipCodeRegex, invalidZipCodeMessage),
 
 	countryArea: Yup.string()

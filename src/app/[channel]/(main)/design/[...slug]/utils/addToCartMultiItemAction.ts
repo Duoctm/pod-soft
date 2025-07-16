@@ -34,7 +34,6 @@ export async function addCartMultiItem(
 ) {
     "use server";
     try {
-        console.log('priceInfo', priceInfo);
         const { me: user } = await executeGraphQL(CurrentUserDocument, {
             cache: "no-cache",
         });
@@ -48,13 +47,14 @@ export async function addCartMultiItem(
         });
 
 
+
+
         invariant(checkout, "This should never happen");
 
         Checkout.saveIdToCookie(channel, checkout.id);
 
         const newLines = lines.map((line) => {
-
-            let printingInfoMetadata = null;
+            let printingInfoMetadata = createNewPrintingInfoMetadata(printTech, undefined);
             let metadataOfItem = null;
 
             if (metadata && metadata != "null") {
@@ -62,8 +62,9 @@ export async function addCartMultiItem(
                 metadataOfItem = metadataObject;
                 metadataOfItem.variantId = line.variantId;
                 metadataOfItem.productId = line.productId;
-                printingInfoMetadata = createNewPrintingInfoMetadata(metadata, sericeIdS, printTech);
+                printingInfoMetadata = createNewPrintingInfoMetadata(printTech, metadata);
             }
+
 
             const pricingInfoMetadata = createNewPricingInfoMetadata(line.variantId, priceInfo);
 
@@ -81,10 +82,15 @@ export async function addCartMultiItem(
                 {
                     key: "pricing_info",
                     value: JSON.stringify(pricingInfoMetadata)
-                }] as MetadataInput[],
+                },
+                {
+                    key: "line_additional_services",
+                    value: JSON.stringify(sericeIdS),
+                }
+                ] as MetadataInput[],
+
             };
         })
-
 
 
         /*[{
@@ -100,6 +106,9 @@ export async function addCartMultiItem(
             id: checkout.id,
             lines: newLines,
         });
+
+
+        console.log("updatedCheckout", updatedCheckout);
 
 
 
@@ -124,6 +133,7 @@ export async function addCartMultiItem(
         };
 
     } catch (error) {
+        console.error("Error adding items to cart:", error);
         return {
             success: false,
             error: {
@@ -137,46 +147,58 @@ export async function addCartMultiItem(
 
 
 function createNewPrintingInfoMetadata(
-    metadataDesign: string,
-    serviceIds: string[],
-    printTech: string
+    printTech: string,
+    metadataDesign?: string,
 ): Array<{
+    print_side: string;
     face_code: string;
     printing_technology: string;
-    additional_service_ids: string[];
+    // additional_service_ids: string[];
 }> {
-    const objectDesign = JSON.parse(metadataDesign) as {
-        designs: Array<{
-            face_code: string;
-            designs: any[];
-        }>;
-    };
-
     const printFace: string[] = [];
     let printing_technology = "NONE";
-    if (objectDesign) {
-        for (const item of objectDesign.designs) {
-            if (item.designs.length > 0) {
-                printFace.push(item.face_code);
+    if (metadataDesign) {
+        const objectDesign = JSON.parse(metadataDesign) as {
+            designs: Array<{
+                face_code: string;
+                designs: any[];
+            }>;
+        };
+        if (objectDesign) {
+            for (const item of objectDesign.designs) {
+                if (item.designs.length > 0) {
+                    printFace.push(item.face_code);
+                }
+            }
+            if (printFace.length > 0) {
+                if (printTech === PrintingTechnology.Silk) {
+                    printing_technology = PrintingTechnology.Silk;
+                } else {
+                    printing_technology = PrintingTechnology.Dtg;
+                }
             }
         }
-        if (printFace.length > 0) {
-            if (printTech === PrintingTechnology.Silk) {
-                printing_technology = PrintingTechnology.Silk;
-            } else {
-                printing_technology = PrintingTechnology.Dtg;
-            }
-        }
-    }
-    objectDesign.designs.map(i => {
-        console.log(i.face_code)
-    })
+        objectDesign.designs.map(i => {
+            console.log(i.face_code)
+        })
 
-    return objectDesign.designs.map(i => ({
-        face_code: (i.face_code).toLocaleUpperCase(),
-        printing_technology,
-        additional_service_ids: serviceIds,
-    }));
+        return objectDesign.designs.map(i => ({
+            print_side: i.face_code.toLocaleUpperCase(),
+            face_code: (i.face_code).toLocaleUpperCase(),
+            printing_technology,
+            // additional_service_ids: serviceIds,
+        }));
+    }
+    else {
+        return [
+            {
+                print_side: "NONE",
+                face_code: "NONE",
+                printing_technology: printTech,
+                // additional_service_ids: serviceIds,
+            }
+        ]
+    }
 };
 
 function createNewPricingInfoMetadata(variantId: string, priceInfo: PriceOfVariantDesign[]) {

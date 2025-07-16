@@ -248,37 +248,43 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                 let unitTotalPriceTemp = 0;
                 let saleUnitTotalPriceTemp = 0;
 
-                for (const rule of resultPricePrintingRules) {
-                    const condition = rule.node.condition;
-                    if (
-                        condition &&
-                        condition.minQuantity !== null &&
-                        condition.maxQuantity !== null &&
-                        condition.minQuantity &&
-                        condition.maxQuantity &&
-                        condition.printingTechnology !== null &&
-                        quantity >= condition.minQuantity &&
-                        quantity <= condition.maxQuantity
-                    ) {
-                        if (rule.node.usedForCalculation == false) {
+                if (printTech != PrintingTechnology.None) {
+                    for (const rule of resultPricePrintingRules) {
+                        const condition = rule.node.condition;
+                        if (
+                            condition &&
+                            condition.minQuantity !== null &&
+                            condition.maxQuantity !== null &&
+                            condition.minQuantity &&
+                            condition.maxQuantity &&
+                            condition.printingTechnology !== null &&
+                            quantity >= condition.minQuantity &&
+                            quantity <= condition.maxQuantity
+                        ) {
+                            if (rule.node.usedForCalculation == false) {
 
-                            if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Front) {
-                                unitTotalPriceTemp += rule.node.price;
-                            }
+                                if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Front) {
+                                    unitTotalPriceTemp += rule.node.price;
+                                }
 
-                            if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Back) {
-                                unitTotalPriceTemp += rule.node.price;
+                                if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Back) {
+                                    unitTotalPriceTemp += rule.node.price;
+                                }
                             }
-                        }
-                        else {
-                            if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Front) {
-                                saleUnitTotalPriceTemp += rule.node.price;
-                            }
-                            if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Back) {
-                                saleUnitTotalPriceTemp += rule.node.price;
+                            else {
+                                if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Front) {
+                                    saleUnitTotalPriceTemp += rule.node.price;
+                                }
+                                if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Back) {
+                                    saleUnitTotalPriceTemp += rule.node.price;
+                                }
                             }
                         }
                     }
+                }
+                else {
+                    unitTotalPriceTemp = blankPrice;
+                    saleUnitTotalPriceTemp = blankSalePrice;
                 }
 
                 printSalePrice = saleUnitTotalPriceTemp - blankSalePrice;
@@ -550,7 +556,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                     const service: Service[] = resultAdditionalService.map((i: any) => ({
                         name: i.node.name ?? "",
                         price: i.node.price ?? 0,
-                        id: extractNumericId(i.node.id ?? ""),
+                        id: i.node.id ?? "",
                     }));
                     setServices(service);
                 }

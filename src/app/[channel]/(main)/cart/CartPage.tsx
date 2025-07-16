@@ -1,8 +1,10 @@
+
 "use client";
 
 import Image from "next/image";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { ToastContainer } from "react-toastify";
+
 import { CheckoutLink } from "./CheckoutLink";
 import { DeleteLineButton } from "./DeleteLineButton";
 import { ViewDesignButton } from "./ViewDesignButton";
@@ -138,6 +140,97 @@ export function CartPage({ params }: CartPageProps) {
 				if (checkoutData?.checkout?.lines?.length > 0) {
 					localStorage.setItem("cartUpdateDesign", JSON.stringify(checkoutData));
 				}
+
+				// Check and update DTG items to None
+				const userData = await getUser();
+				const updatedLines: CheckoutLine[] = [];
+
+				for (const line of checkoutData.checkout.lines as CheckoutLine[]) {
+					const printingMeta = line.metadata?.find((meta) => meta.key === "printing_info");
+					let needsUpdate = false;
+					let currentPrintingTech = PrintingTechnology.None;
+
+					if (printingMeta) {
+						try {
+							const printingInfo = JSON.parse(printingMeta.value);
+							if (Array.isArray(printingInfo) && printingInfo.length > 0) {
+								const firstInfo = printingInfo[0] as { printing_technology?: string };
+								if (firstInfo && typeof firstInfo === 'object' && firstInfo.printing_technology) {
+									currentPrintingTech = firstInfo.printing_technology as PrintingTechnology;
+									if (currentPrintingTech === PrintingTechnology.Dtg) {
+										needsUpdate = true;
+									}
+								}
+							}
+						} catch (error) {
+							console.error("Error parsing printing_info:", error);
+						}
+					}
+
+					if (needsUpdate) {
+						// Recalculate pricing with None technology
+						const result = await calculatePricingForQuantity(
+							line.variant.id,
+							PrintingTechnology.None,
+							line.quantity,
+							Boolean(userData)
+						);
+
+						const dataUpdate: PricingInfoUpdate = {
+							retailPrice: result?.retailPrice || 0,
+							memberPrice: result?.memberPrice || 0,
+							discountPercentage: result?.discountPercentage || 0,
+						};
+
+						// Update printing_info metadata to None
+						const updatedMetadata = line.metadata?.map(meta => {
+							if (meta.key === "printing_info") {
+								try {
+									const printingInfo = JSON.parse(meta.value);
+									if (Array.isArray(printingInfo) && printingInfo.length > 0) {
+										const firstInfo = printingInfo[0] as { printing_technology?: string };
+										if (firstInfo && typeof firstInfo === 'object') {
+											firstInfo.printing_technology = PrintingTechnology.None;
+										}
+									}
+									return {
+										...meta,
+										value: JSON.stringify(printingInfo)
+									};
+								} catch {
+									return meta;
+								}
+							}
+							return meta;
+						}) || [];
+
+						const metadataUpdate = updatePricingInfo(updatedMetadata, dataUpdate);
+
+						// Update the line in checkout
+						await CheckoutLineUpdate({
+							id: checkoutData.checkoutId,
+							lineId: line.id,
+							quantity: line.quantity,
+							metadata: metadataUpdate
+						});
+
+						updatedLines.push({
+							...line,
+							metadata: metadataUpdate
+						});
+					} else {
+						updatedLines.push(line);
+					}
+				}
+
+				// If any updates were made, fetch checkout again to get the latest data
+				if (updatedLines.some((line, index) => line.metadata !== (checkoutData.checkout.lines as CheckoutLine[])[index].metadata)) {
+					const refreshedCheckoutData = await getCheckoutList(params.channel);
+					if (refreshedCheckoutData) {
+						setCheckout(refreshedCheckoutData.checkout as CheckoutType);
+						setItems(refreshedCheckoutData.checkout.lines as CheckoutLine[]);
+					}
+				}
 			}
 			setCheckoutId(checkoutData?.checkoutId as string);
 		} catch (error) {
@@ -145,11 +238,12 @@ export function CartPage({ params }: CartPageProps) {
 		} finally {
 			setLoading(false);
 		}
-	}, [params.channel]);
+	}, [params.channel, calculatePricingForQuantity]);
 
 	useEffect(() => {
 		void fetchCheckout();
 	}, [fetchCheckout]);
+
 
 	const handleQuantityChange = useCallback(
 		async (lineId: string, newQuantity: number, variantId: string, printingTechnology?: PrintingTechnology, currentMetadata?: MetadataItem[]) => {
@@ -157,11 +251,16 @@ export function CartPage({ params }: CartPageProps) {
 
 			const userData = await getUser();
 
+			// For DTG, use None technology for pricing calculation
+			const pricingTechnology = printingTechnology === PrintingTechnology.Dtg
+				? PrintingTechnology.None
+				: (printingTechnology || PrintingTechnology.None);
+
 			const result = await calculatePricingForQuantity(
 				variantId,
-				printingTechnology as PrintingTechnology,
+				pricingTechnology,
 				newQuantity,
-				Boolean(userData), // Assuming no user for calculation, adjust as needed
+				Boolean(userData),
 			)
 			const dataUpdate: PricingInfoUpdate = {
 				retailPrice: result?.retailPrice || 0,
@@ -217,21 +316,44 @@ export function CartPage({ params }: CartPageProps) {
 
 
 	const renderCartItem = (item: CheckoutLine) => {
+		console.log("🚀 CartPage.tsx:223 - item:", item);
+
 		const pricingInfo = parsePricingInfoFromMetadata(item);
-		const hasDiscount = pricingInfo?.has_discount && pricingInfo.retail_price > pricingInfo.member_price;
-		const unitPrice = pricingInfo ? pricingInfo.member_price : item.totalPrice.gross.amount / item.quantity;
-		// const originalUnitPrice = pricingInfo ? pricingInfo.retail_price : unitPrice;
-		const totalPrice = pricingInfo ? pricingInfo.member_price * item.quantity : item.totalPrice.gross.amount;
-		const originalTotalPrice = pricingInfo ? pricingInfo.retail_price * item.quantity : totalPrice;
-		const savings = hasDiscount ? originalTotalPrice - totalPrice : 0;
+		console.log("🚀 CartPage.tsx:317 - pricingInfo:", pricingInfo);
+
+		const serviceDetail = item.metadata?.find((meta) => meta.key === "service_detail");
+
+		console.log(item, "item");
+
+		let serviceDetailPrice = 0;
+
+
+
+		if (serviceDetail && serviceDetail.value) {
+			const parsedValue = JSON.parse(serviceDetail.value) as { price: number, name: string }[];
+			if (Array.isArray(parsedValue)) {
+				serviceDetailPrice = parsedValue.reduce((sum, item) => sum + item.price, 0);
+			}
+		} else {
+			serviceDetailPrice = 0;
+		}
+
+		const unitPrice = (pricingInfo ? pricingInfo.member_price : item.totalPrice.gross.amount / item.quantity) + serviceDetailPrice;
+		const totalPrice = (pricingInfo ? unitPrice * item.quantity : item.totalPrice.gross.amount);
 		const currency = pricingInfo?.currency || item.totalPrice.gross.currency;
+
+		// Calculate discount info for individual items
+		const hasItemDiscount = pricingInfo?.has_discount && pricingInfo.retail_price > pricingInfo.member_price;
+		const itemSavings = hasItemDiscount ? (pricingInfo.retail_price - pricingInfo.member_price) * item.quantity : 0;
 
 
 		// eslint-disable-next-line react-hooks/rules-of-hooks
 		const printingTechnology = usePrintingTechnology(item.metadata)
 		const currentMetadata = item.metadata
 
-		console.log("🚀 CartPage.tsx:233 - currentMetadata:", currentMetadata);
+
+
+
 
 		return (
 			<div key={item.id} className="bg-white rounded-lg border border-gray-200 shadow-sm p-3 sm:p-4 mb-4">
@@ -285,25 +407,27 @@ export function CartPage({ params }: CartPageProps) {
 					</div>
 
 
-					{/* Mobile Price Row */}
-					<div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-100">
+					{/* Mobile Price Row - Simplified */}
+					<div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-100">
 						<div>
 							<div className="text-xs text-gray-500 mb-1">Unit Price</div>
 							<div className="text-sm font-medium text-gray-900">{formatMoney(unitPrice, currency)}</div>
 						</div>
 						<div className="text-right">
-							{hasDiscount && savings > 0 && (
-								<div className="mb-3">
-									<div className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-										Save {formatMoney(savings, currency)} ({pricingInfo.discount_percentage}%)
-									</div>
-								</div>
-							)}
-							<div className="text-xs text-gray-500 mb-1">Total</div>
-							<div className="text-lg font-bold text-black">{formatMoney(totalPrice, currency)}</div>
+							<div className="text-xs text-gray-500 mb-1">Quantity: {item.quantity}</div>
+							<div className="text-sm font-medium text-gray-900">{formatMoney(totalPrice, currency)}</div>
 						</div>
 					</div>
 					{/* Mobile Savings Badge */}
+					{hasItemDiscount && itemSavings > 0 && (
+						<div className="flex justify-center mb-3">
+							<div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+								Save {formatMoney(itemSavings, currency)} ({Math.floor((itemSavings / totalPrice) * 100)}%)
+							</div>
+						</div>
+					)}
+
+
 
 					<div className="flex items-start justify-end space-x-2 mb-3 ">
 						<div className="flex p-1 items-center justify-between bg-slate-100 rounded-md">
@@ -393,13 +517,13 @@ export function CartPage({ params }: CartPageProps) {
 									</div>
 								</div>
 
-								{/* Right: Unit Price */}
+								{/* Right: Price Info - With Discount Display */}
 								<div className="text-right flex-shrink-0">
-									<div className="text-xs text-gray-500 mb-1">Unit Price: {formatMoney(unitPrice, currency)}</div>
+									<div className="text-xs text-gray-500 mb-1">Unit: {formatMoney(unitPrice, currency)}</div>
 									<div className="text-lg font-bold text-black">{formatMoney(totalPrice, currency)}</div>
-									{hasDiscount && savings > 0 && (
+									{hasItemDiscount && itemSavings > 0 && (
 										<div className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 mt-1">
-											Save {formatMoney(savings, currency)} ({pricingInfo.discount_percentage}%)
+											Save {formatMoney(itemSavings, currency)} ({Math.floor((itemSavings / totalPrice) * 100)}%)
 										</div>
 									)}
 								</div>
@@ -466,28 +590,58 @@ export function CartPage({ params }: CartPageProps) {
 		let totalMember: number = 0;
 		let totalDiscount: number = 0;
 		let totalQuantity: number = 0;
+		let totalServicesPrice: number = 0;
 		let currency: string = items[0]?.totalPrice.gross.currency || "USD";
 		let hasAnyDiscount = false;
+
 		items.forEach((line) => {
 			const info = parsePricingInfoFromMetadata(line);
+
+			console.log(line)
+			// Calculate service price for this line
+			const serviceDetail = line.metadata?.find((meta) => meta.key === "service_detail");
+			let serviceDetailPrice = 0;
+			if (serviceDetail && serviceDetail.value) {
+				try {
+					const parsedValue = JSON.parse(serviceDetail.value) as { price: number, name: string }[];
+					serviceDetailPrice = parsedValue.reduce((sum, item) => sum + item.price, 0) * line.quantity;
+				} catch {
+					serviceDetailPrice = 0;
+				}
+			}
+
 			if (info) {
-				totalRetail += info.retail_price * line.quantity;
-				totalMember += info.member_price * line.quantity;
-				totalDiscount += (info.retail_price - info.member_price) * line.quantity;
+				// Use pricing info when available
+				const lineRetailPrice = info.retail_price * line.quantity;
+				const lineMemberPrice = info.member_price * line.quantity;
+
+				totalRetail += lineRetailPrice;
+				totalMember += lineMemberPrice;
+				totalDiscount += lineRetailPrice - lineMemberPrice;
 				totalQuantity += line.quantity;
 				currency = info.currency || currency;
+
 				if (info.has_discount && info.retail_price > info.member_price) {
 					hasAnyDiscount = true;
 				}
 			} else {
-				// fallback: use old price
-				totalRetail += line.totalPrice.gross.amount;
-				totalMember += line.totalPrice.gross.amount;
+				// Fallback to line total price when no pricing info
+				const linePrice = line.totalPrice.gross.amount;
+				totalRetail += linePrice;
+				totalMember += linePrice;
 				totalQuantity += line.quantity;
 				currency = line.totalPrice.gross.currency || currency;
 			}
+
+			// Add service price to totals
+			totalServicesPrice += serviceDetailPrice;
 		});
-		return { totalRetail, totalMember, totalDiscount, totalQuantity, currency, hasAnyDiscount };
+
+		// Add services price to both retail and member totals
+		totalRetail += totalServicesPrice;
+		totalMember += totalServicesPrice;
+
+		return { totalRetail, totalMember, totalDiscount, totalQuantity, totalServicesPrice, currency, hasAnyDiscount };
 	}, [items]);
 
 	return (
@@ -550,21 +704,29 @@ export function CartPage({ params }: CartPageProps) {
 								<h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Order Summary</h2>
 
 								<div className="space-y-2 sm:space-y-3">
-									{/* Subtotal */}
+									{/* Subtotal (Base Product Prices) */}
 									<div className="flex justify-between text-sm sm:text-base text-gray-600">
 										<span>Subtotal ({cartTotals.totalQuantity} items)</span>
-										<span className="font-medium">{formatMoney(cartTotals.totalRetail, cartTotals.currency)}</span>
+										<span className="font-medium">{formatMoney(cartTotals.totalMember - cartTotals.totalServicesPrice + cartTotals.totalDiscount, cartTotals.currency)}</span>
 									</div>
 
-									{/* Total Savings */}
+									{/* Additional Services */}
+									{cartTotals.totalServicesPrice > 0 && (
+										<div className="flex justify-between text-sm sm:text-base text-gray-600">
+											<span>Additional Services</span>
+											<span className="font-medium">{formatMoney(cartTotals.totalServicesPrice, cartTotals.currency)}</span>
+										</div>
+									)}
+
+									{/* Member Discount - Show if user has discount */}
 									{cartTotals.hasAnyDiscount && cartTotals.totalDiscount > 0 && (
 										<div className="flex justify-between text-sm sm:text-base text-green-600 font-medium">
-											<span>Total Savings</span>
+											<span>Member Discount</span>
 											<span>-{formatMoney(cartTotals.totalDiscount, cartTotals.currency)}</span>
 										</div>
 									)}
-									<hr className="my-3 sm:my-4" />
 
+									<hr className="my-3 sm:my-4" />
 									{/* Total */}
 									<div className="flex justify-between text-lg sm:text-xl font-bold text-gray-900">
 										<span>Total</span>
