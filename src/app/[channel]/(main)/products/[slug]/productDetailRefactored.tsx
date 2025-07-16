@@ -511,7 +511,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                     key: "printing_info",
                     value: JSON.stringify([
                         {
-                            print_side: "ALL",
+                            print_side: "NONE",
                             printing_technology: printTechnology || "NONE",
                             additional_service_ids: services || [],
                         },
@@ -682,7 +682,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                             key: "printing_info",
                             value: JSON.stringify([
                                 {
-                                    print_side: "ALL",
+                                    print_side: "NONE",
                                     printing_technology: printTechnology || "NONE",
                                     additional_service_ids: decodedNumbers || [],
                                 },
