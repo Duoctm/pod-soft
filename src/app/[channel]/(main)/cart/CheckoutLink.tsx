@@ -18,10 +18,12 @@ type Props = {
 	checkoutId?: string;
 	className?: string;
 	channel?: string;
+	limitQty?: boolean;
 	includePrintingTechnology?: boolean;
 };
 
 export type InfoSupport = {
+
 	firstName: string;
 	lastName: string;
 	email: string;
@@ -35,6 +37,7 @@ export type InfoSupport = {
 
 
 export const CheckoutLink = ({
+	limitQty,
 	disabled,
 	checkoutId,
 	className = "",
@@ -92,7 +95,15 @@ export const CheckoutLink = ({
 
 		setLoading(true);
 
+
+
 		if (includePrintingTechnology) {
+			// if (limitQty) {
+			// 	toast.warning("Your order quantity is less than 288 please change it")
+			// 	setLoading(false)
+			// 	return;
+			// }
+
 			setErrorMessage(
 				"Your order contains a request for SILK printing technology. Our team will evaluate it and respond with a tailored quote as soon as possible."
 			);

@@ -176,13 +176,13 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 												</div>
 												<div className="text-right flex items-center gap-1">
 													<div className="text-sm font-medium text-neutral-900">
-														{item.variant.pricing?.price &&
-															formatMoney(
-																item.variant.pricing.price.gross.amount,
-																item.variant.pricing.price.gross.currency,
-															)}
+														{formatMoney(
+															parseFloat(orderDetail?.node.total.gross.amount / item.quantity) || 0,
+															orderDetail?.node.total.gross.currency || "",
+														)}
 
 													</div>
+
 													<div className="text-sm text-neutral-500">/ per unit</div>
 												</div>
 											</div>
@@ -302,6 +302,7 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 															<p className="text-sm font-medium text-neutral-600">x{item.quantity}</p>
 														</div>
 														<p className="mt-1 text-sm text-neutral-600">
+
 															{item.variant.pricing?.price &&
 																formatMoney(
 																	item.variant.pricing.price.gross.amount,
