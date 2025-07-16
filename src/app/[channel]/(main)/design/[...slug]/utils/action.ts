@@ -15,20 +15,38 @@ async function getAdditionalService(channel: string, first: number, after: strin
     return data;
 }
 
-async function getPrintingPriceRules(objectId: number, printTech: PrintingTechnology[], channel: string, printSide: PrintSide) {
-    const data = await executeGraphQL(PublicPrintingPriceRulesDocument, {
-        variables: {
-            filter: {
-                status: Status.Active,
-                objectId: objectId,
-                printingTechnologies: printTech,
-                printSide: printSide
-            },
-            sortBy: null,
-            channel: channel
-        }
-    });
-    return data.publicPrintingPriceRules?.edges;
+async function getPrintingPriceRules(printTech: PrintingTechnology[], channel: string, printSide: PrintSide, objectId?: number, minQuantity?: number) {
+    console.log('minQuantity', minQuantity);
+    if (objectId) {
+        const data = await executeGraphQL(PublicPrintingPriceRulesDocument, {
+            variables: {
+                filter: {
+                    status: Status.Active,
+                    objectId: objectId,
+                    printingTechnologies: printTech,
+                    printSide: printSide
+                },
+                sortBy: null,
+                channel: channel
+            }
+        });
+        return data.publicPrintingPriceRules?.edges;
+    }
+    else {
+        const data = await executeGraphQL(PublicPrintingPriceRulesDocument, {
+            variables: {
+                filter: {
+                    status: Status.Active,
+                    printingTechnologies: printTech,
+                    printSide: printSide,
+                    // minQuantity: minQuantity
+                },
+                sortBy: null,
+                channel: channel
+            }
+        });
+        return data.publicPrintingPriceRules?.edges;
+    }
 }
 
 

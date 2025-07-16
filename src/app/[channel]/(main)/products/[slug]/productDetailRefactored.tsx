@@ -398,6 +398,14 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
 
     const handleClickAddToCart = useCallback(async () => {
         setAddToCartLoading(true);
+
+
+        //  const qty = sizeQuantities.
+
+
+        if (printTechnology === PrintingTechnology.Silk) { }
+
+
         const user = await getUser();
         if (!user) {
             try {
@@ -418,6 +426,16 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         const items = Object.values(sizeQuantities[currentColor] || {})
             .filter((v) => v.quantity > 0 && v.variantId)
             .map(({ variantId, quantity }) => ({ variantId, quantity }));
+
+        // Kiểm tra điều kiện cho Silk: tổng quantity < 288 thì không cho thêm vào giỏ hàng
+        if (printTechnology === PrintingTechnology.Silk) {
+            const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+            if (totalQuantity < 288) {
+                toast.error("Minimum quantity for silk printing is 288 pieces");
+                setAddToCartLoading(false);
+                return;
+            }
+        }
 
         if (items.length === 0) {
             toast.error("Please select at least one size and quantity");
@@ -581,11 +599,22 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
             const colorSize = sizeQuantities[currentColor];
             console.log(sizeQuantities[currentColor]);
             for (const [, value] of Object.entries(colorSize)) {
-
                 if (value.variantId == selectedVariant.id) {
-
                     quantity = value.quantity;
                 }
+            }
+        }
+
+        // Kiểm tra điều kiện cho Silk: tổng quantity < 288 thì không cho sang trang design
+        if (convertStringToPrintingTechnology(printTechnology) === PrintingTechnology.Silk) {
+            let totalQuantity = 0;
+            if (currentColor && sizeQuantities[currentColor]) {
+                totalQuantity = Object.values(sizeQuantities[currentColor])
+                    .reduce((sum, item) => sum + item.quantity, 0);
+            }
+            if (totalQuantity < 288) {
+                toast.error("Minimum quantity for silk printing is 288 pieces");
+                return;
             }
         }
 
@@ -691,7 +720,6 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         <Wrapper className="flex min-h-screen flex-col md:flex-row">
             <ToastContainer position="top-center" />
             <ProductTitle name={productDetail?.name} isLoading={loading} className="mb-7 px-4 md:hidden" />
-
             <div className="relative flex w-full max-w-7xl flex-col gap-2 rounded-lg px-4 md:flex-row md:gap-8">
                 <div className="w-full md:w-1/2 lg:w-[35%]">
                     {selectedVariant ? (

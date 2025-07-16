@@ -3,10 +3,11 @@
 import Konva from 'konva';
 import $ from 'jquery';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { v4 as uuidv4 } from 'uuid';
 import { type PrintFaceData, type DesignInfo/*, UploadDataType*/ } from './type';
 import { uploadImageRaw } from './UpdateImage';
-import { v4 as uuidv4 } from 'uuid';
-import { NodeConfig2, NodeHistory2, addStackHistory2, initialStackHistory2 } from './designHistory2'
+import { type NodeConfig2, type NodeHistory2, addStackHistory2, initialStackHistory2 } from './designHistory2'
+
 interface StageConfig {
   stage: Konva.Stage | null;
   layer: Konva.Layer | null;
@@ -92,6 +93,24 @@ class TShirtDesigner {
       this.rotationAngleSetter(0);
     }
   }
+
+
+  private async urlToBase64(url: string): Promise<string> {
+    // Bước 1: fetch ảnh từ url
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    // Bước 2: chuyển blob thành base64
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve(reader.result as string);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob); // đọc blob thành data URL (base64)
+    });
+  }
+
 
 
 
@@ -415,9 +434,9 @@ class TShirtDesigner {
       const currentContainer = this.currentStage.stage.container();
       currentContainer.style.display = 'none';
       currentContainer.style.zIndex = '0';
-      this.maxResizeWidthSetter(parseInt(this.currentStage.stage!.width().toString()));
-      this.maxResizeHeightSetter(parseInt(this.currentStage.stage!.height().toString()));
-      this.maxFontSizeSetter(parseInt(this.currentStage.stage!.width().toString()));
+      this.maxResizeWidthSetter(parseInt(this.currentStage.stage.width().toString()));
+      this.maxResizeHeightSetter(parseInt(this.currentStage.stage.height().toString()));
+      this.maxFontSizeSetter(parseInt(this.currentStage.stage.width().toString()));
     }
     if (this.currentStage.borderDiv) {
       this.currentStage.borderDiv.style.display = 'none';
@@ -508,8 +527,8 @@ class TShirtDesigner {
     stageConfig.layer!.draw();
     clone.dragBoundFunc(function (pos: any) {
       const stage = clone.getStage();
-      const stageWidth = stage!.width();
-      const stageHeight = stage!.height();
+      const stageWidth = stage.width();
+      const stageHeight = stage.height();
 
       const tempNode = clone.clone();
       tempNode.position(pos);
@@ -1144,7 +1163,7 @@ class TShirtDesigner {
     this.clearBorderNode(this.currentStage);
     //const stageWidth = this.currentStage.stage!.width();
     //const stageHeight = this.currentStage.stage!.height();
-    var fontStyle = "";
+    let fontStyle = "";
     //console.log(this.fontStyle, this.fontWeight);
     if (this.fontWeight === 'bold') {
       fontStyle += "700";
@@ -1465,7 +1484,7 @@ class TShirtDesigner {
               let file_url = "";
               if (/^data:image\/[a-zA-Z]+;base64,/.test(imageElement.src)) {
 
-                const file = this.base64ToFile(imageElement.src, 'image.png');
+                const file = this.base64ToFile(imageElement.src, `image${uuidv4()}.png`);
 
                 try {
                   const formData = new FormData();
@@ -1534,6 +1553,7 @@ class TShirtDesigner {
 
     const designs: any[] = [];
     for (const item in this.stages) {
+
       try {
         const designOfStage = {
           final_image_url: "",
@@ -1543,11 +1563,10 @@ class TShirtDesigner {
         const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
         imageDom.crossOrigin = 'anonymous';
 
-
         if (this.stages[item] == this.currentStage) {
           //if (this.currentStage.stage?.getChildren() > 0) {
           const stageBase64 = await this.exportStage(this.stages[item], imageDom);
-          const file = this.base64ToFile(stageBase64, 'image.png');
+          const file = this.base64ToFile(stageBase64, `image${uuidv4()}.png`);
 
           const formData = new FormData();
           formData.append('file', file);
@@ -1560,18 +1579,22 @@ class TShirtDesigner {
         }
         else {
           if (this.faceImage[this.data[item].code] != "" && this.faceImage[this.data[item].code] != null) {
-            const stageBase64 = this.faceImage[this.data[item].code];
-            const file = this.base64ToFile(stageBase64, 'image.png');
+            let stageBase64 = this.faceImage[this.data[item].code];
 
-            const formData = new FormData();
-            formData.append('file', file);
-            const response = await uploadImageRaw(formData);
+            if (stageBase64.startsWith('http://') || stageBase64.startsWith('https://')) {
+              stageBase64 = await this.urlToBase64(this.faceImage[this.data[item].code]);
+            }
+            const file = this.base64ToFile(stageBase64, `image${uuidv4()}.png`);
+
+            const formData1: FormData | null = new FormData();
+            formData1.append('file', file);
+            const response = await uploadImageRaw(formData1);
             designOfStage.final_image_url = (response as { file?: { file_url?: string } }).file?.file_url ?? "";
+
           }
           else {
             designOfStage.final_image_url = this.data[item].image;
           }
-
         }
 
         designOfStage.designs = await getStageInfo(this.stages[item]);
@@ -2266,7 +2289,7 @@ class TShirtDesigner {
   public setRSOfNode(instance: number | null) {
 
     if (this.currentStage.selectedNode != null) {
-      var node = this.currentStage.selectedNode;
+      const node = this.currentStage.selectedNode;
       node.offsetX(0);
       node.offsetY(0);
       node.x(node.x() - node.width() / 2);
@@ -2566,7 +2589,7 @@ class TShirtDesigner {
 
 
       if (child instanceof Konva.Text) {
-        const node = child as Konva.Text;
+        const node = child;
         Nodes.push({
           Id: node.id(),
           Type: "text",
@@ -2586,7 +2609,7 @@ class TShirtDesigner {
         });
       }
       else if (child instanceof Konva.Image) {
-        const node = child as Konva.Image;
+        const node = child;
         const imageElement = node.image() as HTMLImageElement;
         Nodes.push({
           Id: node.id(),

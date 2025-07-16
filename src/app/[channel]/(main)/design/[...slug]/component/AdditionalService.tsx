@@ -59,9 +59,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
         }
     };
 
-    //const numberVarianId = Number(extractNumericId(variantId));
-    //const entries = Object.entries(images);
-
     console.log(images);
     const [services, setServices] = useState<Service[]>([]);
     const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set()); // danh sach service se duoc chon
@@ -84,9 +81,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 
     }, [printTechChild]);
 
-    //const variantsSelected = listVariantIds;
-
-    // State chọn variant trong bước đầu
     const [selectedVariants, setSelectedVariants] = useState<VariantPrice[]>([{
         variantId: variantId,
         quanlity: quantity
@@ -165,41 +159,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
         }
         return result;
     }
-    /*const caculatorPriceOfOneVariant = async () => {
-        const resultPricePrintingRules = await getPrintingPriceRules(numberVarianId, [
-            printTech,
-            PrintingTechnology.None,
-        ]);
-        let blankPrice = 0;
-        if (resultPricePrintingRules) {
-            for (const rule of resultPricePrintingRules) {
-                const condition = rule.node.condition;
-                if (
-                    condition &&
-                    condition.minQuantity !== null &&
-                    condition.maxQuantity !== null &&
-                    condition.minQuantity &&
-                    condition.maxQuantity &&
-                    condition.printingTechnology !== null &&
-                    quantity >= condition.minQuantity &&
-                    quantity <= condition.maxQuantity
-                ) {
-                    if (
-                        condition.printingTechnology === PrintingTechnology.None &&
-                        rule.node.price
-                    ) {
-                        setBlankShirtPrice(rule.node.price);
-                        blankPrice = rule.node.price;
-                    }
-
-                    if (condition.printingTechnology === printTech && rule.node.price) {
-                        setPrintingPrice(rule.node.price - blankPrice);
-                    }
-                }
-            }
-        }
-
-    }*/
 
     const getProductDetailOfDesign = async () => {
         let listProductDetail: any[] = [];
@@ -227,7 +186,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                 listProductDetail = product.variants;
             }
         }
-
         return listProductDetail;
     }
 
@@ -238,7 +196,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
         let totalUnitTotalPrice = 0;
         let totalSaleUnitTotalPrice = 0;
         for (const item of selectVatriantIds) {
-
             const numberVarianId = extractNumericId(item.variantId);
 
             const resultPricePrintingRules: any[] = []
@@ -246,18 +203,14 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
             const printSides = [PrintSide.Front, PrintSide.Back, PrintSide.None];
 
             for (const p of printSides) {
-                const data = await getPrintingPriceRules(Number(numberVarianId), [
+                const data = await getPrintingPriceRules([
                     printTechChildRef.current,
                     PrintingTechnology.None,
-                ], channel, p);
+                ], channel, p, Number(numberVarianId), undefined);
                 if (data && Array.isArray(data)) {
                     resultPricePrintingRules.push(...data);
                 }
-
             }
-
-            console.log('ruleeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', resultPricePrintingRules);
-
 
             let blankPrice = 0;
             let printPrice = 0;
@@ -385,8 +338,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 
         setPriceOfVariantDesign(priceOfVariantDesignTeamp);
         priceOfVariantDesigns(new Set(priceOfVariantDesignTeamp));
-
-        console.log('priceOfVariantDesignTeamp', priceOfVariantDesignTeamp);
 
 
         setBlankShirtPrice(totalBlankPrice);
@@ -582,39 +533,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                 }
                 else if (step == "priceSummary") {
                     caculatorPriceOfListVariant();
-
-                    // let listProductDetail :any[] = [];
-                    // const listProductDetailRaw = localStorage.getItem('listProductDetail');
-                    // const listProductDetail = JSON.parse(listProductDetailRaw);
-                    // console.log('listProductDetailRaw', listProductDetailRaw);
                 }
-
-                // }
-                /*else {
-                    if (step == "selectVariants") {
-                        const listVariantPrice: VariantPrice[] = [];
-                        const listVariantSelect: string[] = [];
-                        let cartData = null;
-                        const cartDataRaw = localStorage.getItem("cartUpdateDesign");
-                        if (cartDataRaw) {
-                            cartData = JSON.parse(cartDataRaw);
-                        }
-                        else {
-                            cartData = await getCheckoutList(channel);
-                        }
-                        for (const line of cartData.checkout.lines) {
-                            listVariantSelect.push(line.variantId)
-                            listVariantPrice.push({
-                                quanlity: line.quantity,
-                                variantId: line.variantId
-                            });
-                        }
-                        setListVariantIds(listVariantPrice);
-                    }
-                    else if (step == "priceSummary") {
-                        caculatorPriceOfOneVariant();
-                    }
-                }*/
                 const resultAdditionalService: any[] = [];
                 let after: string | null = null;
                 let hasNextPage: boolean = true;
@@ -626,8 +545,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                     hasNextPage = data.publicPrintingAdditionalServices?.pageInfo.hasNextPage || false;
                     after = data.publicPrintingAdditionalServices?.pageInfo.endCursor || null;
                 }
-
-
 
                 if (resultAdditionalService) {
                     const service: Service[] = resultAdditionalService.map((i: any) => ({
@@ -741,7 +658,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                 </div>
                             </div>
 
-
                             <div className="mt-4 flex justify-center">
                                 <button
                                     onClick={async () => {
@@ -750,8 +666,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                         const variantIdSelects: AddCartType[] = [];
                                         const priceOfServiceTemp: PriceOfVariantDesign[] = [];// /priceOfServices
                                         const listProductDetail = await getProductDetailOfDesign();
-
-
 
                                         for (const sv of selectedVariants) {
                                             let color = "";
@@ -784,18 +698,67 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                                         quantity: sv.quanlity,
                                                         retail_price: 0
                                                     });
-                                                    break;
                                                 }
                                             }
                                         }
 
                                         variantIds(new Set(variantIdSelects));
+
                                         priceOfVariantDesigns(new Set(priceOfServiceTemp));
                                         setPriceOfVariantDesign(priceOfServiceTemp);
 
 
-
                                         if (printTechChildRef.current == PrintingTechnology.Silk) {
+                                            for (const item of selectedVariants) {
+                                                const printSides = [PrintSide.Front, PrintSide.Back];
+                                                const retailPrice = 0;
+                                                let memberPrice = 0;
+
+                                                for (const p of printSides) {
+
+                                                    const data = await getPrintingPriceRules([
+                                                        PrintingTechnology.Silk,
+                                                    ], channel, p, undefined, item.quanlity);
+
+                                                    console.log('quantity', item.quanlity, data);
+
+
+                                                    if (data && Array.isArray(data)) {
+
+                                                        for (const rule of data) {
+                                                            const condition = rule.node.condition;
+                                                            if (condition && condition.minQuantity !== null &&
+                                                                condition.maxQuantity !== null &&
+                                                                condition.minQuantity &&
+                                                                condition.maxQuantity &&
+                                                                item.quanlity >= condition.minQuantity &&
+                                                                item.quanlity <= condition.maxQuantity
+                                                            ) {
+
+                                                                if (rule.node.usedForCalculation == true && rule.node.minColors == 1 && rule.node.maxColors == 1) {
+                                                                    memberPrice += rule.node.price || 0;
+                                                                    console.log('memberPrice', memberPrice, rule.node.price, rule.node.usedForCalculation, rule.node.minColors, rule.node.maxColors);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                for (const ps of priceOfServiceTemp) {
+                                                    if (ps.variantId == item.variantId) {
+                                                        ps.retail_price = retailPrice;
+                                                        ps.memberPrice = parseFloat(memberPrice.toFixed(2));
+                                                        ps.discount_percentage = Math.floor(((retailPrice - memberPrice) / retailPrice) * 100);
+                                                        ps.has_discount = ps.discount_percentage > 0 ? true : false;
+                                                        break;
+                                                    }
+                                                }
+
+
+                                            }
+                                            console.log('priceOfServiceTemp', priceOfServiceTemp);
+                                            priceOfVariantDesigns(new Set(priceOfServiceTemp));
+                                            setPriceOfVariantDesign(priceOfServiceTemp);
+
                                             if (typeof handlerCheckout === "function") {
                                                 handlerCheckout();
                                             }
@@ -814,111 +777,13 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                 </button>
                             </div>
                         </div>
-                        // <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-hidden p-6">
-                        //     <h2 className="text-2xl font-bold mb-4 text-center">Select Variants</h2>
-
-                        //     <div className="overflow-y-auto space-y-4 max-h-[60vh] pr-2">
-                        //         {listVariantShowSelects.map((variant) => (
-                        //             <label
-                        //                 key={variant.variantId}
-                        //                 className="flex items-center gap-4 border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition cursor-pointer"
-                        //             >
-                        //                 <img
-                        //                     src={variant.image}
-                        //                     alt={variant.name}
-                        //                     className="w-14 h-20 object-cover rounded border"
-                        //                 />
-                        //                 <div className="flex-1">
-                        //                     <p className="text-base font-medium">{variant.name}</p>
-                        //                 </div>
-                        //                 <input
-                        //                     type="checkbox"
-                        //                     checked={selectedVariants.some((v) => v.variantId === variant.variantId)}
-                        //                     onChange={() => toggleVariant(variant.variantId)}
-                        //                     className="accent-[#783c54] w-5 h-5"
-                        //                 />
-                        //             </label>
-                        //         ))}
-
-                        //         <div className="mt-2">
-                        //             <label className="block text-sm font-semibold mb-2">Printing Technology</label>
-                        //             <select
-                        //                 onChange={(e) => {
-                        //                     setPrintTechFromParent(e.target.value as PrintingTechnology);
-                        //                     setPrintTech(e.target.value as PrintingTechnology);
-                        //                 }}
-                        //                 className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-[#783c54] focus:border-[#783c54]"
-                        //             >
-                        //                 <option value="" disabled selected>
-                        //                     Select a printing technology
-                        //                 </option>
-                        //                 <option value={PrintingTechnology.Dtg}>DTG</option>
-                        //                 <option value={PrintingTechnology.Silk}>SILK</option>
-                        //             </select>
-                        //         </div>
-                        //     </div>
-
-                        //     <div className="mt-6 flex justify-center">
-                        //         <button
-                        //             onClick={async () => {
-                        //                 // ... xử lý dữ liệu
-                        //                 if (printTechChildRef.current == PrintingTechnology.Silk) {
-                        //                     handlerCheckout?.();
-                        //                 } else {
-                        //                     setStep("priceSummary");
-                        //                 }
-                        //             }}
-                        //             disabled={selectedVariants.length === 0}
-                        //             className={`w-40 px-4 py-2 rounded-md text-white text-center font-medium transition ${selectedVariants.length === 0
-                        //                 ? "bg-gray-400 cursor-not-allowed"
-                        //                 : "bg-[#2c3c50] hover:bg-[#1f2c3f]"
-                        //                 }`}
-                        //         >
-                        //             Next
-                        //         </button>
-                        //     </div>
-                        // </div>
                     )}
 
                     {/* Bước tính giá */}
                     {step === "priceSummary" && (
                         <>
-
-
-                            {/* Top section: Images */}
-                            {/* <div className="h-[180px] sm:h-[240px] flex items-center gap-2 overflow-x-auto p-2 sm:p-4 border-b border-gray-200 flex-shrink-0">
-                                {entries.map(([code, base64]) => (
-                                    <div
-                                        key={code}
-                                        className="flex flex-col items-center min-w-[100px] max-w-[140px] p-1"
-                                    >
-                                        <img
-                                            src={base64}
-                                            alt={code}
-                                            className="max-h-[120px] sm:max-h-[180px] w-auto object-contain"
-                                        />
-                                        <span className="mt-1 text-xs sm:text-sm text-gray-700">{code}</span>
-                                    </div>
-                                ))}
-                            </div> */}
-
-                            {/* Scrollable content */}
                             <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4">
-
-
                                 <div className="mb-4">
-                                    {/* <div className="mb-4 flex justify-end">
-                                            <button
-                                                onClick={() => setShowVariantsDropdown((prev) => !prev)}
-                                                className="px-4 py-2 border rounded-md bg-white hover:bg-gray-100 w-64 flex justify-between items-center"
-                                            >
-                                                <span>Price Details</span>
-                                                {showVariantsDropdown ? <ChevronUp /> : <ChevronDown />}
-                                            </button>
-                                        </div> */}
-
-
-                                    {/* {showVariantsDropdown && ( */}
                                     <div className="mt-2 w-full border rounded-md bg-white shadow-sm overflow-x-auto">
                                         <table className="min-w-full text-left border border-gray-200 text-sm">
                                             <thead>
@@ -965,17 +830,13 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                                                         {(variant.blankPrice != 0 && variant.blankPrice > variant.salePriceBlank) ? (
                                                                             <>
                                                                                 <div className="flex items-baseline gap-x-2 justify-end">
-                                                                                    {/* <span className="text-sm text-[#B12704] font-semibold">
-                                                                                        -{(((variant.blankPrice - variant.salePriceBlank) / variant.blankPrice) * 100).toFixed(2)}%
-                                                                                    </span> */}
+
                                                                                     <span className="line-through text-gray-600">${variant.blankPrice.toFixed(2)}</span>
                                                                                     <span className="text-lg font-bold text-gray-900 leading-none">
                                                                                         ${variant.salePriceBlank.toFixed(2)}
                                                                                     </span>
                                                                                 </div>
-                                                                                {/* <div className="text-gray-600 text-right mt-1">
-                                                                                    <span className="line-through">${variant.blankPrice.toFixed(2)}</span>
-                                                                                </div> */}
+
                                                                             </>
                                                                         )
                                                                             :
@@ -995,17 +856,13 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                                                         {(variant.blankPrice != 0 && variant.blankPrice > variant.salePriceBlank) ? (
                                                                             <>
                                                                                 <div className="flex items-baseline gap-x-2 justify-end">
-                                                                                    {/* <span className="text-sm text-[#B12704] font-semibold">
-                                                                                        -{(((variant.printingPrice - variant.salePricePrinting) / variant.printingPrice) * 100).toFixed(2)}%
-                                                                                    </span> */}
+
                                                                                     <span className="line-through text-gray-600">${variant.printingPrice.toFixed(2)}</span>
                                                                                     <span className="text-lg font-bold text-gray-900 leading-none">
                                                                                         ${variant.salePricePrinting.toFixed(2)}
                                                                                     </span>
                                                                                 </div>
-                                                                                {/* <div className="text-gray-600 text-right mt-1">
-                                                                                    <span className="line-through">${variant.printingPrice.toFixed(2)}</span>
-                                                                                </div> */}
+
                                                                             </>
                                                                         )
                                                                             :
@@ -1023,17 +880,13 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                                                     {/* Total Price */}
                                                                     <td className="px-2 sm:px-4 py-2 border-b text-[#783c54]">
                                                                         <div className="flex items-baseline gap-x-2 justify-end">
-                                                                            {/* <span className="text-sm text-[#B12704] font-semibold">
-                                                                                -{(((variant.unitTotalPrice - variant.saleUnitTotalPrice) / variant.unitTotalPrice) * 100).toFixed(2)}%
-                                                                            </span> */}
+
                                                                             <span className="line-through">${variant.unitTotalPrice.toFixed(2)}</span>
                                                                             <span className="text-lg font-bold leading-none">
                                                                                 ${variant.saleUnitTotalPrice.toFixed(2)}
                                                                             </span>
                                                                         </div>
-                                                                        {/* <div className="text-gray-600 text-right mt-1">
-                                                                            <span className="line-through">${variant.unitTotalPrice.toFixed(2)}</span>
-                                                                        </div> */}
+
                                                                     </td>
 
                                                                     <td className="py-2 border-b text-right">
@@ -1088,90 +941,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                                                     </tr>
                                                                 )
                                                                 }
-
-
-                                                                {/* {isExpanded && (
-                                                                    <tr className="bg-gray-50">
-                                                                        <td colSpan={6} className="px-4 py-3 border-b">
-                                                                            <div className="space-y-4 text-sm">
-
-                                                                                
-                                                                <div className="flex justify-between">
-                                                                    <strong>Blank Price:</strong>
-                                                                    <div className="text-right">
-                                                                        {variant.blankPrice !== 0 && variant.blankPrice > variant.salePriceBlank ? (
-                                                                            <>
-                                                                                <div className="flex items-baseline gap-x-2 justify-end">
-                                                                                    <span className="text-sm text-[#B12704] font-semibold">
-                                                                                        -{(((variant.blankPrice - variant.salePriceBlank) / variant.blankPrice) * 100).toFixed(2)}%
-                                                                                    </span>
-                                                                                    <span className="font-bold text-gray-900">${variant.salePriceBlank.toFixed(2)}</span>
-                                                                                </div>
-                                                                                <div className="text-gray-600 text-xs mt-1 text-right">
-                                                                                    <span className="line-through">${variant.blankPrice.toFixed(2)}</span>
-                                                                                </div>
-                                                                            </>
-                                                                        ) : (
-                                                                            <span className="font-bold text-gray-900">${variant.salePriceBlank.toFixed(2)}</span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-
-                                                     
-                                                                <div className="flex justify-between">
-                                                                    <strong>Printing Price:</strong>
-                                                                    <div className="text-right">
-                                                                        {variant.blankPrice !== 0 && variant.blankPrice > variant.salePriceBlank ? (
-                                                                            <>
-                                                                                <div className="flex items-baseline gap-x-2 justify-end">
-                                                                                    <span className="text-sm text-[#B12704] font-semibold">
-                                                                                        -{(((variant.printingPrice - variant.salePricePrinting) / variant.printingPrice) * 100).toFixed(2)}%
-                                                                                    </span>
-                                                                                    <span className="font-bold text-gray-900">${variant.salePricePrinting.toFixed(2)}</span>
-                                                                                </div>
-                                                                                <div className="text-gray-600 text-xs mt-1 text-right">
-                                                                                    <span className="line-through">${variant.printingPrice.toFixed(2)}</span>
-                                                                                </div>
-                                                                            </>
-                                                                        ) : (
-                                                                            <span className="font-bold text-gray-900">${variant.salePricePrinting.toFixed(2)}</span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-
-                                                     
-                                                                <div className="flex justify-between">
-                                                                    <strong>Unit Total Price:</strong>
-                                                                    <div className="text-right text-[#783c54] font-semibold">
-                                                                        <div className="flex items-baseline gap-x-2 justify-end">
-                                                                            <span className="text-sm text-[#B12704] font-semibold">
-                                                                                -{(((variant.unitTotalPrice - variant.saleUnitTotalPrice) / variant.unitTotalPrice) * 100).toFixed(2)}%
-                                                                            </span>
-                                                                            <span className="font-bold">${variant.saleUnitTotalPrice.toFixed(2)}</span>
-                                                                        </div>
-                                                                        <div className="text-gray-600 text-xs mt-1 text-right">
-                                                                            <span className="line-through">${variant.unitTotalPrice.toFixed(2)}</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                              
-                                                                <div className="flex justify-between">
-                                                                    <strong>Quantity:</strong>
-                                                                    <span>x{variant.quantity}</span>
-                                                                </div>
-
-                                                              
-                                                                <div className="flex justify-between">
-                                                                    <strong>Total Item Price:</strong>
-                                                                    <span className="text-[#783c54] font-bold">
-                                                                        ${(variant.saleUnitTotalPrice * variant.quantity).toFixed(2)}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                                        </td>
-                                        </tr>
-                                                                )} */}
                                                             </React.Fragment>
                                                         );
                                                     })
@@ -1331,9 +1100,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                 </div>
             )
             }
-
         </>
-
     );
 };
 

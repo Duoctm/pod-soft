@@ -2158,16 +2158,16 @@ function DesignPage(param: DesignPageProps) {
 
                     setSpinner(true);
                     if (designerRef.current != null) {
-
                       let metaData = null;
 
                       if (totalObjectInsert && totalObjectInsert > 0) {
                         metaData = (await designerRef.current.exportDesignToJson()) as any;
+                        console.log('metaData', metaData);
                       }
 
                       const items = Array.from(variantIdsRef.current);
 
-
+                      console.log('priceOfVariantDesignRef.current', priceOfVariantDesignRef.current);
                       const result = await addCartMultiItem(param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
                       if (result.success) {
                         toast.success("Design added to cart successfully");
@@ -2179,8 +2179,6 @@ function DesignPage(param: DesignPageProps) {
                     setTimeout(() => {
                       router.push(`/${param.channel}/cart`);
                     }, 2000);
-
-
                   }
 
                   handlerCheckoutRef.current = handleAddToCart;
@@ -2193,7 +2191,7 @@ function DesignPage(param: DesignPageProps) {
                   }
                   setIsShowAddionalService(true);
                 }
-                //setSpinner(false);
+                setSpinner(false);
               }}
             >
               Add to Cart

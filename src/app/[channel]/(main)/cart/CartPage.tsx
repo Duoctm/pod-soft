@@ -197,6 +197,7 @@ export function CartPage({ params }: CartPageProps) {
 
 
 
+
 	const handleCheckOrderIncludeValue = (items: CheckoutLine[], value: PrintingTechnology) => {
 		return items.some((item) => {
 			const printingMeta = item.metadata?.find((meta) => meta.key === "printing_info");

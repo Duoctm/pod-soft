@@ -1,12 +1,12 @@
 "use server";
 import { invariant } from "ts-invariant";
-import { checkoutLinesAddMultipleItems } from "./checkoutLinesAddMultipleItems";
-import * as Checkout from "@/lib/checkout";
-import { CurrentUserDocument, MetadataInput, CheckoutDeleteLinesDocument, CheckoutFindDocument, PrintingTechnology } from "@/gql/graphql";
 import { redirect } from "next/navigation";
+import { checkoutLinesAddMultipleItems } from "./checkoutLinesAddMultipleItems";
+import { type AddCartType, type PriceOfVariantDesign } from "./type";
+import * as Checkout from "@/lib/checkout";
+import { CurrentUserDocument, type MetadataInput, CheckoutDeleteLinesDocument, CheckoutFindDocument, PrintingTechnology } from "@/gql/graphql";
 import { executeGraphQL } from "@/lib/graphql";
 //import { VariantPrice } from "../component/type"
-import { AddCartType, PriceOfVariantDesign } from "./type";
 
 export type ErrorResponse = {
     error: number;
@@ -34,6 +34,7 @@ export async function addCartMultiItem(
 ) {
     "use server";
     try {
+        console.log('priceInfo', priceInfo);
         const { me: user } = await executeGraphQL(CurrentUserDocument, {
             cache: "no-cache",
         });
@@ -57,7 +58,7 @@ export async function addCartMultiItem(
             let metadataOfItem = null;
 
             if (metadata && metadata != "null") {
-                let metadataObject = JSON.parse(metadata) as any;
+                const metadataObject = JSON.parse(metadata) as any;
                 metadataOfItem = metadataObject;
                 metadataOfItem.variantId = line.variantId;
                 metadataOfItem.productId = line.productId;
@@ -154,11 +155,11 @@ function createNewPrintingInfoMetadata(metadataDesign: string, serviceIds: strin
             }
         }
     }
-    return {
+    return [{
         print_side: "ALL",
         printing_technology: printing_technology,
         additional_service_ids: serviceIds
-    };
+    }];
 };
 
 function createNewPricingInfoMetadata(variantId: string, priceInfo: PriceOfVariantDesign[]) {
