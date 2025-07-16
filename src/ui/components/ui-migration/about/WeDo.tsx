@@ -15,7 +15,7 @@ const WeDo = () => {
 
 
             <Image
-                src={'/images/we-do.webp'}
+                src={'/images/we-do_1.webp'}
                 alt='We Do'
                 fill
                 className='object-cover object-center -z-10 blur-sm md:blur-none '

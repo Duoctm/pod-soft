@@ -31,7 +31,7 @@ const Services = ({ channel }: { channel: string }) => {
             ],
             "status": "available",
             "icon": "/icons/silk-printing.svg",
-            "image": "/images/we-do.webp ",
+            "image": "/images/we-do_1.webp ",
             linkHref: `/${channel}/products`
         },
         {
