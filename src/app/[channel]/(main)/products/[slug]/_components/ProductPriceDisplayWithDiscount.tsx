@@ -78,9 +78,7 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
             return (
                 <div className="price-container">
                     <div className="contact-quote bg-[#FA9633]/10 border border-[#FA9633] rounded-lg px-4 py-2 transition-all duration-300 ease-in-out">
-                        <span className="text-lg font-semibold text-[#FA9633]">
-                            Contact for Quote
-                        </span>
+
                     </div>
                 </div>
             );
@@ -184,9 +182,7 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
                 return (
                     <div className="flex flex-col">
                         <div className="bg-[#FA9633]/10 border border-orange-300 rounded-lg px-4 py-2">
-                            <span className="text-lg font-semibold text-orange-700">
-                                Contact for Quote
-                            </span>
+
                         </div>
                     </div>
                 );
@@ -215,9 +211,7 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
                 return (
                     <div className="flex flex-col transition-all duration-300 ease-in-out">
                         <div className="bg-[#FA9633]/10 border border-[#FA9633] rounded-lg px-4 py-2 transition-all duration-300 ease-in-out">
-                            <span className="text-lg font-semibold text-[#FA9633] transition-all duration-300 ease-in-out">
-                                Contact for Quote
-                            </span>
+
                         </div>
                     </div>
                 );
