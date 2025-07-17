@@ -3,7 +3,7 @@
 
 import Image from "next/image";
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 
 import { CheckoutLink } from "./CheckoutLink";
 import { DeleteLineButton } from "./DeleteLineButton";
@@ -69,6 +69,10 @@ const QuantityInput = ({
 	}, [debouncedValue]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (Number(e.target.value) > 100000) {
+			toast.warning("You’ve entered a quantity that exceeds our limit. Please contact our sales team for a better quote!")
+			return;
+		}
 		setInputValue(e.target.value);
 	};
 
