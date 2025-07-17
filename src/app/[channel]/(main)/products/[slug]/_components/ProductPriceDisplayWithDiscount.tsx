@@ -120,9 +120,6 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
                 <span className="price-main ml-2 text-3xl font-extrabold text-[#F58A71] transition-all duration-300 ease-in-out md:text-4xl lg:text-5xl">
                     {formatMoney(currentPricing.price, currentPricing.currency)}
                 </span>
-                {!hasUser && (
-                    <span className="price-label text-xs text-gray-600 transition-all duration-300 ease-in-out">Retail Price</span>
-                )}
             </div>
         );
     }
