@@ -15,9 +15,10 @@ export async function getPublicPrintingPriceRules({
     channel: string
     printingTechnologies: PrintingTechnology[];
     usedForCalculation?: boolean;
-    printSide: PrintSide;
+    printSide?: PrintSide;
     objectIds: number[];
     minQuantity?: number;
+    signal?: AbortSignal;
 }) {
     try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -31,8 +32,7 @@ export async function getPublicPrintingPriceRules({
                     minQuantity: minQuantity
                 },
                 channel: channel
-            }
-
+            },
 
         })
 

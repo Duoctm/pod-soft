@@ -43,7 +43,7 @@ const ProductAttributeSelector: React.FC<ProductAttributeSelectorProps> = ({
 	}
 
 	return (
-		<div className="my-6">
+		<div className="my-2 lg:my-6">
 			<h2 className="mb-2 text-sm font-semibold">{name}</h2>
 			<div className={"flex flex-wrap gap-1 md:gap-2"}>
 				{sortedValues

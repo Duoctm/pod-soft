@@ -6,7 +6,7 @@ import type { ProductVariant, UserDetailsFragment } from '@/gql/graphql';
 interface ProductActionsProps {
     loading: boolean;
     addtoCartLoading: boolean;
-    user: UserDetailsFragment | undefined;
+    user?: UserDetailsFragment | undefined;
     selectedVariant: ProductVariant | null;
     isShowDesignButton: boolean;
     fromDesign?: boolean;
@@ -19,7 +19,6 @@ interface ProductActionsProps {
 const ProductActions: React.FC<ProductActionsProps> = ({
     loading,
     addtoCartLoading,
-    user,
     selectedVariant,
     isShowDesignButton,
     fromDesign,
@@ -76,18 +75,14 @@ const ProductActions: React.FC<ProductActionsProps> = ({
                             )}
                         </button>
                     </div>
-                    {user && (
-
-                        <button
-                            type="button"
-                            className="flex items-center justify-center gap-2 rounded-lg border px-5 py-2 text-sm font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto"
-                            onClick={onShowMarginPrice}
-                        >
-                            <Info className="h-4 w-4" />
-                            <span className="whitespace-nowrap">Provider Info</span>
-                        </button>
-
-                    )}
+                    <button
+                        type="button"
+                        className="flex items-center justify-center gap-2 rounded-lg border px-5 py-2 text-sm font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:bg-[#8B3958]/90 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#8B3958] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto"
+                        onClick={onShowMarginPrice}
+                    >
+                        <Info className="h-4 w-4" />
+                        <span className="whitespace-nowrap">Provider Info</span>
+                    </button>
                 </div>
             )}
             {fromDesign === true && (

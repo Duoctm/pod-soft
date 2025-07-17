@@ -217,7 +217,6 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                         "node" | "__typename"
                     >[]) || null;
 
-                console.log(edges)
                 setListProductPriceRules(edges);
 
                 if (edges && edges.length > 0) {
@@ -824,7 +823,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                 <MarginPricePopup
                     open={showMarginPrice}
                     onClose={() => setShowMarginPrice(false)}
-                    title="DTG"
+                    title={printTechnology as string}
                     listMarginPrice={listProductPriceRules}
                     variantValues={listParams ?? []}
                 />

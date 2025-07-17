@@ -18,12 +18,14 @@ import { useProductDetail } from "./hooks/useProductDetail";
 import { useUser } from "./hooks/useUser";
 import { usePrintingPriceRules } from "./hooks/usePrintingPriceRules";
 import { useAdditionalServices } from "./hooks/useAdditionalServices";
+import { useLargeQuantityInput } from "./hooks/useLargeQuantityInput";
 
 import { addCart } from "./actions/addCart";
+import { getPublicPrintingPriceRules } from "./actions/getPublicPrintingPriceRules";
 import { useNavigateLogin } from "@/hooks/useNavigateLogin";
 import Wrapper from "@/ui/components/wrapper";
 import { getUser } from "@/actions/user";
-import { PrintingTechnology, type ProductVariant, type PrintingPriceRuleCountableEdge } from "@/gql/graphql";
+import { PrintingTechnology, PrintSide, type ProductVariant, type PrintingPriceRuleCountableEdge } from "@/gql/graphql";
 
 import "react-toastify/dist/ReactToastify.css";
 
@@ -98,12 +100,21 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
     // Custom hooks
     const { productDetail, loading, selectedVariant, setSelectedVariant, getProductDetail } = useProductDetail(slug, channel);
     const { user, hasUser, fetchUser } = useUser();
-    const { productPriceRules, listProductPriceRules, fetchPrintingPriceRules, initializePricing, resetPricing: _resetPricing, getPriceForColorAndSize: _getPriceForColorAndSize } = usePrintingPriceRules(channel, hasUser);
+    const {
+        productPriceRules,
+        listProductPriceRules,
+        fetchPrintingPriceRules,
+        initializePricing,
+        resetPricing: _resetPricing,
+        getPriceForColorAndSize: _getPriceForColorAndSize
+    } = usePrintingPriceRules(channel, hasUser);
     const { publicPrintingAdditionalServices, services, serviceDetails, getPublicPrintingAdditionalServices, handleSetOptions } = useAdditionalServices(channel);
 
     // Local state
     const [showSizeGuide, setShowSizeGuide] = useState(false);
     const [showMarginPrice, setShowMarginPrice] = useState(false);
+    const [listMarginPrice, setListMarginPrice] = useState<any[]>([]);
+    const [_marginPriceLoading, setMarginPriceLoading] = useState(false);
     const [imagesLoading, setImagesLoading] = useState<boolean>(false);
     const [sizeQuantities, setSizeQuantities] = useState<SizeQuantities>({});
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -119,6 +130,17 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         if (!productDetail?.description) return null;
         return parseDescription(productDetail.description, 3);
     }, [productDetail?.description]);
+
+    // Memoized current quantity calculation
+    const currentQuantity = useMemo(() => {
+        if (!currentColor || !sizeQuantities[currentColor]) return 0;
+        return Object.values(sizeQuantities[currentColor]).reduce((total, item) => total + item.quantity, 0);
+    }, [currentColor, sizeQuantities]);
+
+    // Memoized size quantities for current color
+    const currentColorSizeQuantities = useMemo(() => {
+        return currentColor ? sizeQuantities[currentColor] ?? {} : {};
+    }, [currentColor, sizeQuantities]);
 
     // Effects
     useEffect(() => {
@@ -176,6 +198,69 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         }
     }, [currentColor, selectedVariant, initializePricing, printTechnology, selectedSize]); // Removed productPriceRules dependency
 
+    // Function to fetch margin price using new API
+    const fetchMarginPrice = useCallback(async () => {
+        if (!selectedVariant || !channel) return;
+
+        try {
+            setMarginPriceLoading(true);
+
+            // Extract objectId from selectedVariant.id
+            let objectId: number | null = null;
+            try {
+                objectId = parseInt(atob(selectedVariant.id).split(":")[1]);
+            } catch (error) {
+                console.error('🔧 Error extracting objectId from variantId:', error);
+                objectId = null;
+            }
+
+            if (!objectId) {
+                console.warn('⚠️ Could not extract objectId from variant:', selectedVariant.id);
+                setListMarginPrice([]);
+                return;
+            }
+
+            // Determine printSide based on print technology
+            const printSide = printTechnology === "NONE" ? PrintSide.None : PrintSide.All;
+
+            console.log('🚀 Fetching margin price with params:', {
+                channel,
+                printingTechnologies: ['DTG', 'NONE'], // hardcoded as requested
+                printSide,
+                objectIds: [objectId],
+                printTechnology,
+                variantId: selectedVariant.id
+            });
+
+            const result = await getPublicPrintingPriceRules({
+                channel,
+                printingTechnologies: [PrintingTechnology.Dtg, PrintingTechnology.None], // hardcoded
+                objectIds: [objectId],
+                usedForCalculation: hasUser // Use appropriate rules based on user status
+            });
+
+            if (result?.edges) {
+                console.log('✅ Margin price fetched successfully:', result.edges, 'rules');
+                setListMarginPrice(result.edges);
+            } else {
+                console.warn('⚠️ No margin price rules found');
+                setListMarginPrice([]);
+            }
+        } catch (error) {
+            console.error('❌ Error fetching margin price:', error);
+            setListMarginPrice([]);
+        } finally {
+            setMarginPriceLoading(false);
+        }
+    }, [selectedVariant, channel, printTechnology, hasUser]);
+
+    // Fetch margin price when dependencies change
+    useEffect(() => {
+        if (showMarginPrice) {
+            void fetchMarginPrice();
+        }
+    }, [showMarginPrice, fetchMarginPrice]);
+
     // Fetch price when selected size changes (backup for cases not handled by handleSizeSelect)
     // Using refs to avoid dependency loops with productPriceRules
     const priceCache = React.useRef(productPriceRules);
@@ -207,9 +292,16 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                 usingNoneForDTG: printTechnology === "DTG"
             });
 
-            void fetchPrintingPriceRules(selectedVariant.id, currentColor, currentQuantity, selectedPrintingTechnology, selectedSize);
+            // Use old API for pricing fetch
+            void fetchPrintingPriceRules(
+                selectedVariant.id,
+                currentColor,
+                currentQuantity,
+                selectedPrintingTechnology,
+                selectedSize
+            );
         }
-    }, [selectedSize, currentColor, selectedVariant, sizeQuantities, printTechnology, fetchPrintingPriceRules]); // Removed productPriceRules dependency
+    }, [selectedSize, currentColor, selectedVariant, sizeQuantities, printTechnology, fetchPrintingPriceRules]);
 
     // Handle quantity changes only - REMOVED to prevent duplicate API calls
     // This useEffect was causing multiple API calls when quantity changes
@@ -352,7 +444,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                     usingNoneForDTG: printTechnology === "DTG"
                 });
 
-                // Force fetch by calling the API directly
+                // Use old API for pricing fetch
                 void fetchPrintingPriceRules(
                     selectedVariant.id,
                     currentColor,
@@ -364,62 +456,86 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         }
     }, [currentColor, selectedVariant, sizeQuantities, printTechnology, fetchPrintingPriceRules]);
 
-    const handleQuantityChange = useCallback(async (size: string, quantity: number) => {
-        if (!currentColor || !selectedVariant) return;
-        const validQty = quantity > 0 ? quantity : 1;
-
-        console.log('📊 handleQuantityChange called:', {
+    // Large quantity input handler using old API
+    const largeQuantityHandler = useCallback(async (
+        variantId: string,
+        colorId: string,
+        quantity: number,
+        printingTechnology?: PrintingTechnology,
+        size?: string
+    ) => {
+        console.log('� Large quantity handler called:', {
+            variantId,
+            colorId,
+            quantity,
+            printingTechnology,
             size,
-            originalQuantity: quantity,
-            validQty,
-            currentColor,
-            printTechnology,
-            selectedVariant: selectedVariant.id,
             timestamp: new Date().toISOString()
         });
 
+        // Use old API directly
+        await fetchPrintingPriceRules(variantId, colorId, quantity, printingTechnology, size);
+    }, [fetchPrintingPriceRules]);
+
+    // Large quantity input hook for smooth UX
+    const {
+        handleInputChange: handleLargeQuantityInput,
+        initializeQuantity: _initializeQuantity,
+        getQuantityState: _getQuantityState,
+        cancelAllRequests: _cancelAllRequests
+    } = useLargeQuantityInput({
+        onQuantityChange: largeQuantityHandler,
+        debounceDelay: 300
+    });
+
+    // Handler for quantity changes with state update
+    const handleQuantityChange = useCallback((size: string, quantity: number) => {
+        if (!currentColor || !selectedVariant) return;
+
+        const validQty = Math.max(0, quantity);
+
+        console.log('📊 handleQuantityChange called:', {
+            size,
+            quantity,
+            validQty,
+            currentColor,
+            selectedVariant: selectedVariant.id
+        });
+
+        // Update local state immediately for better UX
         setSizeQuantities((prev) => {
             const colorSizes = { ...(prev[currentColor] || {}) };
-            if (quantity === 0) {
+            if (validQty === 0) {
                 delete colorSizes[size];
-                console.log('🗑️ Removed size entry for:', size);
             } else {
                 colorSizes[size] = {
                     quantity: validQty,
-                    variantId: selectedVariant?.id || "",
+                    variantId: selectedVariant.id,
                 };
-                console.log('📝 Updated size entry:', { size, quantity: validQty });
             }
 
             const newState = {
                 ...prev,
                 [currentColor]: colorSizes,
             };
-
-            console.log('📦 New sizeQuantities state:', newState);
             return newState;
         });
 
-        // Convert string to PrintingTechnology enum for quantity change
-        // For DTG, use None technology for pricing
-        const selectedPrintingTechnology = printTechnology === "DTG"
-            ? PrintingTechnology.None
-            : convertStringToPrintingTechnology(printTechnology);
+        // Use large quantity input handler for API calls with debouncing
+        if (validQty > 0) {
+            const printingTech = printTechnology === "DTG"
+                ? PrintingTechnology.None
+                : convertStringToPrintingTechnology(printTechnology);
 
-        console.log('💰 About to fetch price rules:', {
-            variantId: selectedVariant.id,
-            colorId: currentColor,
-            size: size,
-            quantity: validQty,
-            printTechnology,
-            convertedTechnology: selectedPrintingTechnology,
-            enumValue: String(selectedPrintingTechnology),
-            usingNoneForDTG: printTechnology === "DTG"
-        });
-
-        void fetchPrintingPriceRules(selectedVariant.id, currentColor, validQty, selectedPrintingTechnology, size);
-
-    }, [selectedVariant, currentColor, fetchPrintingPriceRules, printTechnology]);
+            handleLargeQuantityInput(
+                size,
+                String(validQty),
+                selectedVariant.id,
+                currentColor,
+                printingTech
+            );
+        }
+    }, [currentColor, selectedVariant, printTechnology, handleLargeQuantityInput]);
 
     const handleClickAddToCart = useCallback(async () => {
         setAddToCartLoading(true);
@@ -488,7 +604,14 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                     originalPrintTech: printTechnology
                 });
 
-                await fetchPrintingPriceRules(variantId, currentColor, quantity, PrintingTechnology.None, size);
+                // Use old API for pricing fetch
+                await fetchPrintingPriceRules(
+                    variantId,
+                    currentColor,
+                    quantity,
+                    PrintingTechnology.None,
+                    size
+                );
             } else {
                 // For other printing technologies, fetch with the current technology
                 const selectedPrintingTechnology = convertStringToPrintingTechnology(printTechnology);
@@ -501,7 +624,13 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                     selectedPrintingTechnology
                 });
 
-                await fetchPrintingPriceRules(variantId, currentColor, quantity, selectedPrintingTechnology, size);
+                await fetchPrintingPriceRules(
+                    variantId,
+                    currentColor,
+                    quantity,
+                    selectedPrintingTechnology,
+                    size
+                );
             }
 
             // Get the specific price for this color-size combination (after fetch)
@@ -782,8 +911,8 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
     return (
         <Wrapper className="flex min-h-screen flex-col md:flex-row">
             <ToastContainer position="top-center" />
-            <ProductTitle name={productDetail?.name} isLoading={loading} className="mb-7 px-4 md:hidden" />
-            <div className="relative flex w-full max-w-7xl flex-col gap-2 rounded-lg px-4 md:flex-row md:gap-8">
+            <ProductTitle name={productDetail?.name} isLoading={loading} className="mb-7 md:hidden" />
+            <div className="relative flex w-full max-w-7xl flex-col gap-2 rounded-lg  md:flex-row md:gap-8">
                 <div className="w-full md:w-1/2 lg:w-[35%]">
                     {selectedVariant ? (
                         loading || imagesLoading ? (
@@ -814,9 +943,9 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                     productPriceRules={productPriceRules}
                     listProductPriceRules={listProductPriceRules}
                     hasUser={hasUser}
-                    currentQuantity={currentColor ? Object.values(sizeQuantities[currentColor] ?? {}).reduce((total, item) => total + item.quantity, 0) : 0}
+                    currentQuantity={currentQuantity}
                     sizeList={sizeList}
-                    sizeQuantities={currentColor ? sizeQuantities[currentColor] ?? {} : {}}
+                    sizeQuantities={currentColorSizeQuantities}
                     selectedSize={selectedSize}
                     addtoCartLoading={addtoCartLoading}
                     user={user}
@@ -854,8 +983,8 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                 <MarginPricePopup
                     open={showMarginPrice}
                     onClose={() => setShowMarginPrice(false)}
-                    title="DTG"
-                    listMarginPrice={listProductPriceRules?.rulesForDisplay || []}
+                    title={printTechnology as string}
+                    listMarginPrice={listMarginPrice}
                     variantValues={listParams ?? []}
                 />
             )}

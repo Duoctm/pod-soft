@@ -74,7 +74,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             <div className="flex flex-1 flex-grow flex-col">
                 <ProductTitle name={productDetail?.name} isLoading={loading} className="hidden md:flex" />
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between my-2">
                     <ProductPriceDisplayWithDiscount
                         loading={loading}
                         currentColor={currentColor}
@@ -84,9 +84,9 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                         hasUser={hasUser}
                         quantity={currentQuantity}
                     />
-                    <button className="flex items-center gap-x-2" onClick={onShowSizeGuide}>
-                        <Ruler />
-                        <span className="underline">Size Guide</span>
+                    <button className="items-center gap-x-2 flex" onClick={onShowSizeGuide}>
+                        <Ruler className='w-4 h-4 md:w-6 md:h-6' />
+                        <span className="underline text-xs md:text-base">Size Guide</span>
                     </button>
                 </div>
 
@@ -112,7 +112,6 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                     services={publicPrintingAdditionalServices}
                     onChange={onSetOptions}
                 />
-
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-start">
                     <ProductActions
                         loading={loading}
@@ -127,7 +126,6 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                         onShowMarginPrice={onShowMarginPrice}
                     />
                 </div>
-
                 <ProductDescription descriptionHtml={features} isLoading={loading} />
 
                 <div className="block w-full md:hidden">
@@ -136,6 +134,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
                         title="Descriptions"
                     />
                 </div>
+
             </div>
         </div>
     );
