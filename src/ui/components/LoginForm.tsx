@@ -1,9 +1,9 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getUser } from "@/actions/user";
 import { useNavigateLogin } from "@/hooks/useNavigateLogin";
-import { useRouter } from "next/navigation";
 
 // Define types for the GraphQL response
 export interface ErrorDetail {
@@ -79,7 +79,7 @@ export interface ParsedAuthData {
 // 			const channelFromParams = params?.channel || "default-channel";
 // 			const storefrontCallbackUrl = `${storefrontBaseUrl}/${channelFromParams}/auth/keycloak-callback`;
 
-// 			console.log("Storefront callback URL for Keycloak redirect:", storefrontCallbackUrl);
+// 			 
 
 // 			const saleorApiGraphqlEndpoint = process.env.NEXT_PUBLIC_SALEOR_API_URL;
 // 			if (!saleorApiGraphqlEndpoint) {

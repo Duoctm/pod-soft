@@ -117,7 +117,7 @@ function KeycloakCallbackContent() {
                     });
 
                     const result = await response.json() as ObtainTokensResponse;
-                    //console.log("externalObtainAccessTokens response:", result);
+
 
                     const tokenData = result.data?.externalObtainAccessTokens;
 

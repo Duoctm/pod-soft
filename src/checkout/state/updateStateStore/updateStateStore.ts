@@ -73,7 +73,6 @@ const useCheckoutUpdateStateStore = createWithEqualityFn<CheckoutUpdateStateStor
 	}),
 	shallow,
 );
-// useCheckoutUpdateStateStore.subscribe(console.log);
 
 export const useCheckoutUpdateState = (): CheckoutUpdateState => {
 	const { updateState, loadingCheckout, submitInProgress, changingBillingCountry } =
@@ -107,6 +106,6 @@ export function useCheckoutUpdateStateChange(scope: undefined): {
 
 export function useCheckoutUpdateStateChange(scope?: CheckoutUpdateStateScope) {
 	return useCheckoutUpdateStateStore(({ actions: { setUpdateState } }) => ({
-		setCheckoutUpdateState: scope ? setUpdateState(scope) : () => {},
+		setCheckoutUpdateState: scope ? setUpdateState(scope) : () => { },
 	}));
 }

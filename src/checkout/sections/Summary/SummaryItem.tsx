@@ -2,10 +2,10 @@ import { type ReactNode } from "react";
 // eslint-disable-next-line no-restricted-imports
 import Image from "next/image";
 import { useSummaryLineLineAttributesText, getSummaryLineProps } from "./utils";
-import { type CheckoutLineFragment, type OrderLineFragment } from "@/checkout/graphql";
+import { type CheckoutLineFragment } from "@/checkout/graphql";
 import { PhotoIcon } from "@/checkout/ui-kit/icons";
 
-export type SummaryLine = CheckoutLineFragment | OrderLineFragment;
+export type SummaryLine = CheckoutLineFragment;
 
 interface SummaryItemProps {
 	line: SummaryLine;
@@ -13,7 +13,7 @@ interface SummaryItemProps {
 }
 
 export const SummaryItem = ({ line, children }: SummaryItemProps) => {
-	const { productName, productImage } = getSummaryLineProps(line as CheckoutLineFragment);
+	const { productName, productImage } = getSummaryLineProps(line);
 
 	const attributesText = useSummaryLineLineAttributesText(line);
 	return (

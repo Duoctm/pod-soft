@@ -41,7 +41,6 @@ export function UserMenuContainer({ params }: { params?: { channel: string } }) 
 			const storefrontBaseUrl = process.env.NEXT_PUBLIC_STOREFRONT_URL || "http://localhost:3001";
 			const channelFromParams = params?.channel;
 			const storefrontCallbackUrl = `${storefrontBaseUrl}/${channelFromParams}/auth/keycloak-callback`;
-			console.log("🚀 UserMenuContainer.tsx:41 - storefrontCallbackUrl:", storefrontCallbackUrl);
 
 
 

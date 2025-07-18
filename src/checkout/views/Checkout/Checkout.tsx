@@ -172,7 +172,6 @@ export const Checkout = () => {
 		const fetchCheckout = async () => {
 			try {
 				const data = await getCheckoutServer({ id: checkoutId, languageCode: LanguageCodeEnum.EnUs });
-				console.log(data.checkout);
 
 				if (isMounted) {
 					setCheckout(data.checkout as CheckoutType);
@@ -288,8 +287,6 @@ export const Checkout = () => {
 	) => {
 		setSubmitting(true);
 		let hasErrors = false;
-		console.log(mapFormDataToApiAddress(values.shippingAddress))
-
 
 		const shippingAddressUpdateResult: CheckoutShippingAddressUpdateMutation = await updateShippingAddress({
 			checkoutId: checkoutId,
@@ -354,7 +351,7 @@ export const Checkout = () => {
 		//const refreshToken = await GetItemToServerCookie(refreshTokenKey);
 		//await callRefreshToken(refreshTokenKey, refreshToken || "");
 
-		console.log(checkout)
+
 		if (!checkout?.deliveryMethod) {
 			toast.error("Please type shipping address");
 			setIsLoadingPlaceOrder(false);
@@ -419,7 +416,8 @@ export const Checkout = () => {
 		setIsOpenAddressEditDialog(!isOpenAddressEditDialog);
 	};
 
-	console.log(checkout)
+
+	console.log(checkout, "checkout");
 
 
 	return isCheckoutInvalid ? (
@@ -456,12 +454,11 @@ export const Checkout = () => {
 								)}
 							</div>
 
-
 						</div>
 						{
 							checkout ? (<div className="order-1  px-4 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 ">
 								<Suspense fallback={<SummarySkeleton />}>
-									{checkout && <Summary {...checkout} lines={checkout.lines} update={update} onPlaceOrder={handlePlaceOrder} show={Boolean(checkout.shippingAddress)} loading={isLoadingPlaceOrder} />}
+									{checkout && <Summary  {...checkout} lines={checkout.lines} update={update} onPlaceOrder={handlePlaceOrder} show={Boolean(checkout.shippingAddress)} loading={isLoadingPlaceOrder} />}
 								</Suspense>
 							</div>) : null
 						}

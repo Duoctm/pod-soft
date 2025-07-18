@@ -1,4 +1,4 @@
- 
+
 import { NavLink } from "./NavLink";
 
 export const NavLinks = async ({ channel }: { channel: string }) => {

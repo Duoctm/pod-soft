@@ -1,7 +1,9 @@
+/* eslint-disable import/no-cycle */
 "use server"
 
-//import { callRefreshToken } from "./callRefreshToken"
 import { GetItemToServerCookie } from "./actions";
+
+//import { callRefreshToken } from "./callRefreshToken"
 
 type JWTPayload = {
     exp: number;
@@ -27,9 +29,9 @@ export async function checkTokenExpiringSoon() {
         if (!payload.exp) return;
 
 
-        const currentTime = Math.floor(Date.now() / 1000);
-        const secondsLeft = payload.exp - currentTime;
-        console.log("secondsLeft", secondsLeft);
+        // const currentTime = Math.floor(Date.now() / 1000);
+        // const secondsLeft = payload.exp - currentTime;
+
         // if (secondsLeft <= 290) {
         //     const refreshTokenKey = `${process.env.NEXT_PUBLIC_SALEOR_API_URL}+saleor_auth_module_refresh_token`;
         //     const refreshToken = await GetItemToServerCookie(refreshTokenKey);

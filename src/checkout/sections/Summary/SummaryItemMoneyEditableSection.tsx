@@ -2,6 +2,7 @@ import * as yup from "yup";
 import { useEffect, useState } from "react";
 // import { toast } from "react-toastify";
 import { type CheckoutLineFragment } from "@/checkout/graphql";
+import { formatNumber } from "@/lib/utils";
 // import { checkoutLineUpdateServer } from "@/checkout/hooks/useCheckoutLineUpdateServer";
 // import { type CheckoutLineUpdateMutationVariables } from "@/gql/graphql";
 
@@ -55,7 +56,7 @@ export const SummaryItemMoneyEditableSection: React.FC<SummaryItemMoneyEditableS
 		<div className="flex flex-col items-start gap-1 font-sans">
 			{/* Hộp hiển thị quantity */}
 			<div className="w-full rounded-md border border-gray-300 bg-white p-2 text-center text-sm font-medium text-gray-800 shadow-sm">
-				{quantity}
+				{formatNumber(Number(quantity))}
 			</div>
 		</div>
 	);

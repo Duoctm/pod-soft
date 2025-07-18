@@ -44,6 +44,7 @@ const QuantityInput = ({
 	item,
 	handleQuantityChange,
 }: {
+
 	item: CheckoutLine;
 	handleQuantityChange: (id: string, value: number) => void;
 }) => {
@@ -319,37 +320,13 @@ export function CartPage({ params }: CartPageProps) {
 
 
 	const renderCartItem = (item: CheckoutLine) => {
-		console.log("🚀 CartPage.tsx:322 - item:", item);
-
 
 		const totalRetail = item.undiscountedUnitPrice.amount
 		const totalDiscount = (item.totalPrice.gross.amount / item.quantity)
-
-
+		const unitPrice = totalDiscount
 		const itemSavings = ((totalDiscount - totalRetail) / totalRetail) * 100;
-		console.log("🚀 CartPage.tsx:330 - itemSavings:", itemSavings);
-
-
-
-		const pricingInfo = parsePricingInfoFromMetadata(item);
-		const serviceDetail = item.metadata?.find((meta) => meta.key === "service_detail");
-		let serviceDetailPrice = 0;
-
-
-
-		if (serviceDetail && serviceDetail.value) {
-			const parsedValue = JSON.parse(serviceDetail.value) as { price: number, name: string }[];
-			if (Array.isArray(parsedValue)) {
-				serviceDetailPrice = parsedValue.reduce((sum, item) => sum + item.price, 0);
-			}
-		} else {
-			serviceDetailPrice = 0;
-		}
-
-		const unitPrice = (pricingInfo ? pricingInfo.member_price : item.totalPrice.gross.amount / item.quantity) + serviceDetailPrice;
-		const totalPrice = (pricingInfo ? unitPrice * item.quantity : item.totalPrice.gross.amount);
-		const currency = pricingInfo?.currency || item.totalPrice.gross.currency;
-
+		const currency = item.totalPrice.gross.currency || "USD";
+		const totalPrice = item.totalPrice.gross.amount;
 
 
 		// eslint-disable-next-line react-hooks/rules-of-hooks
@@ -416,12 +393,14 @@ export function CartPage({ params }: CartPageProps) {
 					<div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-100">
 						<div>
 							<div className="text-xs text-gray-500 mb-1">Unit Price</div>
-							<div className="text-sm font-medium text-gray-900">{formatMoney(totalRetail, currency)} / {formatMoney(unitPrice, currency)}</div>
+							<div className="text-sm text-gray-500 mb-1">
+								{totalPrice < unitPrice ? <span className="line-through"> {formatMoney(totalRetail, currency)} / </span> : null}  <span className="text-[#F58A71] font-bold">{formatMoney(unitPrice, currency)}</span>
+							</div>
 						</div>
 						<div className="text-right">
 
 							<div className="font-bold text-gray-900 text-xl"><sup className="inline-flex items-center  text-xs text-green-800 font-semibold">
-								({Math.floor((itemSavings))}%)
+								{totalPrice < unitPrice ? `(${Math.floor(itemSavings)}%)` : ""}
 							</sup> {formatMoney(totalPrice, currency)} </div>
 						</div>
 					</div>
@@ -476,6 +455,8 @@ export function CartPage({ params }: CartPageProps) {
 
 				{/* Desktop Layout */}
 				<div className="hidden sm:block">
+					<pre>
+					</pre>
 					<div className="flex items-start gap-4">
 						{/* Product Image */}
 						<div className="relative w-16 h-16 flex-shrink-0 overflow-hidden rounded-lg border bg-gray-50">
@@ -516,9 +497,12 @@ export function CartPage({ params }: CartPageProps) {
 
 								{/* Right: Price Info - With Discount Display */}
 								<div className="text-right flex-shrink-0">
-									<div className="text-sm text-gray-500 mb-1"><span className="line-through"> {formatMoney(totalRetail, currency)}</span> /  <span className="text-[#F58A71] font-bold">{formatMoney(unitPrice, currency)}</span> </div>
+
+									<div className="text-sm text-gray-500 mb-1">
+										{totalPrice < unitPrice ? <span className="line-through"> {formatMoney(totalRetail, currency)} / </span> : <span>Price:</span>}  <span className="text-[#F58A71] font-bold">{formatMoney(unitPrice, currency)}</span>
+									</div>
 									<div className="text-2xl py-2 font-bold text-black"><sup className="inline-flex items-center  text-xs text-green-800 font-semibold">
-										({Math.ceil((itemSavings))}%)
+										{totalPrice < unitPrice ? `(${Math.floor(itemSavings)}%)` : ""}
 									</sup> {formatMoney(totalPrice, currency)} </div>
 								</div>
 							</div>
@@ -590,9 +574,12 @@ export function CartPage({ params }: CartPageProps) {
 
 
 
-		items.forEach((line) => {
-			totalRetail += line.undiscountedUnitPrice.amount * line.quantity
+		items.map((line) => {
+
+			totalRetail = line.totalPrice.gross.amount;
 			totalDiscount += (line.undiscountedUnitPrice.amount - (line.totalPrice.gross.amount / line.quantity)) * line.quantity;
+			totalMember = line.totalPrice.gross.amount;
+
 
 
 			const info = parsePricingInfoFromMetadata(line);
@@ -610,10 +597,6 @@ export function CartPage({ params }: CartPageProps) {
 			}
 
 			if (info) {
-				// Use pricing info when available
-				const lineMemberPrice = info.member_price * line.quantity;
-
-				totalMember += lineMemberPrice;
 				totalQuantity += line.quantity;
 				currency = info.currency || currency;
 
@@ -634,7 +617,6 @@ export function CartPage({ params }: CartPageProps) {
 		});
 
 		// Add services price to both retail and member totals
-		totalRetail += totalServicesPrice;
 		totalMember += totalServicesPrice;
 
 		return { totalRetail, totalMember, totalDiscount, totalQuantity, totalServicesPrice, currency, hasAnyDiscount };

@@ -10,10 +10,10 @@ import {
 	type Money as MoneyType,
 	type CheckoutLineFragment,
 	type GiftCardFragment,
-	type OrderLineFragment,
 } from "@/checkout/graphql";
 import { SummaryItemMoneySection } from "@/checkout/sections/Summary/SummaryItemMoneySection";
 import { type GrossMoney, type GrossMoneyWithTax } from "@/checkout/lib/globalTypes";
+
 
 interface SummaryProps {
 	id: string;
@@ -58,7 +58,8 @@ function parsePricingInfo(metadata: { key: string; value: string }[]): PricingIn
 
 // Aggregate pricing info from all lines
 function aggregatePricing(lines: SummaryLine[]) {
-	let totalRetail = 0;
+
+	let totalRetail = 0; // giá gốc
 	let totalMember = 0;
 	let totalSavings = 0;
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -68,6 +69,14 @@ function aggregatePricing(lines: SummaryLine[]) {
 	let hasDiscount = false;
 
 	lines.forEach((line) => {
+
+
+		totalRetail = line.totalPrice.gross.amount
+		totalMember += line.unitPrice.gross.amount * line.quantity;
+		totalSavings += ((line.undiscountedUnitPrice.amount - line.unitPrice.gross.amount) * line.quantity);
+		totalQuantity += line.quantity;
+
+
 		// Use type assertion to access metadata if it exists
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 		const metadata = (line as any).metadata;
@@ -77,10 +86,10 @@ function aggregatePricing(lines: SummaryLine[]) {
 		const info = parsePricingInfo(metadata as { key: string; value: string }[]);
 
 		if (info) {
-			totalRetail += info.retail_price * info.quantity;
-			totalMember += info.member_price * info.quantity;
-			totalSavings += (info.retail_price - info.member_price) * info.quantity;
-			totalQuantity += info.quantity;
+			// totalRetail += info.retail_price * info.quantity;
+
+			// totalSavings += (info.retail_price - info.member_price) * info.quantity;
+
 			discountPercent = info.discount_percentage; // Use last, or could average if needed
 			currency = info.currency;
 			if (info.has_discount) hasDiscount = true;
@@ -118,10 +127,16 @@ export const Summary: FC<SummaryProps> = ({
 }) => {
 
 
+
+
 	const { totalRetail, totalSavings, currency } = aggregatePricing(lines);
 	const saleDiscount = totalSavings;
 	const voucherDiscount = discount?.amount || 0;
-	const totalSavingsAmount = saleDiscount + voucherDiscount;
+
+
+	const totalSavingsAmount = saleDiscount + voucherDiscount + (shippingPrice?.gross?.amount || 0);
+
+
 
 	// const hanlePriceBeforeAddVoucher = (priceGross: MoneyType, voucherDiscount: number) => {
 	// 	if (!voucherCode) return priceGross;
@@ -140,16 +155,16 @@ export const Summary: FC<SummaryProps> = ({
 					<ChevronDownIcon className="mb-2 group-open:rotate-180" />
 				</summary>
 				<ul className="py-2" data-testid="SummaryProductList">
-					{lines.map((line) => (
+					{lines.map((line: CheckoutLineFragment) => (
 						<SummaryItem line={line} key={line?.id}>
 							{editable ? (
 								<SummaryItemMoneyEditableSection
-									line={line as CheckoutLineFragment}
+									line={line}
 									id={id}
 									update={update}
 								/>
 							) : (
-								<SummaryItemMoneySection line={line as OrderLineFragment} />
+								<SummaryItemMoneySection line={line} />
 							)}
 						</SummaryItem>
 					))}
@@ -169,7 +184,7 @@ export const Summary: FC<SummaryProps> = ({
 						<span className="text-sm text-gray-700">Original Price</span>
 					</div>
 					<span className="text-base font-medium text-gray-900">
-						<Money money={{ amount: totalRetail, currency }} ariaLabel="original price" />
+						<Money money={{ amount: totalRetail + (discount?.amount ?? 0), currency }} ariaLabel="original price" />
 					</span>
 				</div>
 
@@ -181,12 +196,11 @@ export const Summary: FC<SummaryProps> = ({
 							<Tag className="w-4 h-4 text-gray-500" />
 							<span className="text-sm text-gray-700">Discount</span>
 						</div>
-						<span className="text-base font-semibold text-red-600">
-							<Money money={{ amount: saleDiscount, currency }} ariaLabel="discount" />
+						<span className="text-base font-semibold text-red-600 flex items-center">
+							-<Money money={{ amount: saleDiscount, currency }} ariaLabel="discount" />
 						</span>
 					</div>
 				)}
-
 
 				{/* 3. Voucher */}
 				{voucherCode && (
@@ -241,7 +255,7 @@ export const Summary: FC<SummaryProps> = ({
 					<Money
 						className="font-bold text-[#8B3958] text-2xl"
 						ariaLabel="subtotal"
-						money={subtotalPrice?.gross || totalPrice?.gross}
+						money={totalPrice?.gross || subtotalPrice?.gross}
 						data-testid="totalOrderPrice"
 					/>
 				</div>

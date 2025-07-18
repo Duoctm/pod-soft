@@ -16,14 +16,14 @@ export async function Pagination({
 
 	const totalPages = Math.ceil(totalCount / itemsPerPage);
 
-	
+
 	// Tạo URL với tham số page
 	const createPageUrl = (page: number) => {
 		const params = new URLSearchParams(urlSearchParams?.toString() || "");
 		params.set("page", page.toString());
 		return `${basePathname}?${params.toString()}`;
 	};
-	console.log(createPageUrl(1));
+
 	return (
 		<nav className="flex items-center justify-center gap-x-2 px-4 pt-12">
 			{/* Prev Button */}
