@@ -71,7 +71,7 @@ function aggregatePricing(lines: SummaryLine[]) {
 	lines.forEach((line) => {
 
 
-		totalRetail = line.totalPrice.gross.amount
+		totalRetail += line.totalPrice.gross.amount
 		totalMember += line.unitPrice.gross.amount * line.quantity;
 		totalSavings += ((line.undiscountedUnitPrice.amount - line.unitPrice.gross.amount) * line.quantity);
 		totalQuantity += line.quantity;
