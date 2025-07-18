@@ -107,7 +107,7 @@ const SupportPage = ({ channel }: { channel: string }) => {
             keys: ["REQUEST_REGISTER"],
             channel: channel,
         });
-        console.log(res)
+
         setFaq(res as GetPublicSettingsQuery["publicSettingsByKeys"]);
 
     }
@@ -155,7 +155,7 @@ const SupportPage = ({ channel }: { channel: string }) => {
                     onSubmit={handleSubmit}
                 >
                     {({ errors, touched, setFieldValue }) => (
-                        <Form className="w-full max-w-2xl space-y-6 p-4 pb-4">
+                        <Form className="w-full max-w-2xl space-y-6 px-4">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div>
                                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
@@ -285,7 +285,7 @@ const SupportPage = ({ channel }: { channel: string }) => {
                                                             <h4 className="font-medium">{value.question}</h4>
                                                         </AccordionSummary>
                                                         <AccordionDetails>
-                                                            <div className="flex flex-1 items-center justify-between pb-4">
+                                                            <div className="flex flex-1 items-center justify-between">
                                                                 <p className="text-sm text-gray-700">{value.result}</p>
                                                                 <button
                                                                     type="button"
@@ -294,7 +294,7 @@ const SupportPage = ({ channel }: { channel: string }) => {
                                                                         setOpenIndex(null); // Đóng accordion sau khi apply
                                                                         window.scrollTo({ top: 0, behavior: "smooth" });
                                                                     }}
-                                                                    className="float-end mt-2 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#8C3859] rounded-md hover:bg-[#8C3859]/70 focus:outline-none focus:ring-2 focus:ring-[#8C3859] focus:ring-offset-2">
+                                                                    className="float-end mt-2 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#F58A71] rounded-md hover:bg-[#F58A71]/70 focus:outline-none focus:ring-2 focus:ring-[#F58A71] focus:ring-offset-2">
                                                                     Apply
                                                                 </button>
                                                             </div>

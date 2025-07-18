@@ -12,7 +12,7 @@ import { PrintingTechnology, PrintSide } from "@/gql/graphql";
 interface PopupProps {
     productId: string,
     channel: string,
-    images: Record<string, string>; // mã -> base64
+    images?: Record<string, string>; // mã -> base64
     variantId: string;
     variantUpdateId: string;
     printTech: PrintingTechnology;
@@ -31,7 +31,6 @@ interface PopupProps {
 const AdditionalServicePopup: React.FC<PopupProps> = ({
     productId,
     channel,
-    images,
     variantId,
     variantUpdateId,
     printTech,
@@ -59,7 +58,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
         }
     };
 
-    console.log(images);
+
     const [services, setServices] = useState<Service[]>([]);
     const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set()); // danh sach service se duoc chon
     const [blankShirtPrice, setBlankShirtPrice] = useState<number>(0);
@@ -726,7 +725,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                                         PrintingTechnology.Silk,
                                                     ], channel, p, undefined, item.quanlity);
 
-                                                    console.log('quantity', item.quanlity, data);
 
 
                                                     if (data && Array.isArray(data)) {
@@ -743,7 +741,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 
                                                                 if (rule.node.usedForCalculation == true && rule.node.minColors == 1 && rule.node.maxColors == 1) {
                                                                     memberPrice += rule.node.price || 0;
-                                                                    console.log('memberPrice', memberPrice, rule.node.price, rule.node.usedForCalculation, rule.node.minColors, rule.node.maxColors);
                                                                 }
                                                             }
                                                         }
@@ -761,7 +758,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 
 
                                             }
-                                            console.log('priceOfServiceTemp', priceOfServiceTemp);
+
                                             priceOfVariantDesigns(new Set(priceOfServiceTemp));
                                             setPriceOfVariantDesign(priceOfServiceTemp);
 

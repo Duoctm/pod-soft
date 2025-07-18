@@ -16,47 +16,27 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
         quantity: number,
     ) => {
         if (!rules || rules.length === 0) {
-            console.log('❌ No rules provided to findPrintingPriceRule');
             return null;
         }
 
-        console.log('🔍 findPrintingPriceRule searching for quantity:', quantity, {
-            availableRules: rules.map(rule => ({
-                minQuantity: rule.node.condition?.minQuantity,
-                maxQuantity: rule.node.condition?.maxQuantity,
-                price: rule.node.price,
-                usedForCalculation: rule.node.usedForCalculation
-            }))
-        });
 
         const foundRule = rules.find((item) => {
             if (!item.node.condition) {
-                console.log('⚠️ Rule without condition found');
+
                 return false;
             }
             const min = item.node.condition.minQuantity;
             const max = item.node.condition.maxQuantity;
             if (min == null) {
-                console.log('⚠️ Rule without minQuantity found');
+
                 return false;
             }
             const matches = quantity >= min && (typeof max === "undefined" || max === null || quantity <= max);
-            console.log('🔎 Rule check:', {
-                min,
-                max,
-                quantity,
-                matches,
-                price: item.node.price
-            });
+
             return matches;
         })?.node || null;
 
-        console.log('✅ Final found rule:', foundRule ? {
-            price: foundRule.price,
-            currency: foundRule.currency,
-            minQuantity: foundRule.condition?.minQuantity,
-            maxQuantity: foundRule.condition?.maxQuantity
-        } : null);
+
 
         return foundRule;
     }, []);
@@ -68,24 +48,13 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
             // Create price key: if size provided, use colorId-size, otherwise just colorId for backward compatibility
             const priceKey = size ? `${colorId}-${size}` : colorId;
 
-            console.log('🔄 fetchPrintingPriceRules called with:', {
-                variantId,
-                colorId,
-                size,
-                priceKey,
-                qty,
-                selectedPrintingTechnology,
-                hasUser
-            });
+
 
             try {
                 let objectId: number | null = null;
                 try {
                     objectId = parseInt(atob(variantId).split(":")[1]);
-                    console.log('🔍 Variant ID parsing:', {
-                        originalVariantId: variantId,
-                        decodedObjectId: objectId
-                    });
+
                 } catch {
                     console.error('❌ Failed to parse variant ID:', variantId);
                     objectId = null;
@@ -99,21 +68,7 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
                 // But keep the original technology for add to cart functionality
                 const printingTechnologyForPricing = originalPrintingTechnology === PrintingTechnology.Silk ? PrintingTechnology.None : originalPrintingTechnology;
 
-                console.log('🎯 Printing technology logic:', {
-                    input: selectedPrintingTechnology,
-                    inputType: typeof selectedPrintingTechnology,
-                    inputIsUndefined: selectedPrintingTechnology === undefined,
-                    original: originalPrintingTechnology,
-                    forPricing: printingTechnologyForPricing,
-                    originalString: String(originalPrintingTechnology),
-                    pricingString: String(printingTechnologyForPricing),
-                    isSilkSelected: originalPrintingTechnology === PrintingTechnology.Silk,
-                    enumValues: {
-                        None: PrintingTechnology.None,
-                        Dtg: PrintingTechnology.Dtg,
-                        Silk: PrintingTechnology.Silk
-                    }
-                });
+
 
                 // Set printSide: if printingTechnologyForPricing is None, use PrintSide.None, else PrintSide.All
                 const printSide = printingTechnologyForPricing === PrintingTechnology.None ? PrintSide.None : PrintSide.All;
@@ -132,27 +87,20 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
                     objectIds: [objectId],
                 };
 
-                console.log('📡 API call params:', apiParams);
 
                 const publicPrintingPriceRules = await getPublicPrintingPriceRules(apiParams);
 
-                console.log('📥 API response:', {
-                    publicPrintingPriceRules,
-                    edgesLength: publicPrintingPriceRules?.edges?.length || 0
-                });
+
 
                 // If no results with current technology, try with None to test
-                if ((!publicPrintingPriceRules?.edges || publicPrintingPriceRules.edges.length === 0) && printingTechnologyForPricing !== PrintingTechnology.None) {
-                    console.log('🔄 No results found, trying with PrintingTechnology.None for debugging...');
+                // if ((!publicPrintingPriceRules?.edges || publicPrintingPriceRules.edges.length === 0) && printingTechnologyForPricing !== PrintingTechnology.None) {
+                //     
 
-                    const testParams = { ...apiParams, printingTechnologies: [PrintingTechnology.None] };
-                    const testResults = await getPublicPrintingPriceRules(testParams);
+                //     const testParams = { ...apiParams, printingTechnologies: [PrintingTechnology.None] };
+                //     const testResults = await getPublicPrintingPriceRules(testParams);
 
-                    console.log('🧪 Test results with None:', {
-                        testResults,
-                        testEdgesLength: testResults?.edges?.length || 0
-                    });
-                }
+
+                // }
 
                 const edges = (publicPrintingPriceRules?.edges as Pick<
                     PrintingPriceRuleCountableEdge,
@@ -165,11 +113,7 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
                 // This allows quantity-based pricing for non-logged users
                 const rulesForDisplayFiltered = edges.filter(item => !item.node.usedForCalculation);
 
-                console.log('🏷️ Rules separation for hasUser =', hasUser, {
-                    rulesForCalculation: rulesForCalculation.length,
-                    rulesForDisplay: rulesForDisplayFiltered.length,
-                    totalEdges: edges.length
-                });
+
                 // Lọc rulesForDisplay chỉ lấy rule có minQuantity=1 và maxQuantity=10
                 // const rulesForDisplayFiltered = edges.filter(item => {
                 //     if (item.node.usedForCalculation) return false;
@@ -187,28 +131,10 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
                 // hasUser = false: Show retail/public prices (rulesForDisplay)
                 const rulesToUse = hasUser ? rulesForCalculation : rulesForDisplayFiltered;
 
-                console.log('💰 Price calculation for quantity:', qty, {
-                    hasUser,
-                    rulesToUseLength: rulesToUse.length,
-                    rulesToUse: rulesToUse.map(rule => ({
-                        usedForCalculation: rule.node.usedForCalculation,
-                        minQuantity: rule.node.condition?.minQuantity,
-                        maxQuantity: rule.node.condition?.maxQuantity,
-                        price: rule.node.price
-                    }))
-                });
+
 
                 if (rulesToUse.length > 0) {
                     const priceRule = findPrintingPriceRule(rulesToUse, qty);
-                    console.log('🎯 Found price rule:', {
-                        priceRule: priceRule ? {
-                            price: priceRule.price,
-                            currency: priceRule.currency,
-                            minQuantity: priceRule.condition?.minQuantity,
-                            maxQuantity: priceRule.condition?.maxQuantity
-                        } : null,
-                        quantity: qty
-                    });
 
                     setProductPriceRules((prev) => ({
                         ...prev,
@@ -246,7 +172,7 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
 
     // Function to reset pricing when printing technology changes
     const resetPricing = useCallback(() => {
-        console.log('🔄 Resetting pricing data');
+
         setProductPriceRules({});
         setListProductPriceRules(null);
     }, []);
@@ -254,7 +180,7 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
     // Function to reset pricing for specific color/size when printing technology changes
     // const resetPricingForColor = useCallback((colorId: string, size?: string) => {
     //     const priceKey = size ? `${colorId}-${size}` : colorId;
-    //     console.log('🔄 Resetting pricing for:', priceKey);
+    //   
     //     setProductPriceRules((prev) => {
     //         const newState = { ...prev };
     //         delete newState[priceKey];
@@ -268,21 +194,14 @@ export const usePrintingPriceRules = (channel: string, hasUser: boolean) => {
             // Create price key: if size provided, use colorId-size, otherwise just colorId for backward compatibility
             const priceKey = size ? `${colorId}-${size}` : colorId;
 
-            console.log('initializePricing called with:', {
-                variantId,
-                colorId,
-                size,
-                priceKey,
-                selectedPrintingTechnology,
-                forceRefresh
-            });
+
 
             // Use a function to check current state instead of dependency
             if (!forceRefresh) {
                 setProductPriceRules((prev) => {
                     // Skip if we already have pricing for this priceKey
                     if (prev[priceKey]) {
-                        console.log('Already have price for', priceKey, '- skipping');
+
                         return prev;
                     }
                     // Continue with fetch since we don't have the price (fire and forget)

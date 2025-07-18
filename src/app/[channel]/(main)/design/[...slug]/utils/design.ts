@@ -1459,7 +1459,7 @@ class TShirtDesigner {
         designOfStage.designs = await getStageInfo(this.stages[item]);
         designs.push(designOfStage);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     }
 
@@ -1495,7 +1495,7 @@ class TShirtDesigner {
                   file_url = (response as { file?: { file_url?: string } }).file?.file_url ?? "";
                 }
                 catch (error) {
-                  console.log(error);
+                  console.error(error);
                 }
               }
               else {
@@ -1521,7 +1521,7 @@ class TShirtDesigner {
                 cloud_url: file_url, // Optional: add uploaded URL
               });
             } catch (error) {
-              console.log("Upload failed:", error);
+              console.error("Upload failed:", error);
             }
           } else if (node instanceof Konva.Text) {
             design.push({
@@ -1601,7 +1601,7 @@ class TShirtDesigner {
         designOfStage.face_code = this.data[item].code;
         designs.push(designOfStage);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     }
 
@@ -1925,7 +1925,7 @@ class TShirtDesigner {
         stageConfig.layer.draw();
       };
 
-      console.log('importDesignFromJson', designs, codes);
+
 
       for (const item in this.data) {
         //console.log('bbbbbbbbbbbbbbbbbbbbbb', this.data[item].code, codes.get(Number(item)));
@@ -2120,7 +2120,6 @@ class TShirtDesigner {
         if (imageDom) {
           this.updateStagePosition(this.stages[item], this.data[item], imageDom);
         }
-        console.log('importDesignFromJson', this.stages[item]);
         await importToStage(this.stages[item], designs[item]);
       }
 

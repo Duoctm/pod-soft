@@ -148,7 +148,7 @@ export const CheckoutLink = ({
 		setErrorDialogOpen(false);
 
 		const res = await createSupport(infoSupport);
-		console.log(res, "🚀 CheckoutLink.tsx:66 - res:");
+
 		if (res?.success) {
 			toast.success("Your order has been submitted. Our team will contact you soon with a tailored quote.");
 		} else {

@@ -43,8 +43,7 @@ const GET_COLLECTIONS = gql`
 `;
 
 export async function getCollections(channelSlug: string) {
-	console.log("Channel slug received:", channelSlug);
-	
+
 	// Create a GraphQL client
 	const client = new GraphQLClient(SALEOR_API_URL);
 
@@ -53,7 +52,7 @@ export async function getCollections(channelSlug: string) {
 		const data = await client.request<CollectionsResponse>(GET_COLLECTIONS, {
 			channel: channelSlug
 		});
-		
+
 		// Transform the GraphQL response into a more usable format
 		const collections: Collection[] = data?.collections?.edges.map(({ node }) => node) || [];
 		return collections;

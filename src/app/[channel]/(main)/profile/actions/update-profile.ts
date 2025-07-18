@@ -108,7 +108,6 @@ export const updateAddress = async (
 				},
 			},
 		});
-		console.log(accountAddressCreate)
 
 		if (!accountAddressCreate) {
 			return null;

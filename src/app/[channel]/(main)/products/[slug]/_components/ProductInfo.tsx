@@ -2,11 +2,12 @@ import React from 'react';
 import { Ruler } from 'lucide-react';
 import { ProductTitle } from './ProductTitle';
 import { ProductPriceDisplayWithDiscount } from './ProductPriceDisplayWithDiscount';
-import ProductSelector from './ProductSelector';
+
 import ProductSizeQuantityInputs from './ProductSizeQuantityInputs';
-import PublicPrintingAdditionalServices from './PublicPrintingAdditionalServices';
 import { ProductActions } from './ProductActions';
 import { ProductDescription } from './ProductDescription';
+import ProductSelector from './ProductColorSizeSelector';
+import PublicPrintingAdditionalServices from './PublicPrintingAdditionalServices';
 import type { Product, UserDetailsFragment, PrintingAdditionalServiceCountableConnection, PrintingPriceRuleCountableEdge } from '@/gql/graphql';
 
 interface ProductInfoProps {

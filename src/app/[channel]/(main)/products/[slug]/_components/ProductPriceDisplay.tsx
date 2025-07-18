@@ -23,15 +23,12 @@ const ProductPriceDisplay: React.FC<ProductPriceDisplayProps> = ({
     }
 
     const currentPrice = productPriceRules[currentColor!];
-
     // If price is 0, show contact message
     if (currentPrice.price === 0) {
         return (
             <div className="flex flex-col">
                 <div className="bg-[#FA9633]/10 border border-[#FA9633] rounded-lg px-4 py-2">
-                    <span className="text-lg font-semibold text-[#FA9633]">
-                        Contact for Quote
-                    </span>
+
                 </div>
             </div>
         );

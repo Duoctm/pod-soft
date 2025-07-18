@@ -14,7 +14,6 @@ interface ViewDesignButtonProps {
 interface DesignMetadata {
 	productId: string;
 	variantId: string;
-	// Add other fields as needed
 }
 
 interface CheckoutLineMetadata {
@@ -85,7 +84,7 @@ export function ViewDesignButton({ lineId, checkout, params, metadata }: ViewDes
 				{}
 			)}
 		>
-			View Design
+			Review
 		</button>
 	);
 }

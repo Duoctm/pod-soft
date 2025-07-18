@@ -19,9 +19,6 @@ const ProductSizeQuantityInputs: React.FC<Props> = ({
 	selectedSize,
 	onSelectSize,
 }) => {
-	// Xoá log hoặc chỉ log khi debug
-	// console.log("🚀 ProductSizeQuantityInputs.tsx:22 - sizeQuantities:", sizeQuantities);
-
 	return (
 		<div className="flex flex-wrap gap-2">
 			{sizeList.map((size) => (

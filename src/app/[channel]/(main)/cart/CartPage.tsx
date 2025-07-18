@@ -15,7 +15,7 @@ import { useCartPricing } from "./hooks/useCartPricing";
 import { usePrintingTechnology } from "./hooks/usePrintingTechnology";
 import { type PricingInfoUpdate, updatePricingInfo } from "./utils/updatePricingInfo";
 import { LinkWithChannel } from "@/ui/atoms/LinkWithChannel";
-import { formatMoney, getHrefForVariant } from "@/lib/utils";
+import { formatMoney, formatNumber, getHrefForVariant } from "@/lib/utils";
 import { PrintingTechnology, type CheckoutLine, type Checkout, type MetadataItem } from "@/gql/graphql";
 import Wrapper from "@/ui/components/wrapper";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -248,7 +248,6 @@ export function CartPage({ params }: CartPageProps) {
 		void fetchCheckout();
 	}, [fetchCheckout]);
 
-
 	const handleQuantityChange = useCallback(
 		async (lineId: string, newQuantity: number, variantId: string, printingTechnology?: PrintingTechnology, currentMetadata?: MetadataItem[]) => {
 			if (newQuantity <= 0) return;
@@ -320,15 +319,20 @@ export function CartPage({ params }: CartPageProps) {
 
 
 	const renderCartItem = (item: CheckoutLine) => {
-		console.log("🚀 CartPage.tsx:223 - item:", item);
+		console.log("🚀 CartPage.tsx:322 - item:", item);
+
+
+		const totalRetail = item.undiscountedUnitPrice.amount
+		const totalDiscount = (item.totalPrice.gross.amount / item.quantity)
+
+
+		const itemSavings = ((totalDiscount - totalRetail) / totalRetail) * 100;
+		console.log("🚀 CartPage.tsx:330 - itemSavings:", itemSavings);
+
+
 
 		const pricingInfo = parsePricingInfoFromMetadata(item);
-		console.log("🚀 CartPage.tsx:317 - pricingInfo:", pricingInfo);
-
 		const serviceDetail = item.metadata?.find((meta) => meta.key === "service_detail");
-
-		console.log(item, "item");
-
 		let serviceDetailPrice = 0;
 
 
@@ -346,9 +350,6 @@ export function CartPage({ params }: CartPageProps) {
 		const totalPrice = (pricingInfo ? unitPrice * item.quantity : item.totalPrice.gross.amount);
 		const currency = pricingInfo?.currency || item.totalPrice.gross.currency;
 
-		// Calculate discount info for individual items
-		const hasItemDiscount = pricingInfo?.has_discount && pricingInfo.retail_price > pricingInfo.member_price;
-		const itemSavings = hasItemDiscount ? (pricingInfo.retail_price - pricingInfo.member_price) * item.quantity : 0;
 
 
 		// eslint-disable-next-line react-hooks/rules-of-hooks
@@ -415,23 +416,15 @@ export function CartPage({ params }: CartPageProps) {
 					<div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-100">
 						<div>
 							<div className="text-xs text-gray-500 mb-1">Unit Price</div>
-							<div className="text-sm font-medium text-gray-900">{formatMoney(unitPrice, currency)}</div>
+							<div className="text-sm font-medium text-gray-900">{formatMoney(totalRetail, currency)} / {formatMoney(unitPrice, currency)}</div>
 						</div>
 						<div className="text-right">
-							<div className="text-xs text-gray-500 mb-1">Quantity: {item.quantity}</div>
-							<div className="text-sm font-medium text-gray-900">{formatMoney(totalPrice, currency)}</div>
+
+							<div className="font-bold text-gray-900 text-xl"><sup className="inline-flex items-center  text-xs text-green-800 font-semibold">
+								({Math.floor((itemSavings))}%)
+							</sup> {formatMoney(totalPrice, currency)} </div>
 						</div>
 					</div>
-					{/* Mobile Savings Badge */}
-					{hasItemDiscount && itemSavings > 0 && (
-						<div className="flex justify-center mb-3">
-							<div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-								Save {formatMoney(itemSavings, currency)} ({Math.floor((itemSavings / totalPrice) * 100)}%)
-							</div>
-						</div>
-					)}
-
-
 
 					<div className="flex items-start justify-end space-x-2 mb-3 ">
 						<div className="flex p-1 items-center justify-between bg-slate-100 rounded-md">
@@ -523,13 +516,10 @@ export function CartPage({ params }: CartPageProps) {
 
 								{/* Right: Price Info - With Discount Display */}
 								<div className="text-right flex-shrink-0">
-									<div className="text-xs text-gray-500 mb-1">Unit: {formatMoney(unitPrice, currency)}</div>
-									<div className="text-lg font-bold text-black">{formatMoney(totalPrice, currency)}</div>
-									{hasItemDiscount && itemSavings > 0 && (
-										<div className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 mt-1">
-											Save {formatMoney(itemSavings, currency)} ({Math.floor((itemSavings / totalPrice) * 100)}%)
-										</div>
-									)}
+									<div className="text-sm text-gray-500 mb-1"><span className="line-through"> {formatMoney(totalRetail, currency)}</span> /  <span className="text-[#F58A71] font-bold">{formatMoney(unitPrice, currency)}</span> </div>
+									<div className="text-2xl py-2 font-bold text-black"><sup className="inline-flex items-center  text-xs text-green-800 font-semibold">
+										({Math.ceil((itemSavings))}%)
+									</sup> {formatMoney(totalPrice, currency)} </div>
 								</div>
 							</div>
 
@@ -598,10 +588,15 @@ export function CartPage({ params }: CartPageProps) {
 		let currency: string = items[0]?.totalPrice.gross.currency || "USD";
 		let hasAnyDiscount = false;
 
+
+
 		items.forEach((line) => {
+			totalRetail += line.undiscountedUnitPrice.amount * line.quantity
+			totalDiscount += (line.undiscountedUnitPrice.amount - (line.totalPrice.gross.amount / line.quantity)) * line.quantity;
+
+
 			const info = parsePricingInfoFromMetadata(line);
 
-			console.log(line)
 			// Calculate service price for this line
 			const serviceDetail = line.metadata?.find((meta) => meta.key === "service_detail");
 			let serviceDetailPrice = 0;
@@ -616,12 +611,9 @@ export function CartPage({ params }: CartPageProps) {
 
 			if (info) {
 				// Use pricing info when available
-				const lineRetailPrice = info.retail_price * line.quantity;
 				const lineMemberPrice = info.member_price * line.quantity;
 
-				totalRetail += lineRetailPrice;
 				totalMember += lineMemberPrice;
-				totalDiscount += lineRetailPrice - lineMemberPrice;
 				totalQuantity += line.quantity;
 				currency = info.currency || currency;
 
@@ -685,13 +677,13 @@ export function CartPage({ params }: CartPageProps) {
 						{/* Mobile Header */}
 						<div className="block sm:hidden mb-4">
 							<h1 className="text-2xl font-bold text-gray-900 mb-2">Shopping Cart</h1>
-							<p className="text-sm text-gray-600">({cartTotals.totalQuantity}) Items</p>
+							<p className="text-sm text-gray-600">({formatNumber(cartTotals.totalQuantity)}) Items</p>
 						</div>
 
 						{/* Desktop Header */}
 						<div className="hidden sm:flex items-center justify-between mb-8">
 							<h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
-							<p className="text-base font-light text-gray-900">({cartTotals.totalQuantity}) Items</p>
+							<p className="text-base font-light text-gray-900">({formatNumber(cartTotals.totalQuantity)}) Items</p>
 						</div>
 
 						<div className="space-y-3 sm:space-y-4">
@@ -710,8 +702,8 @@ export function CartPage({ params }: CartPageProps) {
 								<div className="space-y-2 sm:space-y-3">
 									{/* Subtotal (Base Product Prices) */}
 									<div className="flex justify-between text-sm sm:text-base text-gray-600">
-										<span>Subtotal ({cartTotals.totalQuantity} items)</span>
-										<span className="font-medium">{formatMoney(cartTotals.totalMember - cartTotals.totalServicesPrice + cartTotals.totalDiscount, cartTotals.currency)}</span>
+										<span>Subtotal ({formatNumber(cartTotals.totalQuantity)} items)</span>
+										<span className="font-medium">{formatMoney(cartTotals.totalRetail, cartTotals.currency)}</span>
 									</div>
 
 									{/* Additional Services */}

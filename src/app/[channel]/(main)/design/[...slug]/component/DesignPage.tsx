@@ -42,6 +42,7 @@ import { ChangeProductModal } from "./ChangeProduct";
 import { AdditionalServicePopup } from "./AdditionalService"
 import { cn } from "@/lib/utils";
 import { PrintingTechnology } from "@/gql/graphql";
+import { groupAndSortColors } from "../../../products/[slug]/utils/soft-color";
 //import { PrintDetail, PrintingInfo } from "./type"
 
 interface DesignPageProps {
@@ -142,6 +143,39 @@ function DesignPage(param: DesignPageProps) {
 
   console.warn(showObjectMenu);
 
+  function sortColorObjectsByColorName(mapData: Map<string, any>): Map<string, any> {
+    // 1. Convert Map to array
+    const dataArray = Array.from(mapData.entries()); // [key, value]
+
+    // 2. Extract color_names
+    const colorNames = dataArray.map(([, value]) => value.color_name);
+
+    // 3. Get sorted color_names
+    const sortedColorNames = groupAndSortColors(colorNames);
+
+    // 4. Map color_name to entry for lookup
+    const colorNameToEntry = new Map<string, [string, any]>();
+    for (const [key, value] of dataArray) {
+      colorNameToEntry.set(value.color_name, [key, value]);
+    }
+
+    // 5. Build new Map with sorted order
+    const sortedMap = new Map<string, any>();
+    for (const name of sortedColorNames) {
+      const entry = colorNameToEntry.get(name);
+      if (entry) {
+        const [key, value] = entry;
+        sortedMap.set(key, value);
+      }
+    }
+
+    return sortedMap;
+  }
+
+
+
+
+
   const loadProductData = async (productId: string) => {
     let result: Map<string, object>;
     let variantSizeColor: Map<string, object> | null = null;
@@ -162,7 +196,9 @@ function DesignPage(param: DesignPageProps) {
     variantSizeColor = data.listVariantSizeColor;
     colorId = data.colorId;
     //}
-    setColorData(result);
+    const resultSort = sortColorObjectsByColorName(result);
+    groupAndSortColors
+    setColorData(resultSort);
     setSizeIdDefault(sizeIdDefault);
     setVariantSizeColor(variantSizeColor);
     setColorId(colorId);
@@ -271,7 +307,7 @@ function DesignPage(param: DesignPageProps) {
           }
 
         } catch (error) {
-          console.log(error);
+          console.error(error);
         }
 
 
@@ -401,7 +437,7 @@ function DesignPage(param: DesignPageProps) {
           }
         }
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
 
 
@@ -423,7 +459,7 @@ function DesignPage(param: DesignPageProps) {
         }
       }
       catch (error) {
-        console.log(error);
+        console.error(error);
       }
     }
   }, [designerRef.current?.currentStage.stage]);
@@ -708,7 +744,6 @@ function DesignPage(param: DesignPageProps) {
   const handleRedo = () => {
     if (!designerRef.current?.currentStage) return;
     const result = redoStackHistory2();
-    console.log('redo', result);
     if (result != null) {
       updateHisoryStatus(result);
     }
@@ -717,7 +752,6 @@ function DesignPage(param: DesignPageProps) {
   const handleUndo = () => {
     if (!designerRef.current?.currentStage) return;
     const result = undoStackHistory2();
-    console.log('undo', result);
     if (result != null) {
       updateHisoryStatus(result);
     }
@@ -1208,7 +1242,7 @@ function DesignPage(param: DesignPageProps) {
                           }
                         }}
                         className={cn(
-                          "flex h-8 w-8 items-center justify-center rounded-md border-2 hover:border-black/50",
+                          "flex h-8 w-8 items-center justify-center rounded-full border-2 hover:border-black/50",
                           { "border-black": colorId === key },
                         )}
                         style={{ backgroundColor: (value as { color_value: string }).color_value }}
@@ -1345,7 +1379,7 @@ function DesignPage(param: DesignPageProps) {
                               if (designerRef?.current?.currentStage.selectedNode == undefined) {
                                 return;
                               }
-                              console.log(designerRef)
+
                               const newUrl =
                                 designerRef.current?.originImageOfStage[
                                 designerRef.current.currentStage.selectedNode?.id()
@@ -2136,17 +2170,8 @@ function DesignPage(param: DesignPageProps) {
 
                   const totalObjectInsert = designerRef.current?.getTotalObjectInAllStage();
                   if (totalObjectInsert && totalObjectInsert > 0) {
-                    /*setPrintTech(PrintingTechnology.Dtg);
-
-                    const printTechRaw = localStorage.getItem("printTechOfDesign");
-
-                    if (printTechRaw == PrintingTechnology.Silk) {
-                      setPrintTech(PrintingTechnology.Silk);
-                      //alert(`1 ${printTechRaw}`);
-                    }
-                    else {
-                      setPrintTech(PrintingTechnology.Dtg);
-                    }*/
+                    const printTechOfDesign = localStorage.getItem("printTechOfDesign");
+                    setPrintTech(printTechOfDesign as PrintingTechnology);
                   }
                   else {
                     setPrintTech(PrintingTechnology.None);
@@ -2154,7 +2179,6 @@ function DesignPage(param: DesignPageProps) {
 
 
                   const handleAddToCart = async () => {
-                    console.log('priceOfVariantDesignRef', priceOfVariantDesignRef.current);
 
                     setSpinner(true);
                     if (designerRef.current != null) {
@@ -2162,12 +2186,12 @@ function DesignPage(param: DesignPageProps) {
 
                       if (totalObjectInsert && totalObjectInsert > 0) {
                         metaData = (await designerRef.current.exportDesignToJson()) as any;
-                        console.log('metaData', metaData);
+
                       }
 
                       const items = Array.from(variantIdsRef.current);
 
-                      console.log('priceOfVariantDesignRef.current', priceOfVariantDesignRef.current);
+
                       const result = await addCartMultiItem(param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
                       if (result.success) {
                         toast.success("Design added to cart successfully");
@@ -2224,15 +2248,8 @@ function DesignPage(param: DesignPageProps) {
                 setIsUpdate(true);
                 const totalObjectInsert = designerRef.current?.getTotalObjectInAllStage();
                 if (totalObjectInsert && totalObjectInsert > 0) {
-                  /*setPrintTech(PrintingTechnology.Dtg);
-
-                  const printTechRaw = localStorage.getItem("printTechOfDesign");
-                  if (printTechRaw == PrintingTechnology.Silk) {
-                    setPrintTech(PrintingTechnology.Silk);
-                  }
-                  else {
-                    setPrintTech(PrintingTechnology.Dtg);
-                  }*/
+                  const printTechOfDesign = localStorage.getItem("printTechOfDesign");
+                  setPrintTech(printTechOfDesign as PrintingTechnology);
                 }
                 else {
                   setPrintTech(PrintingTechnology.None);
@@ -2440,7 +2457,7 @@ function DesignPage(param: DesignPageProps) {
                         }
                       }}
                       className={cn(
-                        "flex h-8 w-8 items-center justify-center rounded-md border-2 hover:border-black/50",
+                        "flex h-8 w-8 rounded-full items-center justify-center  border-2 hover:border-black/50",
                         { "border-black": colorId === key },
                       )}
                       style={{ backgroundColor: (value as { color_value: string }).color_value }}
@@ -3566,17 +3583,8 @@ function DesignPage(param: DesignPageProps) {
 
                 const totalObjectInsert = designerRef.current?.getTotalObjectInAllStage();
                 if (totalObjectInsert && totalObjectInsert > 0) {
-                  /*setPrintTech(PrintingTechnology.Dtg);
-
-                  const printTechRaw = localStorage.getItem("printTechOfDesign");
-
-                  if (printTechRaw == PrintingTechnology.Silk) {
-                    setPrintTech(PrintingTechnology.Silk);
-                    //alert(`1 ${printTechRaw}`);
-                  }
-                  else {
-                    setPrintTech(PrintingTechnology.Dtg);
-                  }*/
+                  const printTechOfDesign = localStorage.getItem("printTechOfDesign");
+                  setPrintTech(printTechOfDesign as PrintingTechnology);
                 }
                 else {
                   setPrintTech(PrintingTechnology.None);
@@ -3647,15 +3655,8 @@ function DesignPage(param: DesignPageProps) {
               setIsUpdate(true);
               const totalObjectInsert = designerRef.current?.getTotalObjectInAllStage();
               if (totalObjectInsert && totalObjectInsert > 0) {
-                /*setPrintTech(PrintingTechnology.Dtg);
-
-                const printTechRaw = localStorage.getItem("printTechOfDesign");
-                if (printTechRaw == PrintingTechnology.Silk) {
-                  setPrintTech(PrintingTechnology.Silk);
-                }
-                else {
-                  setPrintTech(PrintingTechnology.Dtg);
-                }*/
+                const printTechOfDesign = localStorage.getItem("printTechOfDesign");
+                setPrintTech(printTechOfDesign as PrintingTechnology);
               }
               else {
                 setPrintTech(PrintingTechnology.None);

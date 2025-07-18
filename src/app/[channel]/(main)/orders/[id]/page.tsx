@@ -176,14 +176,10 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 												</div>
 												<div className="text-right flex items-center gap-1">
 													<div className="text-sm font-medium text-neutral-900">
-														{
-															orderDetail && orderDetail?.node.total ?
-
-																formatMoney(
-																	parseFloat(String(orderDetail?.node.total.gross.amount / item.quantity || 0)),
-																	orderDetail?.node.total.gross.currency || "",
-																) : null
-														}
+														{orderDetail && orderDetail?.node.total ? formatMoney(
+															parseFloat(String(orderDetail?.node.total.gross.amount / item.quantity || 0)),
+															orderDetail?.node.total.gross.currency || ""
+														) : null}
 
 													</div>
 

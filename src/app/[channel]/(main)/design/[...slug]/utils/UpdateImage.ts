@@ -3,7 +3,6 @@
 
 const uploadImageRaw = async (data: FormData) => {
     const file = data.get('file') as File;
-    console.log('file', file);
 
     const operations = JSON.stringify({
         query: `
@@ -37,7 +36,6 @@ const uploadImageRaw = async (data: FormData) => {
     });
 
     const json = await res.json() as { data?: { uploadFile?: { message: string, result: boolean, file: { file_url: string } } } };
-    //console.log("json", json);
     return json.data?.uploadFile;
 }
 

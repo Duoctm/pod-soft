@@ -108,9 +108,6 @@ export async function addCartMultiItem(
         });
 
 
-        console.log("updatedCheckout", updatedCheckout);
-
-
 
         if (updatedCheckout?.errors?.length) {
             return {
@@ -178,9 +175,8 @@ function createNewPrintingInfoMetadata(
                 }
             }
         }
-        objectDesign.designs.map(i => {
-            console.log(i.face_code)
-        })
+
+
 
         return objectDesign.designs.map(i => ({
             print_side: i.face_code.toLocaleUpperCase(),

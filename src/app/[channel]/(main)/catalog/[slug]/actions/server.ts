@@ -96,10 +96,6 @@ export async function fetchCollectionProducts(
 	channel: string = "default-channel",
 ) {
 	try {
-		console.log(
-			`[fetchCollectionProducts] Fetching products for collection: ${collectionId} with limit: ${limit} in channel: ${channel}`,
-		);
-
 		// Gọi API GraphQL để lấy danh sách sản phẩm
 		const result = await executeGraphQL(CollectionProductsDocument, {
 			variables: {
@@ -110,17 +106,6 @@ export async function fetchCollectionProducts(
 			cache: "no-cache",
 		});
 
-		// Log kết quả mà không cần trả về cho client
-		console.log("[fetchCollectionProducts] Result:", {
-			collectionId: result.collection?.id,
-			productCount: result.collection?.products.edges.length || 0,
-			hasNextPage: result.collection?.products.pageInfo.hasNextPage,
-			products: result.collection?.products.edges.map((edge) => ({
-				id: edge.node.id,
-				name: edge.node.name,
-				type: edge.node.productType.name,
-			})),
-		});
 
 		return result;
 	} catch (error) {

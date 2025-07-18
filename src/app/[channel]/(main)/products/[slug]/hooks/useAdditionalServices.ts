@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+
 import { getPublicPrintingAdditionServices } from '../actions/getPublicPrintingAdditionServices';
 import type { PrintingAdditionalServiceCountableConnection } from '@/gql/graphql';
 
@@ -28,7 +29,6 @@ export const useAdditionalServices = (channel: string) => {
     const handleSetOptions = useCallback(
         (ids: string[], serviceDetails: { id: string, name: string, price: number, currency: string }[]) => {
             if (!ids || !serviceDetails) return;
-            console.log("🚀 useAdditionalServices - ids:", ids);
             setServices(ids);
             setServiceDetails(serviceDetails);
         },

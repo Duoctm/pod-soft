@@ -15,8 +15,8 @@ async function getAdditionalService(channel: string, first: number, after: strin
     return data;
 }
 
-async function getPrintingPriceRules(printTech: PrintingTechnology[], channel: string, printSide: PrintSide, objectId?: number, minQuantity?: number) {
-    console.log('minQuantity', minQuantity);
+async function getPrintingPriceRules(printTech: PrintingTechnology[], channel: string, printSide: PrintSide, objectId?: number, _minQuantity?: number) {
+
     if (objectId) {
         const data = await executeGraphQL(PublicPrintingPriceRulesDocument, {
             variables: {

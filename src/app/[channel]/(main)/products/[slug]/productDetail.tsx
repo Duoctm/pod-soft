@@ -304,10 +304,8 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
 
         // Lấy variant đầu tiên làm mặc định nếu chưa có currentColor
         const defaultVariant = productDetail.defaultVariant || productDetail.variants[0];
-        console.log("🚀 productDetail.tsx:262 - defaultVariant:", defaultVariant);
 
         const colorName = defaultVariant?.attributes?.find(attr => attr.attribute)?.values?.[0]?.name;
-        console.log("🚀 productDetail.tsx:263 - colorId:", colorName);
 
         const size = defaultVariant?.attributes?.find(attr => attr.attribute?.name === "SIZE")?.values?.[0]?.name;
 
@@ -410,7 +408,6 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
     const handleSetOptions = useCallback(
         (ids: string[], serviceDetails: { id: string, name: string, price: number, currency: string }[]) => {
             if (!ids || !serviceDetails) return 1;
-            console.log("🚀 productDetail.tsx:406 - ids:", ids);
 
             setServices(ids);
             setServiceDetails(serviceDetails);
@@ -498,9 +495,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
 
 
         // for (const [key, value] of colorSize) {
-        //     console.log('key:', key, 'value:', value);
         // }
-        //console.log(sizeQuantities[currentColor].size)
         const user = await getUser();
         if (!user) {
             // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -515,7 +510,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
         let quantity = 0;
         if (currentColor) {
             const colorSize = sizeQuantities[currentColor];
-            console.log(sizeQuantities[currentColor]);
+
             for (const [, value] of Object.entries(colorSize)) {
 
                 if (value.variantId == selectedVariant.id) {

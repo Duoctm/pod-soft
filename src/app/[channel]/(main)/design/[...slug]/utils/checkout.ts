@@ -60,7 +60,7 @@ export async function addItem(
     }
 
     // Lấy id của cart từ kết quả trả về
-    var checkoutLineId = "";
+    let checkoutLineId = "";
     if (result?.checkoutLinesAdd?.checkout?.lines != null) {
       for (const i of result?.checkoutLinesAdd?.checkout?.lines) {
         if (i.variant.id === selectedVariantID) {
@@ -88,7 +88,7 @@ export async function addItem(
     return true
   }
   catch (error) {
-    console.log(error);
+    console.error(error);
   }
   return false;
 
@@ -126,7 +126,7 @@ async function addItemToUpdateDesign(
     }
 
     // Lấy id của cart từ kết quả trả về
-    var checkoutLineId = "";
+    let checkoutLineId = "";
     if (result?.checkoutLinesAdd?.checkout?.lines != null) {
       for (const i of result?.checkoutLinesAdd?.checkout?.lines) {
         if (i.variant.id === selectedVariantID) {
@@ -152,7 +152,7 @@ async function addItemToUpdateDesign(
     return true
   }
   catch (error) {
-    console.log(error);
+    console.error(error);
   }
   return false;
 
@@ -194,7 +194,7 @@ export async function UpdateDesign(
 ) {
   "use server";
   try {
-    let checkoutLineId = checkoutLineIdParam;
+    const checkoutLineId = checkoutLineIdParam;
     let quantity = 1;
     if (deferenceVariant && newVarianId && channel) {
       const result = await executeGraphQL(CheckoutDeleteLinesDocument, {
@@ -232,14 +232,13 @@ export async function UpdateDesign(
         }
       ];
 
-      console.log(updatedMetadata);
 
       await updateCheckoutLineMetadata(checkoutLineId ?? "", updatedMetadata);
     }
     return true;
   }
   catch (error) {
-    console.log(error);
+    console.error(error);
   }
   return false;
 

@@ -71,7 +71,6 @@ export const useCartPricing = (channel: string) => {
             // Convert printing technology and set up API params
             const selectedPrintingTechnology = convertStringToPrintingTechnology(printingTechnology);
             const printingTechnologyForPricing = selectedPrintingTechnology === PrintingTechnology.Silk ? PrintingTechnology.None : selectedPrintingTechnology;
-            console.log("🚀 useCartPricing.ts:74 - printingTechnologyForPricing:", printingTechnologyForPricing);
 
             const printSide = printingTechnologyForPricing === PrintingTechnology.None ? PrintSide.None : PrintSide.All;
 
@@ -90,15 +89,11 @@ export const useCartPricing = (channel: string) => {
                 objectIds: [objectId],
             };
 
-            console.log(hasUser)
 
-            console.log('🔄 Calculating pricing for quantity:', quantity, 'with params:', apiParams);
 
             // Get price rules
             const publicPrintingPriceRules = await getPublicPrintingPriceRules(apiParams);
             const edges = (publicPrintingPriceRules?.edges as Pick<PrintingPriceRuleCountableEdge, "node" | "__typename">[]) || [];
-            console.log("🚀 useCartPricing.ts:94 - edges:", edges);
-
 
 
             // Separate rules
@@ -128,11 +123,11 @@ export const useCartPricing = (channel: string) => {
                 hasDiscount: discountPercentage > 0,
             };
 
-            console.log('✅ Calculated pricing:', result);
+
             return result;
 
         } catch (error) {
-            console.error('Error calculating pricing:', error);
+
             return null;
         } finally {
             setIsCalculating(false);

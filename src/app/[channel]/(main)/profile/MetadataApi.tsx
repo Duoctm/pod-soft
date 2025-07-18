@@ -7,16 +7,16 @@ import { executeGraphQL } from "@/lib/graphql";
 
 
 async function updateUserMetadata(metadata: { key: string; value: any }[]) {
-    const result = await executeGraphQL(UpdateMetadatAccountDocument, { variables: { metadata } });
-    console.log("testupdateMatadata", result.accountUpdate);
+    return executeGraphQL(UpdateMetadatAccountDocument, { variables: { metadata } });
+
 }
 
 
 
 
 async function getUserMetadata() {
-    const data = await executeGraphQL(GetMetadataOfMeDocument, {});
-    console.log("testMatadata", data.me?.metadata);
+    return executeGraphQL(GetMetadataOfMeDocument, {});
+
 }
 
 

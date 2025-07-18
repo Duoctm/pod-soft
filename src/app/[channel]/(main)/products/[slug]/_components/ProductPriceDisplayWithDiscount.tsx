@@ -61,6 +61,7 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
 
     // Show loading only if explicitly loading or if we have no pricing data at all
     if ((loading && !listProductPriceRules && !currentPricing) || isSpecificPriceLoading) {
+
         return (
             <div className="price-container">
                 <div className="price-skeleton h-12 w-32 animate-pulse rounded bg-gray-200 transition-all duration-300 ease-in-out md:h-14 md:w-40 lg:h-16 lg:w-48" />
@@ -70,11 +71,9 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
 
     // PRIORITY 1: Use size-specific pricing if available
     if (currentPricing) {
-        console.log('✅ Using size-specific pricing for:', selectedSize);
 
         // Check if price is 0, show contact message
         if (currentPricing.price === 0) {
-            console.log('💰 Displaying Contact for Quote (size-specific, price=0)');
             return (
                 <div className="price-container">
                     <div className="contact-quote bg-[#FA9633]/10 border border-[#FA9633] rounded-lg px-4 py-2 transition-all duration-300 ease-in-out">
@@ -84,11 +83,19 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
             );
         }
 
+        console.log("🚀 ProductPriceDisplayWithDiscount.tsx:88 - listProductPriceRules:", listProductPriceRules);
         // For logged in users, try to show discount comparison with retail price
         if (hasUser && listProductPriceRules) {
+
             const retailPriceRule = findPriceFromRules(listProductPriceRules.rulesForDisplay, 1);
+            console.log("🚀 ProductPriceDisplayWithDiscount.tsx:91 - retailPriceRule:", retailPriceRule);
+
             const retailPrice = retailPriceRule?.price || 0;
+            console.log("🚀 ProductPriceDisplayWithDiscount.tsx:94 - retailPrice:", retailPrice);
+
             const memberPrice = currentPricing.price;
+            console.log("🚀 ProductPriceDisplayWithDiscount.tsx:97 - memberPrice:", memberPrice);
+
 
             // If we have both prices and retail price is higher, show discount
             if (memberPrice > 0 && retailPrice > 0 && retailPrice > memberPrice) {
@@ -129,7 +136,11 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
         if (hasUser) {
             // Logged in user - show member price (rulesForCalculation)
             const memberPriceRule = findPriceFromRules(listProductPriceRules.rulesForCalculation, effectiveQuantity);
+            console.log("🚀 ProductPriceDisplayWithDiscount.tsx:130 - memberPriceRule:", memberPriceRule);
+
             const retailPriceRule = findPriceFromRules(listProductPriceRules.rulesForDisplay, 1);
+            console.log("🚀 ProductPriceDisplayWithDiscount.tsx:131 - retailPriceRule:", retailPriceRule);
+
 
             const memberPrice = memberPriceRule?.price || 0;
             const retailPrice = retailPriceRule?.price || 0;
@@ -156,7 +167,7 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
                         </div>
                     );
                 } else {
-                    // If member price is higher or equal to retail price, just show member price
+                    // If member price is higher or equal to retail price, just show member priceP
                     return (
                         <div className="price-container">
                             <span className="price-main ml-2 text-3xl font-extrabold text-[#F58A71] transition-all duration-300 ease-in-out md:text-4xl lg:text-5xl">
@@ -189,11 +200,6 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
             const retailPriceRule = findPriceFromRules(listProductPriceRules.rulesForDisplay, effectiveQuantity);
             const retailPrice = retailPriceRule?.price || 0;
 
-            console.log('Guest pricing debug:', {
-                retailPriceRule,
-                retailPrice,
-                rulesForDisplay: listProductPriceRules.rulesForDisplay
-            });
 
             if (retailPrice > 0) {
                 return (
@@ -208,7 +214,6 @@ const ProductPriceDisplayWithDiscount: React.FC<ProductPriceDisplayWithDiscountP
                 return (
                     <div className="flex flex-col transition-all duration-300 ease-in-out">
                         <div className="bg-[#FA9633]/10 border border-[#FA9633] rounded-lg px-4 py-2 transition-all duration-300 ease-in-out">
-
                         </div>
                     </div>
                 );

@@ -145,7 +145,6 @@ const customStyles = `
 `;
 
 const MarginPricePopup: React.FC<MarginPricePopupProps> = ({ open, onClose, title, listMarginPrice, variantValues }) => {
-    console.log("🚀 MarginPricePopup.tsx:47 - listMarginPrice:", listMarginPrice);
 
     const [showScrollHint, setShowScrollHint] = React.useState(true);
     const [_isMobile, setIsMobile] = React.useState(false);
@@ -213,8 +212,6 @@ const MarginPricePopup: React.FC<MarginPricePopupProps> = ({ open, onClose, titl
 
     // Lấy unique printingTechnology
     const printingTechnologies = Object.keys(groupedByTech);
-    console.log("🚀 MarginPricePopup.tsx:162 - printingTechnologies:", printingTechnologies);
-
 
 
     // Lấy unique các khoảng min-max cho từng công nghệ in

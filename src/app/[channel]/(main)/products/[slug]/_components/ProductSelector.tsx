@@ -88,8 +88,6 @@ const ProductSelector: React.FC<Props> = ({
         }
     }, [selectedPrintTech, setShowDesignButton])
 
-    console.log(variants, "🚀 ProductSelector.tsx:66 - variants:");
-
     const printTechList = useMemo(() => {
         if (!selectedColor || !selectedSize) return [];
         const techSet = new Set<string>();
@@ -148,14 +146,6 @@ const ProductSelector: React.FC<Props> = ({
 
     // Gọi onChange khi lựa chọn thay đổi
     useEffect(() => {
-        console.log('🔄 ProductSelector onChange triggered:', {
-            selectedColor,
-            selectedSize,
-            selectedPrintTech,
-            selectedVariantId,
-            hasAllRequiredData: !!(selectedColor && selectedSize && selectedPrintTech)
-        });
-
         onChange?.(
             {
                 color: selectedColor,
