@@ -178,9 +178,11 @@ function createNewPrintingInfoMetadata(
 
 
 
-        return objectDesign.designs.map(i => ({
-            print_side: i.face_code.toLocaleUpperCase(),
-            face_code: (i.face_code).toLocaleUpperCase(),
+
+
+        return printFace.map(i => ({
+            print_side: i.toLocaleUpperCase(),
+            face_code: i.toLocaleUpperCase(),
             printing_technology,
             // additional_service_ids: serviceIds,
         }));
@@ -224,6 +226,7 @@ export async function UpdateDesignMultiItem(
     metadata: string | null,
     printTech: string
 ) {
+
     const variantIds = lines.map(line => line.variantId);
     const checkoutId = Checkout.getIdFromCookies(channel);
     const { checkout } = checkoutId
@@ -253,6 +256,5 @@ export async function UpdateDesignMultiItem(
     });
     const resultAddToCart = await addCartMultiItem(channel, lines, priceInfo, sericeIdS, metadata, printTech);
 
-    return resultAddToCart.success;
-    return true;
+    return resultAddToCart;
 }

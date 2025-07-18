@@ -92,6 +92,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const variantParam = searchParams.get("variant");
+    localStorage.setItem("backtrack", `/products/${slug}`);
 
     // Custom hooks
     const { productDetail, loading, selectedVariant, setSelectedVariant, getProductDetail } = useProductDetail(slug, channel);

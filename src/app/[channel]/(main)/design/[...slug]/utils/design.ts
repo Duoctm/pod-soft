@@ -1624,13 +1624,14 @@ class TShirtDesigner {
 
 
   public getTotalObjectInAllStage() {
-    let total = 0;
-    for (const item of this.stages) {
-      if (item.layer)
-        total += item.layer?.getChildren().length;
+    let print_face = []
+    for (const item in this.stages) {
+      if (this.stages[item].layer?.getChildren().length) {
+        print_face.push(this.data[item].code);
+      }
     }
 
-    return total;
+    return print_face;
   }
 
 

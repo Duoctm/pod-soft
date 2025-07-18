@@ -16,6 +16,7 @@ interface PopupProps {
     variantId: string;
     variantUpdateId: string;
     printTech: PrintingTechnology;
+    printSides: PrintSide[];
     quantity: number;
     is_update?: boolean | null;
     is_add_to_cart?: boolean | null;
@@ -34,6 +35,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
     variantId,
     variantUpdateId,
     printTech,
+    printSides,
     quantity,
     is_update,
     is_add_to_cart,
@@ -46,6 +48,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 }) => {
     const [step, setStep] = useState<"selectVariants" | "priceSummary">("selectVariants");
     //console.log(images);
+    console.log('printSides', printSides);
 
     const extractNumericId = (globalId: string): string => {
         try {
@@ -73,6 +76,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
     const [priceOfVariantDesign, setPriceOfVariantDesign] = useState<PriceOfVariantDesign[]>([]);
 
     const [printTechChild, setPrintTech] = useState<PrintingTechnology>(printTech);
+    const [totalQuantity, setTotalQuantity] = useState<number>(quantity);
 
     const printTechChildRef = useRef<PrintingTechnology>(printTech);
     useEffect(() => {
@@ -84,6 +88,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
         variantId: variantId,
         quanlity: quantity
     }]);
+
 
 
     const [isSpinner, setSpinner] = useState<boolean>(false);
@@ -142,7 +147,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 
     const totalServicePrice = services
         .filter((s) => selectedServices.has(s.id))
-        .reduce((sum, s) => sum + s.price, 0);
+        .reduce((sum, s) => sum + s.price, 0) * totalQuantity;
 
     const getImageAndName = (id: string) => {
         const result: { image: string; name: string } = {
@@ -199,7 +204,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 
             const resultPricePrintingRules: any[] = []
 
-            const printSides = [PrintSide.Front, PrintSide.Back, PrintSide.None];
+            //const printSides = [PrintSide.Front, PrintSide.Back, PrintSide.None];
 
             for (const p of printSides) {
                 const data = await getPrintingPriceRules([
@@ -218,6 +223,8 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
             let blankSalePrice = 0;
             let printSalePrice = 0;
             let saleUnitTotalPrice = 0;
+
+            console.log('resultPricePrintingRules', resultPricePrintingRules);
 
             if (resultPricePrintingRules) {
                 for (const rule of resultPricePrintingRules) {
@@ -262,19 +269,19 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                         ) {
                             if (rule.node.usedForCalculation == false) {
 
-                                if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Front) {
+                                if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Front && printSides.includes(PrintSide.Front)) {
                                     unitTotalPriceTemp += rule.node.price;
                                 }
 
-                                if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Back) {
+                                if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Back && printSides.includes(PrintSide.Back)) {
                                     unitTotalPriceTemp += rule.node.price;
                                 }
                             }
                             else {
-                                if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Front) {
+                                if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Front && printSides.includes(PrintSide.Front)) {
                                     saleUnitTotalPriceTemp += rule.node.price;
                                 }
-                                if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Back) {
+                                if (condition.printingTechnology === printTechChildRef.current && rule.node.price && rule.node.printSide == PrintSide.Back && printSides.includes(PrintSide.Back)) {
                                     saleUnitTotalPriceTemp += rule.node.price;
                                 }
                             }
@@ -291,6 +298,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                 saleUnitTotalPrice = saleUnitTotalPriceTemp;
                 unitTotalPrice = unitTotalPriceTemp;
             }
+
             const nameImage = getImageAndName(item.variantId);
 
             variantsDropdownTemp.push({
@@ -441,13 +449,15 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                             const listVariantPrice: VariantPrice[] = [];
                             const listVariantSelect = [] as { variantId: string; productId: string }[];
                             let cartData = null;
-                            const cartDataRaw = localStorage.getItem("cartUpdateDesign");
-                            if (cartDataRaw) {
-                                cartData = JSON.parse(cartDataRaw);
-                            }
-                            else {
-                                cartData = await getCheckoutList(channel);
-                            }
+                            //const cartDataRaw = localStorage.getItem("cartUpdateDesign");
+                            // if (cartDataRaw) {
+                            //     alert("Please select a variant before proceeding to design2.");
+                            //     cartData = JSON.parse(cartDataRaw);
+                            // }
+                            // else {
+                            cartData = await getCheckoutList(channel);
+                            //alert("Please select a variant before proceeding to design3.");
+                            //}
                             const cartDataExpand = cartData as any;
                             for (const line of cartDataExpand.checkout.lines) {
                                 listVariantSelect.push({
@@ -460,6 +470,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                     //productId: line.product.id
                                 });
                             }
+
                             setListVariantIds(listVariantPrice);
 
                             if (variantId != variantUpdateId) {
@@ -477,6 +488,8 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                     }
                                 }
                             }
+
+
 
                             const listVariantSelectId = listVariantSelect.map(item => item.variantId);
 
@@ -561,26 +574,29 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                 }
 
                 const jsonServices = localStorage.getItem("services");
+
                 if (jsonServices) {
                     const parsed = JSON.parse(jsonServices);
+
                     if (is_update) {
                         if (typeof parsed === "string") {
                             const data = JSON.parse(parsed) as {
                                 additional_service_ids?: (string | number)[];
                             };
-                            const ids = Array.isArray(data.additional_service_ids)
-                                ? data.additional_service_ids
+
+                            const ids = Array.isArray(data)
+                                ? data.filter((id): id is string => typeof id === "string")
                                 : [];
-                            setSelectedServices(new Set(ids.map((id: number | string) => id.toString())));
+                            setSelectedServices(new Set(ids));
                         }
                     } else {
                         const parsedArray = parsed as any[]; // Ép kiểu đơn giản thành mảng bất kỳ
                         for (const i of parsedArray) {
                             if (i.variantId === variantId) {
                                 for (const j of i.metadata) {
-                                    if (j.key === "printing_info") {
-                                        const ids = (JSON.parse(j.value as string) as any)[0]
-                                            .additional_service_ids;
+                                    if (j.key === "line_additional_services") {
+
+                                        const ids = (JSON.parse(j.value as string) as any);
                                         setSelectedServices(new Set(ids.map((id: number | string) => id.toString())));
                                         break;
                                     }
@@ -666,11 +682,14 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                             <div className="mt-4 flex justify-center">
                                 <button
                                     onClick={async () => {
+                                        console.log('selectedVariants', selectedVariants);
                                         setSelectVatriantIds(selectedVariants);
 
                                         const variantIdSelects: AddCartType[] = [];
                                         const priceOfServiceTemp: PriceOfVariantDesign[] = [];// /priceOfServices
                                         const listProductDetail = await getProductDetailOfDesign();
+                                        const totalQuantity = selectedVariants.reduce((sum, sv) => sum + sv.quanlity, 0);
+                                        setTotalQuantity(totalQuantity);
 
                                         for (const sv of selectedVariants) {
                                             let color = "";
@@ -715,7 +734,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 
                                         if (printTechChildRef.current == PrintingTechnology.Silk) {
                                             for (const item of selectedVariants) {
-                                                const printSides = [PrintSide.Front, PrintSide.Back];
+                                                // const printSides = [PrintSide.Front, PrintSide.Back];
                                                 const retailPrice = 0;
                                                 let memberPrice = 0;
 

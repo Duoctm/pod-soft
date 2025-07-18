@@ -20,6 +20,7 @@ interface CheckoutLineMetadata {
 	quantity: number | null;
 	design_metadata: MetadataItem | null;
 	printing_info_metadata: MetadataItem | null;
+	line_additional_services: MetadataItem | null;
 }
 
 export function ViewDesignButton({ lineId, checkout, params, metadata }: ViewDesignButtonProps) {
@@ -56,7 +57,7 @@ export function ViewDesignButton({ lineId, checkout, params, metadata }: ViewDes
 				localStorage.setItem("checkoutId", checkout);
 				localStorage.setItem(
 					"services",
-					JSON.stringify(result.printing_info_metadata && typeof result.printing_info_metadata.value === "string" ? result.printing_info_metadata.value : "")
+					JSON.stringify(result.line_additional_services && typeof result.line_additional_services.value === "string" ? result.line_additional_services.value : "")
 				);
 				localStorage.setItem("cart_quantity", JSON.stringify(result.quantity || 0));
 

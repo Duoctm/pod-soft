@@ -27,6 +27,7 @@ import {
   ChevronLeft,
   RedoIcon,
   Undo,
+  ArrowLeft
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TShirtDesigner from "../utils/design";
@@ -41,7 +42,7 @@ import { addCartMultiItem, UpdateDesignMultiItem } from "../utils/addToCartMulti
 import { ChangeProductModal } from "./ChangeProduct";
 import { AdditionalServicePopup } from "./AdditionalService"
 import { cn } from "@/lib/utils";
-import { PrintingTechnology } from "@/gql/graphql";
+import { PrintingTechnology, PrintSide } from "@/gql/graphql";
 import { groupAndSortColors } from "../../../products/[slug]/utils/soft-color";
 //import { PrintDetail, PrintingInfo } from "./type"
 
@@ -97,6 +98,11 @@ function DesignPage(param: DesignPageProps) {
   const [showProductModal, setShowProductModal] = useState<number | 0 | 1 | 2>(0);
   const isDestroyHistortRef = useRef(true);
   const [isDestroyHistort, setIsDestroyHistort] = useState(true);
+  const [printSides, setPrintSides] = useState<PrintSide[]>([]);
+  const printSidesRef = useRef<PrintSide[]>([]);
+  useEffect(() => {
+    printSidesRef.current = printSides;
+  }, [printSides]);
 
   useEffect(() => {
     isDestroyHistortRef.current = isDestroyHistort;
@@ -1053,6 +1059,7 @@ function DesignPage(param: DesignPageProps) {
           images={designerRef.current?.faceImage || {}}
           variantId={variantIdRef.current || ""}
           printTech={printTechRef.current}
+          printSides={printSidesRef.current}
           quantity={quantity || 1}
           is_update={isUpdate}
           is_add_to_cart={isAddToCart}
@@ -1078,6 +1085,24 @@ function DesignPage(param: DesignPageProps) {
           className="lg:flex h-full w-full max-w-[370px] flex-row overflow-hidden rounded-md border hidden "
         >
           <div className="flex h-full w-20 flex-col items-start justify-start bg-[#2c3c50] pt-2 text-white relative ">
+            <div
+              className={cn(
+                "flex h-20 w-20 flex-col items-center justify-center hover:bg-white/20 hover:text-white",
+                { "border-l-[4px] border-l-blue-500 bg-white text-black": selected === "color" },
+              )}
+              onClick={() => {
+                const backtrack = localStorage.getItem("backtrack");
+                if (backtrack) {
+                  router.push(`/${param.channel}/${backtrack}`);
+                } else {
+                  router.push(`/${param.channel}`);
+                }
+              }}
+              id="back"
+            >
+              <ArrowLeft className="h-8 w-8" />
+              <span className="text-xs">Back</span>
+            </div>
             <div
               className={cn(
                 "flex h-20 w-20 flex-col items-center justify-center hover:bg-white/20 hover:text-white",
@@ -2168,14 +2193,29 @@ function DesignPage(param: DesignPageProps) {
 
                   setQuantity(cartItem.quantity);
 
-                  const totalObjectInsert = designerRef.current?.getTotalObjectInAllStage();
-                  if (totalObjectInsert && totalObjectInsert > 0) {
+                  const print_face = designerRef.current?.getTotalObjectInAllStage();
+                  if (print_face && print_face.length > 0) {
                     const printTechOfDesign = localStorage.getItem("printTechOfDesign");
                     setPrintTech(printTechOfDesign as PrintingTechnology);
                   }
                   else {
                     setPrintTech(PrintingTechnology.None);
                   }
+
+                  const print_side: PrintSide[] = [PrintSide.None];
+                  if (print_face) {
+                    for (const face of print_face) {
+                      if (face.toUpperCase() == "FRONT") {
+                        print_side.push(PrintSide.Front);
+                      }
+                      else if (face.toUpperCase() == "BACK") {
+                        print_side.push(PrintSide.Back);
+                      }
+                    }
+                  }
+
+                  setPrintSides(print_side);
+
 
 
                   const handleAddToCart = async () => {
@@ -2184,15 +2224,20 @@ function DesignPage(param: DesignPageProps) {
                     if (designerRef.current != null) {
                       let metaData = null;
 
-                      if (totalObjectInsert && totalObjectInsert > 0) {
+                      if (print_face && print_face.length > 0) {
                         metaData = (await designerRef.current.exportDesignToJson()) as any;
 
                       }
 
                       const items = Array.from(variantIdsRef.current);
 
-
-                      const result = await addCartMultiItem(param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
+                      let result: any;
+                      if (param.typeDesign == 1) {
+                        result = await addCartMultiItem(param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
+                      }
+                      else if (param.typeDesign == 4) {
+                        result = await UpdateDesignMultiItem(param.variantId, param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
+                      }
                       if (result.success) {
                         toast.success("Design added to cart successfully");
                       } else {
@@ -2209,6 +2254,18 @@ function DesignPage(param: DesignPageProps) {
 
                   if (param.typeDesign == 4) {
                     setIsUpdate(true);
+                    setIsAddToCart(false);
+                    const jsonCart = localStorage.getItem("cart");
+                    if (jsonCart) {
+                      const cartItem = JSON.parse(jsonCart) as {
+                        params: any; // Loại của params có thể thay đổi tuỳ theo nhu cầu
+                        selectedVariantId: string;
+                        quantity: number;
+                      };
+
+                      console.log("cartItem", cartItem);
+                      setQuantity(cartItem.quantity);
+                    }
                   }
                   else if (param.typeDesign == 1) {
                     setIsAddToCart(true);
@@ -2236,7 +2293,7 @@ function DesignPage(param: DesignPageProps) {
               }}
               onClick={async () => {
                 handleCaptureDesignImage();
-                //setSpinner(true)
+                ///setSpinner(true)
                 const rawQuanlity = localStorage.getItem("cart_quantity");
 
                 let cartQuanlity = 0;
@@ -2246,14 +2303,28 @@ function DesignPage(param: DesignPageProps) {
 
                 setQuantity(cartQuanlity);
                 setIsUpdate(true);
-                const totalObjectInsert = designerRef.current?.getTotalObjectInAllStage();
-                if (totalObjectInsert && totalObjectInsert > 0) {
+                const print_face = designerRef.current?.getTotalObjectInAllStage();
+                if (print_face && print_face.length > 0) {
                   const printTechOfDesign = localStorage.getItem("printTechOfDesign");
                   setPrintTech(printTechOfDesign as PrintingTechnology);
                 }
                 else {
                   setPrintTech(PrintingTechnology.None);
                 }
+
+                const print_side: PrintSide[] = [PrintSide.None];
+                if (print_face) {
+                  for (const face of print_face) {
+                    if (face.toUpperCase() == "FRONT") {
+                      print_side.push(PrintSide.Front);
+                    }
+                    else if (face.toUpperCase() == "BACK") {
+                      print_side.push(PrintSide.Back);
+                    }
+                  }
+                }
+
+                setPrintSides(print_side);
 
                 const checkoutLineId = localStorage.getItem("checkoutLineId");
                 const checkoutId = localStorage.getItem("checkoutId");
@@ -2267,7 +2338,7 @@ function DesignPage(param: DesignPageProps) {
                     if (designerRef.current != null) {
                       let metaData = null;
 
-                      if (totalObjectInsert && totalObjectInsert > 0) {
+                      if (print_face && print_face.length > 0) {
                         metaData = (await designerRef.current.exportDesignToJson()) as any;
                       }
 
@@ -2281,7 +2352,7 @@ function DesignPage(param: DesignPageProps) {
                         }
                       }
                       const result = await UpdateDesignMultiItem(variantUpdate, param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
-                      if (result == true) {
+                      if (result.success) {
                         toast.success("Design updated successfully");
                       } else {
                         toast.error("An error occurred during processing. Please try again later");
@@ -2297,13 +2368,26 @@ function DesignPage(param: DesignPageProps) {
                 handlerCheckoutRef.current = handleUpdateCart;
 
                 setIsShowAddionalService(true);
-                //setSpinner(false);
+                setSpinner(false);
               }}
             >
               Update
             </Button>
           )}
         </div>
+
+        <ArrowLeft
+          className="absolute left-1 top-1 z-10 block h-12 w-12 rounded-full bg-[#2c344b] p-3 lg:hidden"
+          stroke="white"
+          onClick={() => {
+            const backtrack = localStorage.getItem("backtrack");
+            if (backtrack) {
+              router.push(`/${param.channel}/${backtrack}`);
+            } else {
+              router.push(`/${param.channel}`);
+            }
+          }}
+        />
 
         <Pen
           className="absolute right-1 top-1 z-10 block h-12 w-12 rounded-full bg-[#2c344b] p-3 lg:hidden"
@@ -3557,6 +3641,11 @@ function DesignPage(param: DesignPageProps) {
         </div>
       </div>
 
+
+
+
+
+
       <div className="fixed bottom-0 right-0 block  md:hidden">
         {(param.typeDesign == 1) && (
           <Button
@@ -3581,8 +3670,8 @@ function DesignPage(param: DesignPageProps) {
 
                 setQuantity(cartItem.quantity);
 
-                const totalObjectInsert = designerRef.current?.getTotalObjectInAllStage();
-                if (totalObjectInsert && totalObjectInsert > 0) {
+                const print_face = designerRef.current?.getTotalObjectInAllStage();
+                if (print_face && print_face.length > 0) {
                   const printTechOfDesign = localStorage.getItem("printTechOfDesign");
                   setPrintTech(printTechOfDesign as PrintingTechnology);
                 }
@@ -3590,23 +3679,42 @@ function DesignPage(param: DesignPageProps) {
                   setPrintTech(PrintingTechnology.None);
                 }
 
+                const print_side: PrintSide[] = [PrintSide.None];
+                if (print_face) {
+                  for (const face of print_face) {
+                    if (face.toUpperCase() == "FRONT") {
+                      print_side.push(PrintSide.Front);
+                    }
+                    else if (face.toUpperCase() == "BACK") {
+                      print_side.push(PrintSide.Back);
+                    }
+                  }
+                }
+
+                setPrintSides(print_side);
+
+
 
                 const handleAddToCart = async () => {
-                  //alert(printTechRef.current);
-                  //alert(`22222 ${printTechRef.current}`);
+
                   setSpinner(true);
                   if (designerRef.current != null) {
-
                     let metaData = null;
 
-                    if (totalObjectInsert && totalObjectInsert > 0) {
+                    if (print_face && print_face.length > 0) {
                       metaData = (await designerRef.current.exportDesignToJson()) as any;
+
                     }
 
                     const items = Array.from(variantIdsRef.current);
 
-
-                    const result = await addCartMultiItem(param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
+                    let result: any;
+                    if (param.typeDesign == 1) {
+                      result = await addCartMultiItem(param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
+                    }
+                    else if (param.typeDesign == 4) {
+                      result = await UpdateDesignMultiItem(param.variantId, param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
+                    }
                     if (result.success) {
                       toast.success("Design added to cart successfully");
                     } else {
@@ -3623,13 +3731,25 @@ function DesignPage(param: DesignPageProps) {
 
                 if (param.typeDesign == 4) {
                   setIsUpdate(true);
+                  setIsAddToCart(false);
+                  const jsonCart = localStorage.getItem("cart");
+                  if (jsonCart) {
+                    const cartItem = JSON.parse(jsonCart) as {
+                      params: any; // Loại của params có thể thay đổi tuỳ theo nhu cầu
+                      selectedVariantId: string;
+                      quantity: number;
+                    };
+
+                    console.log("cartItem", cartItem);
+                    setQuantity(cartItem.quantity);
+                  }
                 }
                 else if (param.typeDesign == 1) {
                   setIsAddToCart(true);
                 }
                 setIsShowAddionalService(true);
               }
-              //setSpinner(false);
+              setSpinner(false);
             }}
           >
             <ShoppingCart
@@ -3643,7 +3763,7 @@ function DesignPage(param: DesignPageProps) {
           <Button
             onClick={async () => {
               handleCaptureDesignImage();
-              //setSpinner(true)
+              ///setSpinner(true)
               const rawQuanlity = localStorage.getItem("cart_quantity");
 
               let cartQuanlity = 0;
@@ -3653,14 +3773,28 @@ function DesignPage(param: DesignPageProps) {
 
               setQuantity(cartQuanlity);
               setIsUpdate(true);
-              const totalObjectInsert = designerRef.current?.getTotalObjectInAllStage();
-              if (totalObjectInsert && totalObjectInsert > 0) {
+              const print_face = designerRef.current?.getTotalObjectInAllStage();
+              if (print_face && print_face.length > 0) {
                 const printTechOfDesign = localStorage.getItem("printTechOfDesign");
                 setPrintTech(printTechOfDesign as PrintingTechnology);
               }
               else {
                 setPrintTech(PrintingTechnology.None);
               }
+
+              const print_side: PrintSide[] = [PrintSide.None];
+              if (print_face) {
+                for (const face of print_face) {
+                  if (face.toUpperCase() == "FRONT") {
+                    print_side.push(PrintSide.Front);
+                  }
+                  else if (face.toUpperCase() == "BACK") {
+                    print_side.push(PrintSide.Back);
+                  }
+                }
+              }
+
+              setPrintSides(print_side);
 
               const checkoutLineId = localStorage.getItem("checkoutLineId");
               const checkoutId = localStorage.getItem("checkoutId");
@@ -3674,7 +3808,7 @@ function DesignPage(param: DesignPageProps) {
                   if (designerRef.current != null) {
                     let metaData = null;
 
-                    if (totalObjectInsert && totalObjectInsert > 0) {
+                    if (print_face && print_face.length > 0) {
                       metaData = (await designerRef.current.exportDesignToJson()) as any;
                     }
 
@@ -3688,7 +3822,7 @@ function DesignPage(param: DesignPageProps) {
                       }
                     }
                     const result = await UpdateDesignMultiItem(variantUpdate, param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
-                    if (result == true) {
+                    if (result.success) {
                       toast.success("Design updated successfully");
                     } else {
                       toast.error("An error occurred during processing. Please try again later");
@@ -3704,7 +3838,7 @@ function DesignPage(param: DesignPageProps) {
               handlerCheckoutRef.current = handleUpdateCart;
 
               setIsShowAddionalService(true);
-              //setSpinner(false);
+              setSpinner(false);
             }}
           >
             <ShoppingCart

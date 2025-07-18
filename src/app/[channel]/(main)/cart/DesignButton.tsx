@@ -12,6 +12,7 @@ type DesignButtonProps = {
 };
 
 export function DesignButton({ productId, variantId, params, selectedVariantId, quantity, checkout, lineId }: DesignButtonProps) {
+
 	return (
 		<button
 			type="button"
@@ -24,7 +25,12 @@ export function DesignButton({ productId, variantId, params, selectedVariantId, 
 					quantity: quantity,
 				});
 				localStorage.setItem('cart', cartInfo);
+				console.log('cartInfo', quantity);
 				localStorage.setItem("services", JSON.stringify(result.printing_info_metadata.value));
+				localStorage.setItem(
+					"services",
+					JSON.stringify(result.line_additional_services && typeof result.line_additional_services.value === "string" ? result.line_additional_services.value : "")
+				);
 				localStorage.setItem("printTechOfDesign", PrintingTechnology.Dtg);
 				window.location.replace(`design/4/${productId}/${variantId}`);
 			}}
