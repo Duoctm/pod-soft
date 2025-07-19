@@ -58,17 +58,17 @@ export function UserMenuContainer({ params }: { params?: { channel: string } }) 
 				},
 				body: JSON.stringify({
 					query: `
-									mutation ExternalAuthenticationUrl($pluginId: String!, $input: JSONString!) {
-										externalAuthenticationUrl(pluginId: $pluginId, input: $input) {
-											authenticationData
-											errors {
-												field
-												message
-												code
-											}
-										}
-									}
-								`,
+						mutation ExternalAuthenticationUrl($pluginId: String!, $input: JSONString!) {
+  externalAuthenticationUrl(pluginId: $pluginId, input: $input) {
+    authenticationData
+    errors {
+      field
+      message
+      code
+    }
+  }
+}
+					`,
 					variables: {
 						pluginId: "mirumee.authentication.openidconnect",
 						input: JSON.stringify({ redirectUri: storefrontCallbackUrl })
@@ -111,7 +111,7 @@ export function UserMenuContainer({ params }: { params?: { channel: string } }) 
 
 	return (
 		<div onClick={handleLogin} className="flex items-center justify-center rounded-md p-2">
-			<UserIcon className={cn('h-6 w-6', {
+			<UserIcon className={cn('h-6 w-6 text-white hover:text-orange-500', {
 				"text-black ": version === "1",
 				"text-white": version === "2",
 			})} aria-hidden="true" />

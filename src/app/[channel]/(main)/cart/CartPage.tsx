@@ -22,6 +22,14 @@ import { getUser } from "@/actions/user";
 
 export type CheckoutType = Pick<Checkout, "__typename" | "id" | "email" | "lines" | "totalPrice">;
 
+type PrintDetail = {
+	print_side: string;               // Ví dụ: "FRONT"
+	face_code: string;                // Ví dụ: "FRONT"
+	printing_technology: string;     // Ví dụ: "DTG"
+};
+
+
+
 const INITIAL_CHECKOUT_VALUE: CheckoutType = {
 	__typename: "Checkout" as const,
 	id: "",
@@ -42,8 +50,10 @@ interface CartPageProps {
 const QuantityInput = ({
 	item,
 	handleQuantityChange,
+	printTechnology
 }: {
 	item: CheckoutLine;
+	printTechnology: string[] | undefined
 	handleQuantityChange: (id: string, value: number) => void;
 }) => {
 	const [inputValue, setInputValue] = useState(item.quantity.toString());
@@ -63,6 +73,16 @@ const QuantityInput = ({
 	}, [debouncedValue]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		console.log("🚀 CartPage.tsx:77 - printTechnology:", printTechnology);
+		if (printTechnology && printTechnology[0].toLocaleUpperCase() == "SILK") {
+
+			toast.warning(
+				"Minimum quantity for Silk is 228, Please try again",
+			);
+			return
+		}
+
+
 		if (Number(e.target.value) > 100000) {
 			toast.warning(
 				"You’ve entered a quantity that exceeds our limit. Please contact our sales team for a better quote!",
@@ -219,6 +239,13 @@ export function CartPage({ params }: CartPageProps) {
 			totalSavings += ((item.undiscountedUnitPrice.amount - item.unitPrice.gross.amount) * item.quantity);
 		}
 
+		const { metadata } = item
+		const printingMeta = metadata?.find((meta) => meta.key === "printing_info");
+		const parsePricingInfo: PrintDetail[] | null = printingMeta ? (JSON.parse(printingMeta.value) as PrintDetail[]) : null;
+
+		const printTechnology = parsePricingInfo?.map((item) => item.printing_technology)
+
+
 		// discount percent = (priceBeforeDiscount - priceAfterDiscount) / priceBeforeDiscount * 100
 		const discountPercent = priceBeforeDiscount > 0 ? ((priceBeforeDiscount - priceAfterDiscount) / priceBeforeDiscount) * 100 : 0;
 
@@ -266,6 +293,13 @@ export function CartPage({ params }: CartPageProps) {
 									<p className="text-xs text-gray-600">Material: {item.variant.product.category.name}</p>
 								)}
 							</div>
+							<div>
+								{printTechnology && printTechnology.length > 0 && (
+									<p className="text-xs text-gray-600">
+										Print Technology: {printTechnology.join(", ")}
+									</p>
+								)}
+							</div>
 						</div>
 
 						{/* Delete Button - Top Right */}
@@ -290,9 +324,9 @@ export function CartPage({ params }: CartPageProps) {
 						</div>
 						<div className="text-right">
 							<div className="text-xl font-bold text-gray-900">
-								<span className="text-sm line-through font-normal pr-2">
+								{totalSavings > 0 ? <span className="text-sm line-through font-normal pr-2">
 									{formatMoney(totalPriceWithoutDiscount, currency)}{" "}
-								</span>
+								</span> : null}
 								{formatMoney(totalPriceWithDiscount, currency)}{" "}
 							</div>
 							{
@@ -325,6 +359,7 @@ export function CartPage({ params }: CartPageProps) {
 							</button>
 							<div className="mx-2">
 								<QuantityInput
+									printTechnology={printTechnology}
 									item={item}
 									handleQuantityChange={(id, quantity) =>
 										handleQuantityChange(
@@ -333,6 +368,7 @@ export function CartPage({ params }: CartPageProps) {
 											item.variant.id,
 											printingTechnology as PrintingTechnology,
 											currentMetadata,
+
 										)
 									}
 								/>
@@ -428,6 +464,13 @@ export function CartPage({ params }: CartPageProps) {
 											<p className="text-xs text-gray-600">Material: {item.variant.product.category.name}</p>
 										)}
 									</div>
+									<div>
+										{printTechnology && printTechnology.length > 0 && (
+											<p className="text-xs text-gray-600">
+												Print Technology: {printTechnology.join(", ")}
+											</p>
+										)}
+									</div>
 								</div>
 
 								{/* Right: Price Info - With Discount Display */}
@@ -438,7 +481,9 @@ export function CartPage({ params }: CartPageProps) {
 										<span className="font-bold text-[#F58A71]">{formatMoney(priceAfterDiscount, currency)}</span>
 									</div>
 									<div className="py-2 text-2xl font-semibold text-black flex items-center relative">
-										<span className="line-through text-base pr-2">{formatMoney(totalPriceWithoutDiscount, currency)}{" "}</span>
+										{totalSavings > 0 ? <span className="text-sm line-through font-normal pr-2">
+											{formatMoney(totalPriceWithoutDiscount, currency)}{" "}
+										</span> : null}
 										{formatMoney(totalPriceWithDiscount, currency)}{" "}
 									</div>
 									{
@@ -472,6 +517,7 @@ export function CartPage({ params }: CartPageProps) {
 										−
 									</button>
 									<QuantityInput
+										printTechnology={printTechnology}
 										item={item}
 										handleQuantityChange={(id, quantity) =>
 											handleQuantityChange(
@@ -548,6 +594,7 @@ export function CartPage({ params }: CartPageProps) {
 		const totalServicesPrice: number = 0;
 		const currency: string = items[0]?.totalPrice.gross.currency || "USD";
 		let hasAnyDiscount = false;
+		let printingTechnology: string = ""
 
 		items.map((line) => {
 			console.log("🚀 CartPage.tsx:569 - line:", line);
@@ -559,7 +606,15 @@ export function CartPage({ params }: CartPageProps) {
 			hasAnyDiscount = totalDiscount > 0;
 			totalMember += line.totalPrice.gross.amount;
 			totalQuantity = line.quantity;
+
+			const { metadata } = line
+			const printingMeta = metadata?.find((meta) => meta.key === "printing_info");
+			const parsePricingInfo: PrintDetail[] | null = printingMeta ? (JSON.parse(printingMeta.value) as PrintDetail[]) : null;
+
+			printingTechnology = parsePricingInfo?.map((item) => item.printing_technology)[0] as string
 		});
+
+
 
 
 
@@ -574,6 +629,7 @@ export function CartPage({ params }: CartPageProps) {
 			totalServicesPrice,
 			currency,
 			hasAnyDiscount,
+			printingTechnology
 		};
 	}, [items]);
 
