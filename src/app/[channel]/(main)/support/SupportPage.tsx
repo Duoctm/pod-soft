@@ -144,7 +144,7 @@ const SupportPage = ({ channel }: { channel: string }) => {
     return (
         <div className="mx-auto max-w-7xl min-h-screen">
             <ToastContainer />
-            <div className="flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center justify-center pb-4">
                 <h2 className="mb-8 text-balance text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
                     Support
                 </h2>

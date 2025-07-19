@@ -5,8 +5,6 @@ import ShopNow from '../elements/ShopNow'
 import Banner from '../elements/Banner'
 import Wrapper from '../../wrapper'
 import HeroTitle from '../elements/HeroTitle'
-import HeroSubTitle from '../elements/HeroSubTitle'
-
 
 const HeroNewVersion = ({ channel }: { channel: string }) => {
     return (
@@ -49,7 +47,7 @@ const HeroNewVersion = ({ channel }: { channel: string }) => {
                             <ShopNow channel={channel} />
 
                         </div>
-                        <HeroSubTitle />
+                        {/* <HeroSubTitle /> */}
                     </div>
                 </Wrapper>
                 {/* Responsive background image */}
