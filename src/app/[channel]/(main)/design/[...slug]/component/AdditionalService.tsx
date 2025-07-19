@@ -219,6 +219,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
     }
 
     const caculatorPriceOfListVariant = async () => {
+        setSpinner(true);
         const variantsDropdownTemp: VariantPriceDropdown[] = [];
         let totalBlankPrice = 0;
         let totalPrintPrice = 0;
@@ -378,6 +379,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 
         setTotalUnitTotalPrice(totalUnitTotalPrice);
         setTotalSaleUnitTotalPrice(totalSaleUnitTotalPrice);
+        setSpinner(false);
     }
 
     useEffect(() => {
@@ -702,7 +704,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                             <div className="mt-4 flex justify-center">
                                 <button
                                     onClick={async () => {
-                                        console.log('selectedVariants', selectedVariants);
+                                        setSpinner(true);
                                         setSelectVatriantIds(selectedVariants);
 
                                         const variantIdSelects: AddCartType[] = [];
@@ -750,7 +752,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 
                                         priceOfVariantDesigns(new Set(priceOfServiceTemp));
                                         setPriceOfVariantDesign(priceOfServiceTemp);
-
+                                        setSpinner(false);
 
                                         if (printTechChildRef.current == PrintingTechnology.Silk) {
                                             for (const item of selectedVariants) {
