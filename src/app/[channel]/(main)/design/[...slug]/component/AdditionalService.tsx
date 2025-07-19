@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronDown } from 'lucide-react';
+import { toast } from "react-toastify";
 import { getAdditionalService, getPrintingPriceRules } from "../utils/action";
 import { fetchRawProductDetail } from "../utils/getProductDetailForDesign";
 import { getCheckoutList } from "../../../cart/actions"
 import { type AddCartType, type PriceOfVariantDesign } from "../utils/type"
 import { type Service, type VariantPrice, type VariantSelect, type VariantPriceDropdown } from "./type";
 import { PrintingTechnology, PrintSide } from "@/gql/graphql";
-import { toast } from "react-toastify";
 
 interface PopupProps {
     productId: string,
@@ -29,6 +29,32 @@ interface PopupProps {
     setPrintTechFromParent: React.Dispatch<React.SetStateAction<PrintingTechnology>>;
 
 }
+
+function getLocalStorageSize(): number {
+    let total = 0;
+    for (const key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+            const value = localStorage.getItem(key);
+            total += key.length + (value?.length || 0);
+        }
+    }
+    return total;
+}
+
+function saveProductVariants(variants: any) {
+    const data = JSON.stringify(variants);
+    const dataSize = data.length; // 1 char ~ 1 byte
+    const currentSize = getLocalStorageSize();
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    if (currentSize + dataSize < maxSize) {
+        localStorage.setItem('listProductDetail', data);
+    } else {
+        localStorage.removeItem('listProductDetail');
+        console.warn("Dữ liệu vượt quá giới hạn 5MB, không lưu vào localStorage.");
+    }
+}
+
 
 const AdditionalServicePopup: React.FC<PopupProps> = ({
     productId,
@@ -432,7 +458,8 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                         });
                                     }
                                 }
-                                localStorage.setItem('listProductDetail', JSON.stringify(product.variants));
+                                saveProductVariants(product.variants);
+                                //localStorage.setItem('listProductDetail', JSON.stringify(product.variants));
                             }
                             setListVariantShowSelects(variantShowSelect);
                             setSpinner(false);
@@ -533,8 +560,8 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                 }
                             }
 
-
-                            localStorage.setItem('listProductDetail', JSON.stringify(productVariantItems));
+                            saveProductVariants(productVariantItems);
+                            //localStorage.setItem('listProductDetail', JSON.stringify(productVariantItems));
 
                             setListVariantShowSelects(variantShowSelect);
                             setSpinner(false);

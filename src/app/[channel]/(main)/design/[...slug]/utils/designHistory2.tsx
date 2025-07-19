@@ -52,7 +52,7 @@ export function destroyStackHistory2() {
 
 export function addStackHistory2(nodeHistory: NodeHistory2, override?: boolean) {
     const StackHistoriesJsonString = localStorage.getItem("stackHistory");
-    let StackHistories = JSON.parse(StackHistoriesJsonString || "") as StackHistory2;
+    const StackHistories = JSON.parse(StackHistoriesJsonString || "") as StackHistory2;
     if (override) {
         StackHistories.nodeHistory = [nodeHistory];
         StackHistories.index = 0;
@@ -65,12 +65,25 @@ export function addStackHistory2(nodeHistory: NodeHistory2, override?: boolean) 
         StackHistories.index++;
     }
 
-    localStorage.setItem("stackHistory", JSON.stringify(StackHistories));
+    let flag = true;
+    while (flag) {
+        try {
+            localStorage.setItem("stackHistory", JSON.stringify(StackHistories));
+            flag = false;
+        }
+        catch (e) {
+            if (StackHistories.nodeHistory.length == 0) {
+                return;
+            }
+            StackHistories.nodeHistory.shift();
+            StackHistories.index--;
+        }
+    }
 }
 
 export function undoStackHistory2(): NodeHistory2 | null {
     const StackHistoriesJsonString = localStorage.getItem("stackHistory");
-    let StackHistories = JSON.parse(StackHistoriesJsonString || "") as StackHistory2;
+    const StackHistories = JSON.parse(StackHistoriesJsonString || "") as StackHistory2;
     if (StackHistories.nodeHistory.length == 0 || StackHistories.index == 0) {
         return null;
     }
@@ -83,7 +96,7 @@ export function undoStackHistory2(): NodeHistory2 | null {
 
 export function redoStackHistory2(): NodeHistory2 | null {
     const StackHistoriesJsonString = localStorage.getItem("stackHistory");
-    let StackHistories = JSON.parse(StackHistoriesJsonString || "") as StackHistory2;
+    const StackHistories = JSON.parse(StackHistoriesJsonString || "") as StackHistory2;
     if (StackHistories.nodeHistory.length == 0 || StackHistories.index == StackHistories.nodeHistory.length - 1) {
         return null;
     }

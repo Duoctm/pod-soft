@@ -52,7 +52,13 @@ const fetchProductDetail = async (productId: string, variantId: string, channel:
 
   try {
     const rawData = await fetchRawProductDetail(productId, channel);
-    localStorage.setItem('productDetailDesign', JSON.stringify(rawData));
+    try {
+      localStorage.setItem('productDetailDesign', JSON.stringify(rawData));
+    }
+    catch (e) {
+      localStorage.removeItem('productDetailDesign');
+      console.error("cannot save data in localStorage", e);
+    }
     // Kiểm tra xem rawData có phải là một object và có trường 'product'
     if (rawData && typeof rawData === 'object' && 'product' in rawData) {
       const product = (rawData as { product: { variants: any[] } }).product;
