@@ -73,13 +73,16 @@ const QuantityInput = ({
 	}, [debouncedValue]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		console.log("🚀 CartPage.tsx:77 - printTechnology:", printTechnology);
-		if (printTechnology && printTechnology[0].toLocaleUpperCase() == "SILK") {
 
-			toast.warning(
-				"Minimum quantity for Silk is 228, Please try again",
-			);
-			return
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+		if (printTechnology && printTechnology === PrintingTechnology.Silk) {
+			if (Number(e.target.value) < 288) {
+
+				toast.warning(
+					"Minimum quantity for Silk is 228, Please try again",
+				);
+				return
+			}
 		}
 
 
@@ -147,8 +150,18 @@ export function CartPage({ params }: CartPageProps) {
 			variantId: string,
 			printingTechnology?: PrintingTechnology,
 			currentMetadata?: MetadataItem[],
+			printTech?: string
 		) => {
 			if (newQuantity <= 0) return;
+
+			console.log(printTech)
+
+			if (printTech === "SILK" && newQuantity < 288) {
+				toast.warning(
+					"Minimum quantity for Silk is 228, Please try again",
+				);
+				return
+			}
 
 			const userData = await getUser();
 
@@ -241,7 +254,9 @@ export function CartPage({ params }: CartPageProps) {
 
 		const { metadata } = item
 		const printingMeta = metadata?.find((meta) => meta.key === "printing_info");
-		const printingTech = metadata?.find((meta) => meta.key === "print_technology");
+		const printingTech = metadata?.find((meta) => meta.key === "print_technology")?.value.replace(/^"|"$/g, '');
+
+
 		const parsePricingInfo: PrintDetail[] | null = printingMeta ? (JSON.parse(printingMeta.value) as PrintDetail[]) : null;
 
 		const printTechnology = parsePricingInfo?.map((item) => item.printing_technology)
@@ -297,7 +312,7 @@ export function CartPage({ params }: CartPageProps) {
 							<div>
 								{
 									printingTech ? <span className="text-xs text-gray-600">
-										Print Technology: {printingTech.value}
+										Print Technology: {printingTech}
 									</span> : printTechnology && printTechnology.length > 0 && (
 										<p className="text-xs text-gray-600">
 											Print Technology: {printTechnology.join(", ")}
@@ -356,6 +371,7 @@ export function CartPage({ params }: CartPageProps) {
 										item.variant.id,
 										printingTechnology as PrintingTechnology,
 										currentMetadata,
+										printingTech
 									)
 								}
 								className="flex h-8 w-8 items-center justify-center rounded text-gray-600 transition-all hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
@@ -365,7 +381,7 @@ export function CartPage({ params }: CartPageProps) {
 							</button>
 							<div className="mx-2">
 								<QuantityInput
-									printTechnology={printingTech?.value}
+									printTechnology={printingTech}
 									item={item}
 									handleQuantityChange={(id, quantity) =>
 										handleQuantityChange(
@@ -388,6 +404,8 @@ export function CartPage({ params }: CartPageProps) {
 										item.variant.id,
 										printingTechnology as PrintingTechnology,
 										currentMetadata,
+										printingTech
+
 									)
 								}
 								className="flex h-8 w-8 items-center justify-center rounded text-gray-600 transition-all hover:bg-white hover:shadow-sm"
@@ -473,7 +491,7 @@ export function CartPage({ params }: CartPageProps) {
 									<div>
 										{
 											printingTech ? <span className="text-xs text-gray-600">
-												Print Technology: {printingTech.value}
+												Print Technology: {printingTech}
 											</span> : printTechnology && printTechnology.length > 0 && (
 												<p className="text-xs text-gray-600">
 													Print Technology: {printTechnology.join(", ")}
@@ -527,7 +545,7 @@ export function CartPage({ params }: CartPageProps) {
 										−
 									</button>
 									<QuantityInput
-										printTechnology={printingTech?.value}
+										printTechnology={printingTech}
 										item={item}
 										handleQuantityChange={(id, quantity) =>
 											handleQuantityChange(
@@ -607,7 +625,7 @@ export function CartPage({ params }: CartPageProps) {
 		let printingTechnology: string = ""
 
 		items.map((line) => {
-			console.log("🚀 CartPage.tsx:569 - line:", line);
+
 			totalRetail += line.undiscountedUnitPrice.amount * line.quantity;
 
 			if (line.undiscountedUnitPrice.amount > line.unitPrice.gross.amount / line.quantity) {
