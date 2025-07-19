@@ -10,19 +10,27 @@ const config = {
 			},
 			{
 				protocol: "https",
-				hostname: "res.cloudinary.com",
-				port: "",
-				pathname: "/dzzqvl1b2/image/**",
-			},
-			{
-				protocol: "https",
 				hostname: "api-dev.mypodsoftware.io.vn",
 				port: "",
 				pathname: "/thumbnail/**",
 			},
 			{
-				protocol: "http",
-				hostname: "api-dev.mypodsoftware.io.vn",
+				protocol: "https",
+				hostname: "api.mypodsoftware.io.vn",
+				port: "",
+				pathname: "/thumbnail/**",
+			},
+			{
+				protocol: "https",
+				hostname: "zoomprints-production-s3-media-bucket.s3.us-west-1.amazonaws.com",
+			},
+			{
+				protocol: "https",
+				hostname: "zoomprints-production-s3-media-bucket.s3.amazonaws.com",
+			},
+			{
+				protocol: "https",
+				hostname: "api.podsoftware.io.vn",
 				port: "",
 				pathname: "/thumbnail/**",
 			},

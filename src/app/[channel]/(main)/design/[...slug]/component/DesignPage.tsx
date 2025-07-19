@@ -713,37 +713,51 @@ function DesignPage(param: DesignPageProps) {
   }
 
   const colors = [
+    // Gray group (low saturation, sorted by lightness descending)
     "#FFFFFF",
-    "#000000",
-    "#FF0000",
-    "#00FF00",
-    "#0000FF",
-    "#FFFF00",
-    "#FF00FF",
-    "#00FFFF",
-    "#FFA500",
-    "#800080",
-    "#616161",
     "#f0f0f0",
+    "#b8d5d7",
+    "#a5def8",
+    "#616161",
     "#5b5b5b",
-    "#222222",
-    "#fc8d74",
     "#432d26",
-    "#eead91",
-    "#806355",
     "#382d21",
+    "#222222",
+
+    // Red group
+    "#fc8d74",
+    "#eead91",
+    "#c50404",
+    "#FF0000",
+
+    // Orange group
+    "#FFA500",
+
+    // Yellow group
     "#faef93",
     "#aeba5e",
+
+    // Green group
     "#8aa140",
     "#1f6522",
+    "#00FF00",
+
+    // Cyan group
     "#13afa2",
-    "#b8d5d7",
     "#15aeda",
-    "#a5def8",
+    "#00FFFF",
+
+    // Blue group
     "#0f77c0",
     "#3469b7",
-    "#c50404",
+    "#0000FF",
+
+    // Purple group
+    "#800080",
+
+    // Others (no color lands here in your list)
   ];
+
 
   // const menuWidth = "10vw";
 
@@ -1058,7 +1072,7 @@ function DesignPage(param: DesignPageProps) {
           channel={param.channel}
           images={designerRef.current?.faceImage || {}}
           variantId={variantIdRef.current || ""}
-          printTech={printTechRef.current}
+          printTech={printTech}
           printSides={printSidesRef.current}
           quantity={quantity || 1}
           is_update={isUpdate}
@@ -1087,8 +1101,7 @@ function DesignPage(param: DesignPageProps) {
           <div className="flex h-full w-20 flex-col items-start justify-start bg-[#2c3c50] pt-2 text-white relative ">
             <div
               className={cn(
-                "flex h-20 w-20 flex-col items-center justify-center hover:bg-white/20 hover:text-white",
-                { "border-l-[4px] border-l-blue-500 bg-white text-black": selected === "color" },
+                "flex h-20 w-20 flex-col items-center justify-center hover:bg-white/20 hover:text-white"
               )}
               onClick={() => {
                 const backtrack = localStorage.getItem("backtrack");
@@ -1216,7 +1229,11 @@ function DesignPage(param: DesignPageProps) {
                 <div className="flex flex-1 flex-col p-2">
                   <div className="flex items-center justify-between ">
                     <span className="text-md font-semibold">Choose Color</span>
-                    <X />
+                    <X
+                      onClick={() => {
+                        setMenuIndex(0);
+                      }}
+                    />
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2 ">
                     {Array.from(colorData.entries()).map(([key, value]) => (
@@ -1576,7 +1593,7 @@ function DesignPage(param: DesignPageProps) {
                           {colors.map((color: string) => (
                             <div
                               key={color}
-                              className="w-7 h-7 rounded-md border hover:border-black/50 cursor-pointer transition-transform transform hover:scale-110"
+                              className="w-7 h-7 rounded-full border hover:border-black/50 cursor-pointer transition-transform transform hover:scale-110"
                               style={{ backgroundColor: color }}
                               data-color={color}
                               onClick={() => {
@@ -1887,7 +1904,7 @@ function DesignPage(param: DesignPageProps) {
                             {colors.map((color: string) => (
                               <div
                                 key={color}
-                                className="w-7 h-7 rounded-md border hover:border-black/50 cursor-pointer transition-transform transform hover:scale-110"
+                                className="w-7 h-7 rounded-full border hover:border-black/50 cursor-pointer transition-transform transform hover:scale-110"
                                 style={{ backgroundColor: color }}
                                 data-color={color}
                                 onClick={() => {

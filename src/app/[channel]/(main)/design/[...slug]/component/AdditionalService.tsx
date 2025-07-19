@@ -8,6 +8,7 @@ import { getCheckoutList } from "../../../cart/actions"
 import { type AddCartType, type PriceOfVariantDesign } from "../utils/type"
 import { type Service, type VariantPrice, type VariantSelect, type VariantPriceDropdown } from "./type";
 import { PrintingTechnology, PrintSide } from "@/gql/graphql";
+import { toast } from "react-toastify";
 
 interface PopupProps {
     productId: string,
@@ -48,7 +49,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 }) => {
     const [step, setStep] = useState<"selectVariants" | "priceSummary">("selectVariants");
     //console.log(images);
-    console.log('printSides', printSides);
 
     const extractNumericId = (globalId: string): string => {
         try {
@@ -60,7 +60,6 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
             return "";
         }
     };
-
 
     const [services, setServices] = useState<Service[]>([]);
     const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set()); // danh sach service se duoc chon
@@ -224,18 +223,16 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
             let printSalePrice = 0;
             let saleUnitTotalPrice = 0;
 
-            console.log('resultPricePrintingRules', resultPricePrintingRules);
+
 
             if (resultPricePrintingRules) {
                 for (const rule of resultPricePrintingRules) {
                     const condition = rule.node.condition;
                     if (condition && condition.minQuantity !== null &&
-                        condition.maxQuantity !== null &&
                         condition.minQuantity &&
-                        condition.maxQuantity &&
                         condition.printingTechnology !== null &&
-                        quantity >= condition.minQuantity &&
-                        quantity <= condition.maxQuantity
+                        ((condition.maxQuantity && quantity <= condition.maxQuantity && quantity >= condition.minQuantity) ||
+                            (condition.maxQuantity === null && quantity >= condition.minQuantity))
                     ) {
                         if (rule.node.usedForCalculation == false) {
                             if (condition.printingTechnology === PrintingTechnology.None && rule.node.price && rule.node.printSide == PrintSide.None) {
@@ -257,15 +254,11 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                 if (printTech != PrintingTechnology.None) {
                     for (const rule of resultPricePrintingRules) {
                         const condition = rule.node.condition;
-                        if (
-                            condition &&
-                            condition.minQuantity !== null &&
-                            condition.maxQuantity !== null &&
+                        if (condition && condition.minQuantity !== null &&
                             condition.minQuantity &&
-                            condition.maxQuantity &&
                             condition.printingTechnology !== null &&
-                            quantity >= condition.minQuantity &&
-                            quantity <= condition.maxQuantity
+                            ((condition.maxQuantity && quantity <= condition.maxQuantity && quantity >= condition.minQuantity) ||
+                                (condition.maxQuantity === null && quantity >= condition.minQuantity))
                         ) {
                             if (rule.node.usedForCalculation == false) {
 
@@ -734,6 +727,12 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
 
                                         if (printTechChildRef.current == PrintingTechnology.Silk) {
                                             for (const item of selectedVariants) {
+                                                if (item.quanlity < 288) {
+                                                    toast.error("The quantity of each variant must be at least 288 for Silk printing.");
+                                                    return;
+                                                }
+                                            }
+                                            for (const item of selectedVariants) {
                                                 // const printSides = [PrintSide.Front, PrintSide.Back];
                                                 const retailPrice = 0;
                                                 let memberPrice = 0;
@@ -1052,7 +1051,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                         </div>
 
                                         <div className="mt-3 text-right text-sm text-gray-600">
-                                            Selected Services Total:&nbsp;
+                                            Total service cost for all items:&nbsp;
                                             <span className="text-base font-semibold text-[#783c54]">
                                                 ${totalServicePrice.toLocaleString()}
                                             </span>
@@ -1070,7 +1069,7 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                             </div>
 
                                             <div>
-                                                <div className="text-sm text-gray-600">Selected Services Total</div>
+                                                <div className="text-sm text-gray-600">Total service cost</div>
                                                 <div className="text-base sm:text-lg font-semibold text-black">
                                                     ${totalServicePrice.toLocaleString()}
                                                 </div>

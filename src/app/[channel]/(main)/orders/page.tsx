@@ -16,6 +16,7 @@ export default async function OrderPage({ params }: { params: { channel: string 
 
 	const orders = user.orders?.edges || [];
 
+
 	if (orders.length === 0) {
 		return (
 			<div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">

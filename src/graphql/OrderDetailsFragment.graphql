@@ -18,6 +18,10 @@ fragment OrderDetails on Order {
 			amount
 			currency
 		}
+		net {
+			amount
+			currency
+		}
 	}
 	lines {
 		metadata {
@@ -43,6 +47,10 @@ fragment OrderDetails on Order {
 			}
 			pricing {
 				price {
+					net {
+						amount
+						currency
+					}
 					gross {
 						amount
 						currency

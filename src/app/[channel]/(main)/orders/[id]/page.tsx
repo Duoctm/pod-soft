@@ -82,6 +82,7 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 	//     return <LoginForm params={{ channel: params.channel }} />;
 	// }
 
+
 	const handleReorder = async () => {
 		setIsLoading(true);
 		try {
@@ -142,11 +143,15 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 						<h2 className="mb-2 lg:mb-4 text-xl font-semibold">Order #{orderDetail?.node.number}</h2>
 						<div className="space-y-4">
 							{products.map((item) => {
+								console.log("🚀 page.tsx:145 - item:", item);
+
+
 								if (!item.variant) return null;
 								const product = item.variant.product;
 								const { name: variantName } = item.variant
 								const { category } = item.variant.product
 								const media = item.variant.media;
+								const { pricing } = item.variant
 								return (
 									<div
 										key={product.id}
@@ -176,11 +181,7 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 												</div>
 												<div className="text-right flex items-center gap-1">
 													<div className="text-sm font-medium text-neutral-900">
-														{orderDetail && orderDetail?.node.total ? formatMoney(
-															parseFloat(String(orderDetail?.node.total.gross.amount / item.quantity || 0)),
-															orderDetail?.node.total.gross.currency || ""
-														) : null}
-
+														{pricing?.price && formatMoney(pricing.price.gross.amount, pricing.price.gross.currency)}
 													</div>
 
 													<div className="text-sm text-neutral-500">/ per unit</div>

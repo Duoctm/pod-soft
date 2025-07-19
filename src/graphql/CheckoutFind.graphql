@@ -19,6 +19,12 @@ query CheckoutFind($id: ID!) {
 				amount
 				currency
 			}
+			unitPrice {
+				gross {
+					amount
+					currency
+				}
+			}
 			variant {
 				quantityAvailable
 				media {

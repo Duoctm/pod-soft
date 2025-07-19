@@ -59,6 +59,7 @@ function parsePricingInfo(metadata: { key: string; value: string }[]): PricingIn
 // Aggregate pricing info from all lines
 function aggregatePricing(lines: SummaryLine[]) {
 
+
 	let totalRetail = 0; // giá gốc
 	let totalMember = 0;
 	let totalSavings = 0;
@@ -69,11 +70,16 @@ function aggregatePricing(lines: SummaryLine[]) {
 	let hasDiscount = false;
 
 	lines.forEach((line) => {
+		console.log("🚀 Summary.tsx:72 - line:", line);
+		currency = line.unitPrice.gross.currency; // Assuming all lines have the same currency
 
 
-		totalRetail += line.totalPrice.gross.amount
+		totalRetail += line.undiscountedUnitPrice.amount * line.quantity;
 		totalMember += line.unitPrice.gross.amount * line.quantity;
-		totalSavings += ((line.undiscountedUnitPrice.amount - line.unitPrice.gross.amount) * line.quantity);
+		console.log(line.undiscountedUnitPrice.amount - line.unitPrice.gross.amount)
+		if (line.undiscountedUnitPrice.amount > line.unitPrice.gross.amount / line.quantity) {
+			totalSavings += ((line.undiscountedUnitPrice.amount - line.unitPrice.gross.amount) * line.quantity);
+		}
 		totalQuantity += line.quantity;
 
 
@@ -86,12 +92,9 @@ function aggregatePricing(lines: SummaryLine[]) {
 		const info = parsePricingInfo(metadata as { key: string; value: string }[]);
 
 		if (info) {
-			// totalRetail += info.retail_price * info.quantity;
-
-			// totalSavings += (info.retail_price - info.member_price) * info.quantity;
 
 			discountPercent = info.discount_percentage; // Use last, or could average if needed
-			currency = info.currency;
+
 			if (info.has_discount) hasDiscount = true;
 		}
 	});
@@ -131,10 +134,13 @@ export const Summary: FC<SummaryProps> = ({
 
 	const { totalRetail, totalSavings, currency } = aggregatePricing(lines);
 	const saleDiscount = totalSavings;
+
 	const voucherDiscount = discount?.amount || 0;
 
 
+
 	const totalSavingsAmount = saleDiscount + voucherDiscount + (shippingPrice?.gross?.amount || 0);
+
 
 
 

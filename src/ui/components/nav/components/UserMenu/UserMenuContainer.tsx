@@ -112,10 +112,9 @@ export function UserMenuContainer({ params }: { params?: { channel: string } }) 
 	return (
 		<div onClick={handleLogin} className="flex items-center justify-center rounded-md p-2">
 			<UserIcon className={cn('h-6 w-6', {
-				"text-black": version === "1",
+				"text-black ": version === "1",
 				"text-white": version === "2",
 			})} aria-hidden="true" />
-
 			<span className="sr-only">Log in</span>
 		</div>
 	);

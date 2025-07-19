@@ -16,7 +16,6 @@ async function getAdditionalService(channel: string, first: number, after: strin
 }
 
 async function getPrintingPriceRules(printTech: PrintingTechnology[], channel: string, printSide: PrintSide, objectId?: number, _minQuantity?: number) {
-
     if (objectId) {
         const data = await executeGraphQL(PublicPrintingPriceRulesDocument, {
             variables: {
@@ -28,7 +27,7 @@ async function getPrintingPriceRules(printTech: PrintingTechnology[], channel: s
                 },
                 sortBy: null,
                 channel: channel
-            }
+            },
         });
         return data.publicPrintingPriceRules?.edges;
     }
@@ -43,7 +42,7 @@ async function getPrintingPriceRules(printTech: PrintingTechnology[], channel: s
                 },
                 sortBy: null,
                 channel: channel
-            }
+            },
         });
         return data.publicPrintingPriceRules?.edges;
     }
