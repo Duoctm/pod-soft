@@ -53,7 +53,7 @@ const QuantityInput = ({
 	printTechnology
 }: {
 	item: CheckoutLine;
-	printTechnology: string[] | undefined
+	printTechnology: string | undefined
 	handleQuantityChange: (id: string, value: number) => void;
 }) => {
 	const [inputValue, setInputValue] = useState(item.quantity.toString());
@@ -365,7 +365,7 @@ export function CartPage({ params }: CartPageProps) {
 							</button>
 							<div className="mx-2">
 								<QuantityInput
-									printTechnology={printTechnology}
+									printTechnology={printingTech?.value}
 									item={item}
 									handleQuantityChange={(id, quantity) =>
 										handleQuantityChange(
@@ -527,7 +527,7 @@ export function CartPage({ params }: CartPageProps) {
 										−
 									</button>
 									<QuantityInput
-										printTechnology={printTechnology}
+										printTechnology={printingTech?.value}
 										item={item}
 										handleQuantityChange={(id, quantity) =>
 											handleQuantityChange(
