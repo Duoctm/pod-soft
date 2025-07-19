@@ -602,6 +602,10 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                     ]),
                 },
                 {
+                    key: "print_technology",
+                    value: JSON.stringify(JSON.stringify)
+                },
+                {
                     key: "service_detail",
                     value: JSON.stringify(serviceDetails)
                 },
@@ -834,6 +838,7 @@ const ProductDetail: React.FC<PageProps> = ({ params }) => {
                         />
                     </div>
                 </div>
+                {printTechnology}
 
                 <ProductInfo
                     productDetail={productDetail}

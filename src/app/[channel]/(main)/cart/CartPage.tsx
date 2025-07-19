@@ -241,6 +241,7 @@ export function CartPage({ params }: CartPageProps) {
 
 		const { metadata } = item
 		const printingMeta = metadata?.find((meta) => meta.key === "printing_info");
+		const printingTech = metadata?.find((meta) => meta.key === "print_technology");
 		const parsePricingInfo: PrintDetail[] | null = printingMeta ? (JSON.parse(printingMeta.value) as PrintDetail[]) : null;
 
 		const printTechnology = parsePricingInfo?.map((item) => item.printing_technology)
@@ -294,11 +295,16 @@ export function CartPage({ params }: CartPageProps) {
 								)}
 							</div>
 							<div>
-								{printTechnology && printTechnology.length > 0 && (
-									<p className="text-xs text-gray-600">
-										Print Technology: {printTechnology.join(", ")}
-									</p>
-								)}
+								{
+									printingTech ? <span className="text-xs text-gray-600">
+										Print Technology: {printingTech.value}
+									</span> : printTechnology && printTechnology.length > 0 && (
+										<p className="text-xs text-gray-600">
+											Print Technology: {printTechnology.join(", ")}
+										</p>
+									)
+								}
+
 							</div>
 						</div>
 
@@ -465,11 +471,15 @@ export function CartPage({ params }: CartPageProps) {
 										)}
 									</div>
 									<div>
-										{printTechnology && printTechnology.length > 0 && (
-											<p className="text-xs text-gray-600">
-												Print Technology: {printTechnology.join(", ")}
-											</p>
-										)}
+										{
+											printingTech ? <span className="text-xs text-gray-600">
+												Print Technology: {printingTech.value}
+											</span> : printTechnology && printTechnology.length > 0 && (
+												<p className="text-xs text-gray-600">
+													Print Technology: {printTechnology.join(", ")}
+												</p>
+											)
+										}
 									</div>
 								</div>
 
