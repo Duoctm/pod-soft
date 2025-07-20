@@ -44,7 +44,7 @@ const ProductActions: React.FC<ProductActionsProps> = ({
     return (
         <div className="flex flex-grow gap-2">
             {!fromDesign && (
-                <div className="flex flex-col gap-2 w-full md:flex-row items-center justify-between flex-wrap">
+                <div className="flex flex-col gap-2 w-full md:flex-row items-center justify-between">
                     <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:gap-2">
                         {(selectedVariant?.metadata?.find((i) => i.key === "custom_json") && isShowDesignButton) && (
                             <div onClick={onNavigateToDesign} className="w-full sm:w-auto">
