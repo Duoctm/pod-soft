@@ -3877,12 +3877,7 @@ function DesignPage(param: DesignPageProps) {
         </div>
       </div>
 
-
-
-
-
-
-      <div className="fixed bottom-0 right-0 block  lg:hidden">
+      {/* <div className="absolute top-1/2 right-0 block  lg:hidden">
         {(param.typeDesign == 1) && (
           <Button
             className="flex h-12 w-12  items-center justify-center rounded-full bg-[#2c344b] p-2"
@@ -4083,7 +4078,7 @@ function DesignPage(param: DesignPageProps) {
             />
           </Button>
         )}
-      </div>
+      </div> */}
 
       <div className="fixed inset-0 z-50 hidden items-center justify-center" role="status">
         <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-t-2 border-blue-500"></div>
