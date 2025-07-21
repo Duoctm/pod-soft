@@ -456,7 +456,7 @@ export const Checkout = () => {
 
 						</div>
 						{
-							checkout ? (<div className="order-1  px-4 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 ">
+							checkout ? (<div className="order-1 lg:order-2 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:px-10 ">
 								<Suspense fallback={<SummarySkeleton />}>
 									{checkout && <Summary  {...checkout} lines={checkout.lines} update={update} onPlaceOrder={handlePlaceOrder} show={Boolean(checkout.shippingAddress)} loading={isLoadingPlaceOrder} />}
 								</Suspense>
