@@ -70,7 +70,7 @@ export default function CheckoutPage({
 
 				{/* Checkout Content */}
 				<div className="overflow-hidden">
-					<div className="p-2">
+					<div>
 						<RootWrapper saleorApiUrl={process.env.NEXT_PUBLIC_SALEOR_API_URL} />
 					</div>
 				</div>
