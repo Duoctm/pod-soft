@@ -55,6 +55,7 @@ interface SummaryProps {
 
 // Aggregate pricing info from all lines
 function aggregatePricing(lines: CheckoutLine[]) {
+
 	let totalRetail = 0;
 	let totalMember = 0;
 	let totalSavings = 0;
@@ -70,7 +71,9 @@ function aggregatePricing(lines: CheckoutLine[]) {
 		const printing = line.metadata?.find((meta) => meta.key === "printing");
 		const validJson = printing?.value.replace(/'/g, '"') as string;
 		const parsePrinting: PrintInfo | null = printing ? (JSON.parse(validJson) as PrintInfo) : null;
-		const { breakdown: { line_services: lineServices }, final_unit_price, base_price } = parsePrinting!;
+		const { breakdown: { line_services: lineServices }, base_price, printing_cost_per_unit } = parsePrinting!;
+		console.log("🚀 Summary.tsx:75 - parsePrinting:", parsePrinting);
+
 
 		const servicePRice = lineServices.reduce((total, service) => {
 			const cost = parseFloat(service.total_cost) || 0;
@@ -82,7 +85,7 @@ function aggregatePricing(lines: CheckoutLine[]) {
 
 
 		currency = line.unitPrice.gross.currency;
-		printingPrice += (Number(final_unit_price) * line.quantity) - servicePRice;
+		printingPrice += (Number(printing_cost_per_unit) * line.quantity);
 
 		totalRetail += line.undiscountedUnitPrice.amount * line.quantity;
 		totalMember += line.unitPrice.gross.amount * line.quantity;
@@ -201,7 +204,7 @@ export const Summary: FC<SummaryProps> = ({
 								<span className="text-sm text-gray-600">Printing Price</span>
 							</div>
 							<span className="font-medium">
-								<Money money={{ amount: Number(printingPrice) + (discount?.amount ?? 0), currency }} ariaLabel="printing price" />
+								<Money money={{ amount: Number(printingPrice), currency }} ariaLabel="printing price" />
 							</span>
 						</div>
 
@@ -286,7 +289,7 @@ export const Summary: FC<SummaryProps> = ({
 						) : (
 							<>
 								<ShoppingCart className="w-5 h-5" />
-								Purchase
+								Place Order
 							</>
 						)}
 					</button>
