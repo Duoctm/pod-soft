@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronDown } from 'lucide-react';
-import { toast } from "react-toastify";
 import { getAdditionalService, getPrintingPriceRules } from "../utils/action";
 import { fetchRawProductDetail } from "../utils/getProductDetailForDesign";
 import { getCheckoutList } from "../../../cart/actions"
 import { type AddCartType, type PriceOfVariantDesign } from "../utils/type"
 import { type Service, type VariantPrice, type VariantSelect, type VariantPriceDropdown } from "./type";
 import { PrintingTechnology, PrintSide } from "@/gql/graphql";
+import { toast } from "react-toastify";
 
 interface PopupProps {
     productId: string,
@@ -32,7 +32,7 @@ interface PopupProps {
 
 function getLocalStorageSize(): number {
     let total = 0;
-    for (const key in localStorage) {
+    for (let key in localStorage) {
         if (localStorage.hasOwnProperty(key)) {
             const value = localStorage.getItem(key);
             total += key.length + (value?.length || 0);

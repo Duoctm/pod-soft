@@ -52,7 +52,7 @@ export function destroyStackHistory2() {
 
 export function addStackHistory2(nodeHistory: NodeHistory2, override?: boolean) {
     const StackHistoriesJsonString = localStorage.getItem("stackHistory");
-    const StackHistories = JSON.parse(StackHistoriesJsonString || "") as StackHistory2;
+    let StackHistories = JSON.parse(StackHistoriesJsonString || "") as StackHistory2;
     if (override) {
         StackHistories.nodeHistory = [nodeHistory];
         StackHistories.index = 0;
@@ -83,7 +83,7 @@ export function addStackHistory2(nodeHistory: NodeHistory2, override?: boolean) 
 
 export function undoStackHistory2(): NodeHistory2 | null {
     const StackHistoriesJsonString = localStorage.getItem("stackHistory");
-    const StackHistories = JSON.parse(StackHistoriesJsonString || "") as StackHistory2;
+    let StackHistories = JSON.parse(StackHistoriesJsonString || "") as StackHistory2;
     if (StackHistories.nodeHistory.length == 0 || StackHistories.index == 0) {
         return null;
     }
@@ -96,7 +96,7 @@ export function undoStackHistory2(): NodeHistory2 | null {
 
 export function redoStackHistory2(): NodeHistory2 | null {
     const StackHistoriesJsonString = localStorage.getItem("stackHistory");
-    const StackHistories = JSON.parse(StackHistoriesJsonString || "") as StackHistory2;
+    let StackHistories = JSON.parse(StackHistoriesJsonString || "") as StackHistory2;
     if (StackHistories.nodeHistory.length == 0 || StackHistories.index == StackHistories.nodeHistory.length - 1) {
         return null;
     }

@@ -1,5 +1,5 @@
 import compact from "lodash-es/compact";
-import { type CheckoutLineFragment, type OrderLineFragment } from "@/checkout/graphql";
+import { type CheckoutLine, type CheckoutLineFragment, type OrderLineFragment } from "@/checkout/graphql";
 import { type MightNotExist } from "@/checkout/lib/globalTypes";
 
 export const isCheckoutLine = (
@@ -10,7 +10,7 @@ export const getThumbnailFromLine = (line: CheckoutLineFragment) =>
 	line.variant.media?.find(({ type }) => type === "IMAGE") ||
 	line.variant.product.media?.find(({ type }) => type === "IMAGE");
 
-export const getSummaryLineProps = (line: CheckoutLineFragment) => {
+export const getSummaryLineProps = (line: CheckoutLine) => {
 	return {
 		variantName: line?.variant?.name,
 		productName: line?.variant?.product?.name,

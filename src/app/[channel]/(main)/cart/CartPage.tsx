@@ -302,17 +302,14 @@ export function CartPage({ params }: CartPageProps) {
 	};
 
 	const renderCartItem = (item: CheckoutLine) => {
-		console.log("🚀 CartPage.tsx:235 - item:", item);
+		console.log("🚀 CartPage.tsx:305 - item:", item);
+
 
 		const currency = item.totalPrice.gross.currency || "USD";
 		const { metadata } = item
-		const printingMeta = metadata?.find((meta) => meta.key === "printing_info");
+
 		const printingTech = metadata?.find((meta) => meta.key === "print_technology")?.value.replace(/^"|"$/g, '');
 
-
-		const parsePricingInfo: PrintDetail[] | null = printingMeta ? (JSON.parse(printingMeta.value) as PrintDetail[]) : null;
-
-		const printTechnology = parsePricingInfo?.map((item) => item.printing_technology)
 
 
 
@@ -320,18 +317,19 @@ export function CartPage({ params }: CartPageProps) {
 		const validJson = printing?.value.replace(/'/g, '"') as string;
 		const parsePrinting: PrintInfo | null = printing ? (JSON.parse(validJson) as PrintInfo) : null;
 
-		const { breakdown: { line_services: lineServices }, final_unit_price, base_price } = parsePrinting!
+		const { breakdown: { line_services: lineServices, sides }, base_price, services_cost_per_unit, printing_cost_per_unit } = parsePrinting!
 
+
+		const printTech = sides?.find((item) => item.technology)
 		const serviceDataMapping = mapService(lineServices, currency)
+		console.log("🚀 CartPage.tsx:325 - printTechnology:", printTech?.technology);
+
 		// const sumPricePerService = lineServices.reduce((total, service) => {
 		// 	const cost = parseFloat(service.cost_per_item) || 0;
 		// 	return total + cost;
 		// }, 0);
 
-		const totalSumService = lineServices.reduce((total, service) => {
-			const cost = parseFloat(service.total_cost) || 0;
-			return total + cost;
-		}, 0);
+		const totalSumService = services_cost_per_unit
 
 
 
@@ -353,7 +351,8 @@ export function CartPage({ params }: CartPageProps) {
 		// const totalPriceWithoutDiscount = (priceBeforeDiscount * item.quantity);
 
 		// tổng giá trị của item sau giảm
-		const totalPriceWithDiscount = Number(Number(final_unit_price) * item.quantity);
+		const totalPriceWithDiscount = item.totalPrice.gross.amount;
+		const printingPrice = Number(printing_cost_per_unit)
 
 		let totalSavings = 0;
 
@@ -408,10 +407,10 @@ export function CartPage({ params }: CartPageProps) {
 							<div>
 								{
 									printingTech ? <span className="text-xs text-gray-600">
-										Print Technology: {printingTech}
-									</span> : printTechnology && printTechnology.length > 0 && (
+										Print Technology: {printTech?.technology}
+									</span> : printTech?.technology && (
 										<p className="text-xs text-gray-600">
-											Print Technology: {printTechnology.join(", ")}
+											Print Technology: {printTech.technology}
 										</p>
 									)
 								}
@@ -454,13 +453,21 @@ export function CartPage({ params }: CartPageProps) {
 						}
 					</span></p>
 					{/* Mobile Price Row - Simplified */}
-					<div className="mb-3 flex items-center justify-end border-b border-gray-100 pb-3">
-						<div className="text-right">
-							<div className="py-2 text-xl font-semibold text-black flex items-end relative flex-col">
-								<div className="text-gray-500 text-sm">
-									{!printTechnology?.includes("NONE") ? "Printing Price" : "Price"}: {formatMoney(totalPriceWithDiscount, currency)}  &nbsp;&nbsp;|&nbsp;&nbsp; Services: {formatMoney(totalSumService, currency)}
+					<div className="mb-3 flex items-center justify-start border-b border-gray-100 pb-3">
+						<div className="text-right ">
+							<div className="py-2 text-xl font-semibold text-black flex justify-start relative flex-col flex-1 items-start">
+								<div className="text-gray-500 text-sm flex flex-col items-start justify-end">
+									{
+										printingPrice > 0 ? <div>Printing Price {formatMoney(printingPrice, currency)}  / per unit</div> : null
+									}
+									Services: {formatMoney(Number(totalSumService), currency)} / per unit
+
+									{/* {!printTechnology ? "Printing Price" : "Price "}: {formatMoney(totalPriceWithDiscount, currency)}  &nbsp;&nbsp;|&nbsp;&nbsp; Services: {formatMoney(Number(totalSumService), currency)} / per unit */}
 								</div>
-								{formatMoney(Number(totalPriceWithDiscount + totalSumService), currency)}
+								<div className="mt-5 text-2xl">
+
+									{formatMoney(Number(totalPriceWithDiscount), currency)}
+								</div>
 							</div>
 							{
 								totalSavings > 0 && (
@@ -525,38 +532,38 @@ export function CartPage({ params }: CartPageProps) {
 								+
 							</button>
 						</div>
-					</div>
-
-					{/* Mobile Quantity Control */}
-					<div className="flex flex-1 items-center justify-end space-y-3">
-						{/* Mobile Action Buttons */}
-						{(Array.isArray(item.metadata) && item.metadata.length > 0) ||
-							(Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0) ? (
-							<div className="flex items-center justify-center gap-2">
-								{Array.isArray(item.metadata) &&
-									item.metadata.length > 0 &&
-									item.metadata?.find((item: MetadataItem) => item.key === "design")?.value != "null" && (
-										<ViewDesignButton
+						{/* Mobile Quantity Control */}
+						<div className="flex flex-1 items-center justify-end space-y-3">
+							{/* Mobile Action Buttons */}
+							{(Array.isArray(item.metadata) && item.metadata.length > 0) ||
+								(Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0) ? (
+								<div className="flex items-center justify-center gap-2">
+									{Array.isArray(item.metadata) &&
+										item.metadata.length > 0 &&
+										item.metadata?.find((item: MetadataItem) => item.key === "design")?.value != "null" && (
+											<ViewDesignButton
+												lineId={item.id}
+												checkout={checkoutId}
+												params={params}
+												metadata={item.metadata}
+											/>
+										)}
+									{Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && (
+										<DesignButton
+											variantId={item.variant.id}
+											productId={item.variant.product.id}
+											params={params}
+											quantity={item.quantity}
 											lineId={item.id}
 											checkout={checkoutId}
-											params={params}
-											metadata={item.metadata}
+											selectedVariantId={item.variant.id}
 										/>
 									)}
-								{Array.isArray(item.variant.metadata) && item.variant.metadata.length > 0 && (
-									<DesignButton
-										variantId={item.variant.id}
-										productId={item.variant.product.id}
-										params={params}
-										quantity={item.quantity}
-										lineId={item.id}
-										checkout={checkoutId}
-										selectedVariantId={item.variant.id}
-									/>
-								)}
-							</div>
-						) : null}
+								</div>
+							) : null}
+						</div>
 					</div>
+
 				</div>
 
 				{/* Desktop Layout */}
@@ -602,10 +609,10 @@ export function CartPage({ params }: CartPageProps) {
 									<div>
 										{
 											printingTech ? <span className="text-xs text-gray-600">
-												Print Technology: <span className="font-semibold">{printingTech}</span>
-											</span> : printTechnology && printTechnology.length > 0 && (
+												Print Technology: <span className="font-semibold">{printTech?.technology}</span>
+											</span> : printTech?.technology && (
 												<p className="text-xs text-gray-600">
-													Print Technology:  <span className="font-semibold">{printTechnology.join(", ")}</span>
+													Print Technology:  <span className="font-semibold">{printTech.technology}</span>
 												</p>
 											)
 										}
@@ -636,10 +643,15 @@ export function CartPage({ params }: CartPageProps) {
 										<span className="font-bold text-[#F58A71]">{formatMoney(priceAfterDiscount, currency)}</span>
 									</div>
 									<div className="py-2 text-2xl font-semibold text-black flex items-end relative flex-col">
-										<div className="text-gray-500 text-sm">
-											{!printTechnology?.includes("NONE") ? "Printing Price" : "Price"}: {formatMoney(totalPriceWithDiscount, currency)}  &nbsp;&nbsp;|&nbsp;&nbsp; Services: {formatMoney(totalSumService, currency)}
+										<div className="text-gray-500 text-sm flex flex-col items-end justify-end">
+											{
+												printingPrice > 0 ? <div>Printing Price {formatMoney(printingPrice, currency)}  / per unit</div> : null
+											}
+											Services: {formatMoney(Number(totalSumService), currency)} / per unit
+
+											{/* {!printTechnology ? "Printing Price" : "Price "}: {formatMoney(totalPriceWithDiscount, currency)}  &nbsp;&nbsp;|&nbsp;&nbsp; Services: {formatMoney(Number(totalSumService), currency)} / per unit */}
 										</div>
-										{formatMoney(Number(totalPriceWithDiscount + totalSumService), currency)}
+										{formatMoney(Number(totalPriceWithDiscount), currency)}
 									</div>
 
 									{
@@ -761,21 +773,18 @@ export function CartPage({ params }: CartPageProps) {
 			const printing = line.metadata?.find((meta) => meta.key === "printing");
 			const validJson = printing?.value.replace(/'/g, '"') as string;
 			const parsePrinting: PrintInfo | null = printing ? (JSON.parse(validJson) as PrintInfo) : null;
-			const { breakdown: { line_services: lineServices }, final_unit_price } = parsePrinting!
+			const { final_unit_price, services_cost_per_unit, } = parsePrinting!
 
 
 
-			const totalSumService = lineServices.reduce((total, service) => {
-				const cost = parseFloat(service.total_cost) || 0;
-				return total + cost;
-			}, 0);
-
-			totalServices += totalSumService
+			totalServices = Number(services_cost_per_unit) * line.quantity
 
 
 
 
-			totalRetail += Number(final_unit_price) * line.quantity - totalSumService;
+
+
+			totalRetail += Number(final_unit_price) * line.quantity;
 
 			if (line.undiscountedUnitPrice.amount > line.unitPrice.gross.amount / line.quantity) {
 				totalDiscount += ((line.undiscountedUnitPrice.amount - line.unitPrice.gross.amount) * line.quantity);

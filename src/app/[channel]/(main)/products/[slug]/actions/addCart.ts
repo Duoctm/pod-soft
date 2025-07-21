@@ -38,6 +38,8 @@ export async function addCart(
 		Checkout.saveIdToCookie(params.channel, checkout.id);
 
 		const newLines = lines.map((line) => {
+			console.log("🚀 addCart.ts:41 - lines:", lines);
+
 
 			return {
 				...line,

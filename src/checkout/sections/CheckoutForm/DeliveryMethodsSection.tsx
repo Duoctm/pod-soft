@@ -69,7 +69,7 @@ export const DeliveryMethods = ({ checkout, update }: DeliveryMethodsProps) => {
 	}
 
 	return (
-		<div className="py-4" data-testid="deliveryMethods">
+		<div className="p-4" data-testid="deliveryMethods">
 			<Title className="mb-2">Delivery methods</Title>
 			{!user && !checkout && <DeliveryMethodsSkeleton />}
 			{user && !shippingAddress ? (
