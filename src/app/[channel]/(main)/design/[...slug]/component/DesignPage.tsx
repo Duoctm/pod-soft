@@ -4083,7 +4083,7 @@ function DesignPage(param: DesignPageProps) {
             />
           </Button>
         )}
-      </div> */}
+      </div>
 
       <div className="fixed inset-0 z-50 hidden items-center justify-center" role="status">
         <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-t-2 border-blue-500"></div>
