@@ -683,21 +683,32 @@ const AdditionalServicePopup: React.FC<PopupProps> = ({
                                     <label className="block text-sm font-medium mb-1">
                                         Printing Technology
                                     </label>
-                                    <select
-                                        value={printTechChild}
-                                        onChange={(e) => {
-                                            //alert(e.target.value);
-                                            setPrintTechFromParent(e.target.value as PrintingTechnology)
-                                            setPrintTech(e.target.value as PrintingTechnology);
-                                        }}
-                                        className="w-full border border-gray-300 rounded px-3 py-2"
-                                    >
-                                        <option value="" disabled>
-                                            Select a printing technology
-                                        </option>
-                                        <option value={PrintingTechnology.Dtg}>DTG</option>
-                                        <option value={PrintingTechnology.Silk}>SILK</option>
-                                    </select>
+                                    {(printTechChild == PrintingTechnology.None) && (
+                                        <select
+                                            className="w-full border border-gray-300 rounded px-3 py-2"
+                                        >
+
+                                            <option value={PrintingTechnology.None}>NONE</option>
+                                        </select>
+                                    )}
+                                    {(printTechChild != PrintingTechnology.None) && (
+                                        <select
+                                            value={printTechChild}
+                                            onChange={(e) => {
+                                                //alert(e.target.value);
+                                                setPrintTechFromParent(e.target.value as PrintingTechnology)
+                                                setPrintTech(e.target.value as PrintingTechnology);
+                                            }}
+                                            className="w-full border border-gray-300 rounded px-3 py-2"
+                                        >
+                                            <option value="" disabled>
+                                                Select a printing technology
+                                            </option>
+                                            <option value={PrintingTechnology.Dtg}>DTG</option>
+                                            <option value={PrintingTechnology.Silk}>SILK</option>
+                                        </select>
+                                    )}
+
                                 </div>
                             </div>
 

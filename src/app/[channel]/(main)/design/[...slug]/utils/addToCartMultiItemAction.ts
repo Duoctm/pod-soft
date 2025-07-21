@@ -8,6 +8,7 @@ import { CurrentUserDocument, type MetadataInput, CheckoutDeleteLinesDocument, C
 import { executeGraphQL } from "@/lib/graphql";
 //import { VariantPrice } from "../component/type"
 
+
 export type ErrorResponse = {
     error: number;
     type: string;
@@ -143,15 +144,24 @@ export async function addCartMultiItem(
 }
 
 
+type PrintingInfoMetadata =
+    | Array<{
+        print_side: string;
+        face_code: string;
+        printing_technology: string;
+    }>
+    | Array<{
+        print_side: string;
+        face_code: string;
+        printing_technology: string;
+        colors: number;
+    }>;
+
+
 function createNewPrintingInfoMetadata(
     printTech: string,
     metadataDesign?: string,
-): Array<{
-    print_side: string;
-    face_code: string;
-    printing_technology: string;
-    // additional_service_ids: string[];
-}> {
+): PrintingInfoMetadata {
     const printFace: string[] = [];
     let printing_technology = "NONE";
     if (metadataDesign) {
@@ -180,12 +190,23 @@ function createNewPrintingInfoMetadata(
 
 
 
-        return printFace.map(i => ({
-            print_side: i.toLocaleUpperCase(),
-            face_code: i.toLocaleUpperCase(),
-            printing_technology,
-            // additional_service_ids: serviceIds,
-        }));
+        if (printing_technology == PrintingTechnology.Dtg) {
+            return printFace.map(i => ({
+                print_side: i.toLocaleUpperCase(),
+                face_code: i.toLocaleUpperCase(),
+                printing_technology,
+                // additional_service_ids: serviceIds,
+            }));
+        }
+        else {
+            return printFace.map(i => ({
+                print_side: i.toLocaleUpperCase(),
+                face_code: i.toLocaleUpperCase(),
+                printing_technology,
+                colors: 0
+                // additional_service_ids: serviceIds,
+            }));
+        }
     }
     else {
         return [

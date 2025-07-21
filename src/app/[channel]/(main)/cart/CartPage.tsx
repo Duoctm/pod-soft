@@ -28,6 +28,76 @@ type PrintDetail = {
 	printing_technology: string;     // Ví dụ: "DTG"
 };
 
+export function getRandomRgba(): string {
+	const r = Math.floor(Math.random() * 256); // 0 - 255
+	const g = Math.floor(Math.random() * 256);
+	const b = Math.floor(Math.random() * 256);
+	const a = 0.2; // Giới hạn alpha trong khoảng 0 - 1
+	return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
+export interface PrintInfo {
+	breakdown: Breakdown
+	applied_at: string
+	final_unit_price: string
+	base_price: string
+	printing_cost_per_unit: string
+	services_cost_per_unit: string
+}
+
+interface Breakdown {
+	sides: Side[]
+	base_item: BaseItem
+	line_services: LineService[]
+}
+
+interface Side {
+	side: string
+	rule_id: string
+	technology: string
+	cost_per_unit: string
+	services_breakdown: any[]
+	unit_printing_price: string
+}
+
+export interface LineService {
+	service_id: number
+	total_cost: string
+	service_name: string
+	cost_per_item: string
+	pricing_method: string
+}
+
+interface ServiceData {
+	color: string,
+	mapPrice: string
+}
+
+export interface BaseItem {
+	price: string
+	source: string
+	rule_id: string
+}
+
+
+
+export const mapService = (items: LineService[], currency: string): ServiceData[] => {
+	return items.map((i: LineService) => {
+		const randomColorRgba = getRandomRgba()
+		const formatPrice = formatMoney(Number(i.cost_per_item), currency)
+
+		return {
+			color: randomColorRgba,
+			mapPrice: `${i.service_name}  ${formatPrice}`
+		}
+	})
+
+
+}
+
+
+
+
 
 
 const INITIAL_CHECKOUT_VALUE: CheckoutType = {
@@ -232,26 +302,9 @@ export function CartPage({ params }: CartPageProps) {
 	};
 
 	const renderCartItem = (item: CheckoutLine) => {
+		console.log("🚀 CartPage.tsx:235 - item:", item);
+
 		const currency = item.totalPrice.gross.currency || "USD";
-
-		// eslint-disable-next-line react-hooks/rules-of-hooks
-		const printingTechnology = usePrintingTechnology(item.metadata);
-		const currentMetadata = item.metadata;
-
-		// giá trị từng item trước giảm
-		const priceBeforeDiscount = item.undiscountedUnitPrice.amount;
-		// giá sau khi tính toán 
-		const priceAfterDiscount = item.totalPrice.gross.amount / item.quantity;
-
-		// tổng giá trị của item trước giảm
-		const totalPriceWithoutDiscount = priceBeforeDiscount * item.quantity;
-
-		let totalSavings = 0;
-
-		if (item.undiscountedUnitPrice.amount > item.unitPrice.gross.amount / item.quantity) {
-			totalSavings += ((item.undiscountedUnitPrice.amount - item.unitPrice.gross.amount) * item.quantity);
-		}
-
 		const { metadata } = item
 		const printingMeta = metadata?.find((meta) => meta.key === "printing_info");
 		const printingTech = metadata?.find((meta) => meta.key === "print_technology")?.value.replace(/^"|"$/g, '');
@@ -262,11 +315,54 @@ export function CartPage({ params }: CartPageProps) {
 		const printTechnology = parsePricingInfo?.map((item) => item.printing_technology)
 
 
+
+		const printing = metadata?.find((meta) => meta.key === "printing");
+		const validJson = printing?.value.replace(/'/g, '"') as string;
+		const parsePrinting: PrintInfo | null = printing ? (JSON.parse(validJson) as PrintInfo) : null;
+
+		const { breakdown: { line_services: lineServices }, final_unit_price, base_price } = parsePrinting!
+
+		const serviceDataMapping = mapService(lineServices, currency)
+		// const sumPricePerService = lineServices.reduce((total, service) => {
+		// 	const cost = parseFloat(service.cost_per_item) || 0;
+		// 	return total + cost;
+		// }, 0);
+
+		const totalSumService = lineServices.reduce((total, service) => {
+			const cost = parseFloat(service.total_cost) || 0;
+			return total + cost;
+		}, 0);
+
+
+
+		// eslint-disable-next-line react-hooks/rules-of-hooks
+		const printingTechnology = usePrintingTechnology(item.metadata);
+		const currentMetadata = item.metadata;
+
+		// giá trị từng item trước giảm
+		const priceBeforeDiscount = item.undiscountedUnitPrice.amount;
+
+		// giá sau khi tính toán 
+		// const priceAfterDiscount = (item.totalPrice.gross.amount / item.quantity) - sumPricePerService;
+		const priceAfterDiscount = Number(base_price)
+
+		// before printing = 
+
+
+		// tổng giá trị của item trước giảm
+		// const totalPriceWithoutDiscount = (priceBeforeDiscount * item.quantity);
+
+		// tổng giá trị của item sau giảm
+		const totalPriceWithDiscount = Number(Number(final_unit_price) * item.quantity);
+
+		let totalSavings = 0;
+
+		if (item.undiscountedUnitPrice.amount > item.unitPrice.gross.amount / item.quantity) {
+			totalSavings += ((item.undiscountedUnitPrice.amount - item.unitPrice.gross.amount) * item.quantity);
+		}
 		// discount percent = (priceBeforeDiscount - priceAfterDiscount) / priceBeforeDiscount * 100
 		const discountPercent = priceBeforeDiscount > 0 ? ((priceBeforeDiscount - priceAfterDiscount) / priceBeforeDiscount) * 100 : 0;
 
-		// tổng giá trị của item sau giảm
-		const totalPriceWithDiscount = item.totalPrice.gross.amount;
 
 		return (
 			<div key={item.id} className="mb-4 rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
@@ -276,7 +372,7 @@ export function CartPage({ params }: CartPageProps) {
 					{/* Mobile Header Row */}
 					<div className="mb-3 flex items-start gap-3">
 						{/* Product Image */}
-						<div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border bg-gray-50">
+						<div className="relative h-32 w-32 flex-shrink-0 overflow-hidden rounded-lg border bg-gray-50">
 							{item.variant?.media && (
 								<Image
 									src={item.variant.media[0].url || ""}
@@ -321,6 +417,14 @@ export function CartPage({ params }: CartPageProps) {
 								}
 
 							</div>
+							<div>
+								<div className="mb-1 text-xs text-gray-500">Unit Price</div>
+								<div className="mb-1 text-sm text-gray-500">
+									{priceBeforeDiscount > priceAfterDiscount ? <span className="line-through"> {formatMoney(priceBeforeDiscount, currency)} / </span> : null}
+									{" "}
+									<span className="font-bold text-[#F58A71]">{formatMoney(priceAfterDiscount, currency)}</span>
+								</div>
+							</div>
 						</div>
 
 						{/* Delete Button - Top Right */}
@@ -334,21 +438,29 @@ export function CartPage({ params }: CartPageProps) {
 						/>
 					</div>
 
+
+					<p className="text-xs text-gray-600 flex text-balance items-start gap-2 flex-1">Services: <span className="font-semibold flex gap-2 flex-1 flex-wrap">
+						{
+							serviceDataMapping.map((i, idx) => {
+								return <div key={idx}
+									className="px-2 py-1 rounded-full"
+									style={{
+										backgroundColor: i.color
+									}}
+								>
+									{i.mapPrice}
+								</div>
+							})
+						}
+					</span></p>
 					{/* Mobile Price Row - Simplified */}
-					<div className="mb-3 flex items-center justify-between border-b border-gray-100 pb-3">
-						<div>
-							<div className="mb-1 text-xs text-gray-500">Unit Price</div>
-							<div className="mb-1 text-sm text-gray-500">
-								{priceBeforeDiscount > priceAfterDiscount ? <span className="line-through"> {formatMoney(priceBeforeDiscount, currency)} / </span> : <span>Price:</span>}
-								<span className="font-bold text-[#F58A71]">{formatMoney(priceAfterDiscount, currency)}</span>
-							</div>
-						</div>
+					<div className="mb-3 flex items-center justify-end border-b border-gray-100 pb-3">
 						<div className="text-right">
-							<div className="text-xl font-bold text-gray-900">
-								{totalSavings > 0 ? <span className="text-sm line-through font-normal pr-2">
-									{formatMoney(totalPriceWithoutDiscount, currency)}{" "}
-								</span> : null}
-								{formatMoney(totalPriceWithDiscount, currency)}{" "}
+							<div className="py-2 text-xl font-semibold text-black flex items-end relative flex-col">
+								<div className="text-gray-500 text-sm">
+									{!printTechnology?.includes("NONE") ? "Printing Price" : "Price"}: {formatMoney(totalPriceWithDiscount, currency)}  &nbsp;&nbsp;|&nbsp;&nbsp; Services: {formatMoney(totalSumService, currency)}
+								</div>
+								{formatMoney(Number(totalPriceWithDiscount + totalSumService), currency)}
 							</div>
 							{
 								totalSavings > 0 && (
@@ -449,17 +561,16 @@ export function CartPage({ params }: CartPageProps) {
 
 				{/* Desktop Layout */}
 				<div className="hidden sm:block">
-					<pre></pre>
 					<div className="flex items-start gap-4">
 						{/* Product Image */}
-						<div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border bg-gray-50">
+						<div className="relative h-32 w-32 flex-shrink-0 overflow-hidden rounded-lg border bg-gray-50">
 							{item.variant?.media && (
 								<Image
 									src={item.variant.media[0].url || ""}
 									alt={item.variant.media[0].alt ?? ""}
 									fill
 									loading="lazy"
-									className="object-contain object-center"
+									className="object-contain bg-cover"
 								/>
 							)}
 						</div>
@@ -482,38 +593,55 @@ export function CartPage({ params }: CartPageProps) {
 									</LinkWithChannel>
 									<div className="mt-1 space-y-0.5">
 										{item.variant.name !== item.variant.id && Boolean(item.variant.name) && (
-											<p className="text-xs text-gray-600">Size: {item.variant.name}</p>
+											<p className="text-xs text-gray-600">Size: <span className="font-semibold">{item.variant.name}</span></p>
 										)}
 										{item.variant?.product?.category?.name && (
-											<p className="text-xs text-gray-600">Material: {item.variant.product.category.name}</p>
+											<p className="text-xs text-gray-600">Material:  <span className="font-semibold">{item.variant.product.category.name}</span> </p>
 										)}
 									</div>
 									<div>
 										{
 											printingTech ? <span className="text-xs text-gray-600">
-												Print Technology: {printingTech}
+												Print Technology: <span className="font-semibold">{printingTech}</span>
 											</span> : printTechnology && printTechnology.length > 0 && (
 												<p className="text-xs text-gray-600">
-													Print Technology: {printTechnology.join(", ")}
+													Print Technology:  <span className="font-semibold">{printTechnology.join(", ")}</span>
 												</p>
 											)
 										}
+									</div>
+									<div>
+										<p className="text-xs text-gray-600 flex text-balance items-start gap-2 flex-1">Services:<span className="font-semibold flex gap-2 flex-1 flex-wrap">
+											{
+												serviceDataMapping.map((i, idx) => {
+													return <div key={idx}
+														className="px-2 py-1 rounded-full"
+														style={{
+															backgroundColor: i.color
+														}}
+													>
+														{i.mapPrice}
+													</div>
+												})
+											}
+										</span></p>
 									</div>
 								</div>
 
 								{/* Right: Price Info - With Discount Display */}
 								<div className="flex-shrink-0 text-right">
 									<div className="mb-1 text-sm text-gray-500">
-										{priceBeforeDiscount > priceAfterDiscount ? <span className="line-through"> {formatMoney(priceBeforeDiscount, currency)} / </span> : <span>Price:</span>}
+										{priceBeforeDiscount > priceAfterDiscount ? <span className="line-through"> {formatMoney(priceBeforeDiscount, currency)} / </span> : null}
 										{" "}
 										<span className="font-bold text-[#F58A71]">{formatMoney(priceAfterDiscount, currency)}</span>
 									</div>
-									<div className="py-2 text-2xl font-semibold text-black flex items-center relative">
-										{totalSavings > 0 ? <span className="text-sm line-through font-normal pr-2">
-											{formatMoney(totalPriceWithoutDiscount, currency)}{" "}
-										</span> : null}
-										{formatMoney(totalPriceWithDiscount, currency)}{" "}
+									<div className="py-2 text-2xl font-semibold text-black flex items-end relative flex-col">
+										<div className="text-gray-500 text-sm">
+											{!printTechnology?.includes("NONE") ? "Printing Price" : "Price"}: {formatMoney(totalPriceWithDiscount, currency)}  &nbsp;&nbsp;|&nbsp;&nbsp; Services: {formatMoney(totalSumService, currency)}
+										</div>
+										{formatMoney(Number(totalPriceWithDiscount + totalSumService), currency)}
 									</div>
+
 									{
 										totalSavings > 0 && (
 											<div className="inline-flex items-center text-xs font-semibold text-green-800 pr-2 bg-green-100 rounded-full px-2 py-1">
@@ -537,6 +665,7 @@ export function CartPage({ params }: CartPageProps) {
 												item.variant.id,
 												printingTechnology as PrintingTechnology,
 												currentMetadata,
+												printingTech
 											)
 										}
 										className="flex h-8 w-8 items-center justify-center rounded border border-gray-300 text-gray-600 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
@@ -623,17 +752,37 @@ export function CartPage({ params }: CartPageProps) {
 		const currency: string = items[0]?.totalPrice.gross.currency || "USD";
 		let hasAnyDiscount = false;
 		let printingTechnology: string = ""
+		let totalServices = 0;
 
+		console.log("🚀 CartPage.tsx:744 - items:", items);
 		items.map((line) => {
 
-			totalRetail += line.undiscountedUnitPrice.amount * line.quantity;
+
+			const printing = line.metadata?.find((meta) => meta.key === "printing");
+			const validJson = printing?.value.replace(/'/g, '"') as string;
+			const parsePrinting: PrintInfo | null = printing ? (JSON.parse(validJson) as PrintInfo) : null;
+			const { breakdown: { line_services: lineServices }, final_unit_price } = parsePrinting!
+
+
+
+			const totalSumService = lineServices.reduce((total, service) => {
+				const cost = parseFloat(service.total_cost) || 0;
+				return total + cost;
+			}, 0);
+
+			totalServices += totalSumService
+
+
+
+
+			totalRetail += Number(final_unit_price) * line.quantity - totalSumService;
 
 			if (line.undiscountedUnitPrice.amount > line.unitPrice.gross.amount / line.quantity) {
 				totalDiscount += ((line.undiscountedUnitPrice.amount - line.unitPrice.gross.amount) * line.quantity);
 			}
 			hasAnyDiscount = totalDiscount > 0;
 			totalMember += line.totalPrice.gross.amount;
-			totalQuantity = line.quantity;
+			totalQuantity += line.quantity;
 
 			const { metadata } = line
 			const printingMeta = metadata?.find((meta) => meta.key === "printing_info");
@@ -649,6 +798,7 @@ export function CartPage({ params }: CartPageProps) {
 		// Add services price to both retail and member totals
 		totalMember += totalServicesPrice;
 
+
 		return {
 			totalRetail,
 			totalMember,
@@ -657,7 +807,8 @@ export function CartPage({ params }: CartPageProps) {
 			totalServicesPrice,
 			currency,
 			hasAnyDiscount,
-			printingTechnology
+			printingTechnology,
+			totalServices
 		};
 	}, [items]);
 
@@ -747,14 +898,20 @@ export function CartPage({ params }: CartPageProps) {
 											</span>
 										</div>
 									)}
-
-									{/* Member Discount - Show if user has discount */}
+									{cartTotals.hasAnyDiscount && cartTotals.totalDiscount > 0 && (
+										<div className="flex justify-between text-sm font-medium  sm:text-base">
+											<span>Total Service</span>
+											<span>{formatMoney(cartTotals.totalServices, cartTotals.currency)}</span>
+										</div>
+									)}
+									{/* Member Discount - Show if user has discount
 									{cartTotals.hasAnyDiscount && cartTotals.totalDiscount > 0 && (
 										<div className="flex justify-between text-sm font-medium text-green-600 sm:text-base">
 											<span>Member Discount</span>
 											<span>-{formatMoney(cartTotals.totalDiscount, cartTotals.currency)}</span>
 										</div>
-									)}
+									)} */}
+
 
 									<hr className="my-3 sm:my-4" />
 									{/* Total */}

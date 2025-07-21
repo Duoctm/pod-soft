@@ -7,6 +7,7 @@ import { Dialog } from "@headlessui/react";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import { addCart } from "../../products/[slug]/actions/addCart";
+import { mapService, type PrintInfo } from "../../cart/CartPage";
 import { BreadcrumbClient } from "./BreadcrumbClient";
 import { getOrderUser } from "./actions";
 import { type CurrentUserOrderListQuery, type PaymentChargeStatusEnum, DiscountValueTypeEnum } from "@/gql/graphql";
@@ -16,6 +17,18 @@ import { cn, formatDate, formatMoney } from "@/lib/utils";
 import { PaymentStatus } from "@/ui/components/PaymentStatus";
 import "react-toastify/dist/ReactToastify.css";
 import updateCheckoutLineMetadata from "@/hooks/useAddMetadata";
+
+type ProductPricingInfo = {
+	member_price: number;          // Giá dành cho thành viên
+	retail_price: number;          // Giá bán lẻ gốc
+	discount_percentage: number;   // Phần trăm giảm giá (nếu có)
+	currency: string;              // Loại tiền tệ, ví dụ: "USD"
+	has_discount: boolean;         // Cờ xác định có giảm giá hay không
+	color: string;                 // Tên màu kèm mã màu (ví dụ: "AZALEA-#DD74A1")
+	quantity: number;              // Số lượng sản phẩm
+};
+
+
 
 const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }) => {
 	const [isLoading, setIsLoading] = useState(false);
@@ -92,6 +105,7 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 						acc.push({
 							variantId: product.variant.id,
 							quantity: product.quantity,
+							metadata: product.metadata || [],
 						});
 
 						if (product.metadata?.length) {
@@ -103,8 +117,9 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 					}
 					return acc;
 				},
-				[] as { variantId: string; quantity: number }[],
+				[] as { variantId: string; quantity: number; metadata: any[] }[],
 			);
+			console.log(items, "items to reorder");
 
 			const reorder = await addCart({ channel: params.channel, slug: "" }, items);
 
@@ -143,7 +158,29 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 						<h2 className="mb-2 lg:mb-4 text-xl font-semibold">Order #{orderDetail?.node.number}</h2>
 						<div className="space-y-4">
 							{products.map((item) => {
-								console.log("🚀 page.tsx:145 - item:", item);
+								console.log("🚀 page.tsx:145 - item:", item.metadata);
+
+								const { metadata } = item;
+								const designMetadata = metadata?.find((m) => m.key === "pricing_info");
+
+
+
+								const parsedDesignMetadata: ProductPricingInfo | null = designMetadata ? (JSON.parse(designMetadata.value) as ProductPricingInfo) : null;
+								console.log("🚀 page.tsx:165 - parsedDesignMetadata:", parsedDesignMetadata);
+
+
+
+								const printing = metadata?.find((meta) => meta.key === "printing");
+								const validJson = printing?.value.replace(/'/g, '"') as string;
+								const parsePrinting: PrintInfo | null = printing ? (JSON.parse(validJson) as PrintInfo) : null;
+								const { breakdown: { line_services: lineServices, sides }, final_unit_price } = parsePrinting!;
+								const printingTechnology = sides.find(i => i.technology)
+
+
+
+								if (!parsedDesignMetadata) return null;
+								const mapServices = mapService(lineServices, parsedDesignMetadata.currency)
+
 
 
 								if (!item.variant) return null;
@@ -151,7 +188,7 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 								const { name: variantName } = item.variant
 								const { category } = item.variant.product
 								const media = item.variant.media;
-								const { pricing } = item.variant
+
 								return (
 									<div
 										key={product.id}
@@ -174,6 +211,22 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 											</div>
 											<p className="text-sm text-slate-500">Type: {category?.name}</p>
 											<p className="text-sm text-slate-500">Variant: {variantName}</p>
+											<p className="text-sm text-slate-500">Printing Technology: {printingTechnology?.technology}</p>
+											<p className="text-xs text-gray-600 flex text-balance items-center gap-2 flex-1">Services:<span className="font-semibold flex gap-2 flex-1 flex-wrap">
+												{
+													mapService && mapService.length > 0 ? (mapServices.map((i, idx) => {
+														return <div key={idx}
+															className="px-2 py-1 rounded-full"
+															style={{
+																backgroundColor: i.color
+															}}
+														>
+															{i.mapPrice}
+														</div>
+													})) : "None"
+												}
+											</span></p>
+
 											<div className="flex items-center justify-between">
 												<div className="flex items-center space-x-2">
 													<span className="text-sm font-medium text-neutral-700">Quantity:</span>
@@ -181,7 +234,7 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 												</div>
 												<div className="text-right flex items-center gap-1">
 													<div className="text-sm font-medium text-neutral-900">
-														{pricing?.price && formatMoney(pricing.price.gross.amount, pricing.price.gross.currency)}
+														{parsedDesignMetadata && formatMoney(Number(final_unit_price), parsedDesignMetadata.currency)}
 													</div>
 
 													<div className="text-sm text-neutral-500">/ per unit</div>
@@ -280,6 +333,16 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 										if (!item.variant) return null;
 										const product = item.variant.product;
 										const media = item.variant.media;
+										const { metadata } = item;
+										const designMetadata = metadata?.find((m) => m.key === "pricing_info");
+										const parsedDesignMetadata: ProductPricingInfo | null = designMetadata ? (JSON.parse(designMetadata.value) as ProductPricingInfo) : null;
+
+										const printing = metadata?.find((meta) => meta.key === "printing");
+										const validJson = printing?.value.replace(/'/g, '"') as string;
+										const parsePrinting: PrintInfo | null = printing ? (JSON.parse(validJson) as PrintInfo) : null;
+										const { final_unit_price } = parsePrinting!;
+
+
 										return (
 											<div
 												key={product.id}
@@ -304,11 +367,8 @@ const OrderDetailPage = ({ params }: { params: { id: string; channel: string } }
 														</div>
 														<p className="mt-1 text-sm text-neutral-600">
 
-															{item.variant.pricing?.price &&
-																formatMoney(
-																	item.variant.pricing.price.gross.amount,
-																	item.variant.pricing.price.gross.currency,
-																)}
+															{parsedDesignMetadata && formatMoney(Number(final_unit_price), parsedDesignMetadata.currency)}
+
 														</p>
 													</div>
 												</div>

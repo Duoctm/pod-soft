@@ -39,11 +39,11 @@ import "react-toastify/dist/ReactToastify.css";
 import { useDesign } from "../utils/useDesign";
 import { redoStackHistory2, undoStackHistory2, destroyStackHistory2, type NodeHistory2 } from "../utils/designHistory2";
 import { addCartMultiItem, UpdateDesignMultiItem } from "../utils/addToCartMultiItemAction";
+import { groupAndSortColors } from "../../../products/[slug]/utils/soft-color";
 import { ChangeProductModal } from "./ChangeProduct";
 import { AdditionalServicePopup } from "./AdditionalService"
 import { cn } from "@/lib/utils";
 import { PrintingTechnology, PrintSide } from "@/gql/graphql";
-import { groupAndSortColors } from "../../../products/[slug]/utils/soft-color";
 //import { PrintDetail, PrintingInfo } from "./type"
 
 interface DesignPageProps {
@@ -2405,23 +2405,242 @@ function DesignPage(param: DesignPageProps) {
             }
           }}
         />
-
-        <Pen
-          className="absolute right-1 top-1 z-10 block h-12 w-12 rounded-full bg-[#2c344b] p-3 lg:hidden"
-          stroke="white"
+        <div className=" absolute right-1 top-1  flex items-center  gap-2 z-10  h-12  rounded-full bg-[#2c344b] px-4  lg:hidden"
           onClick={() => {
             if (designerRef.current) {
               handleDeselect();
             }
             setIsShowDialog(!isShowDialog);
           }}
-        />
 
-        <ShirtIcon
-          className="absolute right-1 top-14 z-10 block h-12 w-12 rounded-full bg-[#2c344b] p-3 lg:hidden"
-          stroke="white"
-          onClick={() => setIsShowFaceDialog(!isShowFaceDialog)}
-        />
+        >
+          <span className="text-white">Tools</span>
+          <Pen
+            className="block h-12 w-12 rounded-full bg-[#2c344b] p-3 lg:hidden"
+            stroke="white"
+          />
+        </div>
+
+        <div className="absolute right-1 top-14  block lg:hidden">
+          <div className="flex items-center  gap-2 z-10  h-12  rounded-full bg-[#2c344b] px-4" onClick={() => setIsShowFaceDialog(!isShowFaceDialog)}>
+
+            <span className="text-white">Change Face</span>
+            <ShirtIcon
+              className=" z-10 block h-12 w-12 rounded-full  p-3 lg:hidden"
+              stroke="white"
+
+            />
+          </div>
+        </div>
+        <div className="absolute top-28 right-0 block lg:hidden">
+          <div className="flex items-center  gap-2 z-10  h-12  rounded-full bg-[#2c344b] px-4">
+            <span className="text-white">Add to cart</span>
+            {(param.typeDesign == 1) && (
+              <Button
+                className="flex h-12 w-12  items-center justify-center "
+                onClick={async () => {
+                  handleCaptureDesignImage();
+
+                  const isLogin = await checkUser();
+
+                  if (isLogin == false) {
+                    window.location.replace(`/${param.channel}/login`);
+                  }
+                  //setSpinner(true);
+                  const json = localStorage.getItem("cart");
+
+                  if (json != null && json !== undefined) {
+                    const cartItem = JSON.parse(json) as {
+                      params: any; // Loại của params có thể thay đổi tuỳ theo nhu cầu
+                      selectedVariantId: string;
+                      quantity: number;
+                    };
+
+                    setQuantity(cartItem.quantity);
+
+                    const print_face = designerRef.current?.getTotalObjectInAllStage();
+                    if (print_face && print_face.length > 0) {
+                      const printTechOfDesign = localStorage.getItem("printTechOfDesign");
+                      setPrintTech(printTechOfDesign as PrintingTechnology);
+                    }
+                    else {
+                      setPrintTech(PrintingTechnology.None);
+                    }
+
+                    const print_side: PrintSide[] = [PrintSide.None];
+                    if (print_face) {
+                      for (const face of print_face) {
+                        if (face.toUpperCase() == "FRONT") {
+                          print_side.push(PrintSide.Front);
+                        }
+                        else if (face.toUpperCase() == "BACK") {
+                          print_side.push(PrintSide.Back);
+                        }
+                      }
+                    }
+
+                    setPrintSides(print_side);
+
+
+
+                    const handleAddToCart = async () => {
+
+                      setSpinner(true);
+                      if (designerRef.current != null) {
+                        let metaData = null;
+
+                        if (print_face && print_face.length > 0) {
+                          metaData = (await designerRef.current.exportDesignToJson()) as any;
+
+                        }
+
+                        const items = Array.from(variantIdsRef.current);
+
+                        let result: any;
+                        if (param.typeDesign == 1) {
+                          result = await addCartMultiItem(param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
+                        }
+                        else if (param.typeDesign == 4) {
+                          result = await UpdateDesignMultiItem(param.variantId, param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
+                        }
+                        if (result.success) {
+                          toast.success("Design added to cart successfully");
+                        } else {
+                          toast.error("An error occurred during processing. Please try again later");
+                        }
+                      }
+                      setSpinner(false);
+                      setTimeout(() => {
+                        router.push(`/${param.channel}/cart`);
+                      }, 2000);
+                    }
+
+                    handlerCheckoutRef.current = handleAddToCart;
+
+                    if (param.typeDesign == 4) {
+                      setIsUpdate(true);
+                      setIsAddToCart(false);
+                      const jsonCart = localStorage.getItem("cart");
+                      if (jsonCart) {
+                        const cartItem = JSON.parse(jsonCart) as {
+                          params: any; // Loại của params có thể thay đổi tuỳ theo nhu cầu
+                          selectedVariantId: string;
+                          quantity: number;
+                        };
+
+                        console.log("cartItem", cartItem);
+                        setQuantity(cartItem.quantity);
+                      }
+                    }
+                    else if (param.typeDesign == 1) {
+                      setIsAddToCart(true);
+                    }
+                    setIsShowAddionalService(true);
+                  }
+                  setSpinner(false);
+                }}
+              >
+
+                <ShoppingCart
+                  className="flex h-12 w-12  items-center justify-center rounded-full bg-[#2c344b] p-2"
+                  stroke="white"
+                />
+              </Button>
+            )}
+
+            {(param.typeDesign === 2) && (
+              <Button
+                onClick={async () => {
+                  handleCaptureDesignImage();
+                  ///setSpinner(true)
+                  const rawQuanlity = localStorage.getItem("cart_quantity");
+
+                  let cartQuanlity = 0;
+                  if (rawQuanlity) {
+                    cartQuanlity = JSON.parse(rawQuanlity) as number;
+                  }
+
+                  setQuantity(cartQuanlity);
+                  setIsUpdate(true);
+                  const print_face = designerRef.current?.getTotalObjectInAllStage();
+                  if (print_face && print_face.length > 0) {
+                    const printTechOfDesign = localStorage.getItem("printTechOfDesign");
+                    setPrintTech(printTechOfDesign as PrintingTechnology);
+                  }
+                  else {
+                    setPrintTech(PrintingTechnology.None);
+                  }
+
+                  const print_side: PrintSide[] = [PrintSide.None];
+                  if (print_face) {
+                    for (const face of print_face) {
+                      if (face.toUpperCase() == "FRONT") {
+                        print_side.push(PrintSide.Front);
+                      }
+                      else if (face.toUpperCase() == "BACK") {
+                        print_side.push(PrintSide.Back);
+                      }
+                    }
+                  }
+
+                  setPrintSides(print_side);
+
+                  const checkoutLineId = localStorage.getItem("checkoutLineId");
+                  const checkoutId = localStorage.getItem("checkoutId");
+
+                  // if (param.typeDesign === 3) {
+                  //   setVariantIdOfUpdate(variantId);
+                  // }
+                  const handleUpdateCart = async () => {
+                    setSpinner(true);
+                    if (checkoutLineId != null && checkoutLineId != undefined && checkoutId != null && variantId != null) {
+                      if (designerRef.current != null) {
+                        let metaData = null;
+
+                        if (print_face && print_face.length > 0) {
+                          metaData = (await designerRef.current.exportDesignToJson()) as any;
+                        }
+
+                        const items = Array.from(variantIdsRef.current)
+                        let variantUpdate = param.variantId;
+                        if (param.typeDesign == 2) {
+                          const variantFromChangProduct = localStorage.getItem("changeProductFrom");
+                          if (variantFromChangProduct) {
+                            variantUpdate = variantFromChangProduct;
+                            variantIdRef.current = variantFromChangProduct;
+                          }
+                        }
+                        const result = await UpdateDesignMultiItem(variantUpdate, param.channel, items, Array.from(priceOfVariantDesignRef.current), Array.from(selectedServicesRef.current), JSON.stringify(metaData, null, 2), printTechRef.current);
+                        if (result.success) {
+                          toast.success("Design updated successfully");
+                        } else {
+                          toast.error("An error occurred during processing. Please try again later");
+                        }
+                      }
+                    }
+                    setSpinner(false);
+                    setTimeout(() => {
+                      router.push(`/${param.channel}/cart`);
+                    }, 2000);
+                  }
+
+                  handlerCheckoutRef.current = handleUpdateCart;
+
+                  setIsShowAddionalService(true);
+                  setSpinner(false);
+                }}
+              >
+
+                <ShoppingCart
+                  stroke="white"
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2c344b] p-2"
+                />
+              </Button>
+            )}
+          </div>
+        </div>
+
+
         {/* <MousePointerClickIcon
           onClick={() => handleDeselect()}
           className="fixed bottom-20 right-1 z-10 block h-12 w-12 rounded-full bg-[#8C3859] p-3 lg:hidden"
@@ -3658,12 +3877,7 @@ function DesignPage(param: DesignPageProps) {
         </div>
       </div>
 
-
-
-
-
-
-      <div className="fixed bottom-0 right-0 block  md:hidden">
+      {/* <div className="absolute top-1/2 right-0 block  lg:hidden">
         {(param.typeDesign == 1) && (
           <Button
             className="flex h-12 w-12  items-center justify-center rounded-full bg-[#2c344b] p-2"
@@ -3864,7 +4078,7 @@ function DesignPage(param: DesignPageProps) {
             />
           </Button>
         )}
-      </div>
+      </div> */}
 
       <div className="fixed inset-0 z-50 hidden items-center justify-center" role="status">
         <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-t-2 border-blue-500"></div>
