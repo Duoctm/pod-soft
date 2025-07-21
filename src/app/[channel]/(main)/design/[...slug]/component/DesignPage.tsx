@@ -2782,7 +2782,7 @@ function DesignPage(param: DesignPageProps) {
                       )}
                       style={{ backgroundColor: (value as { color_value: string }).color_value }}
                     >
-                      {colorId && <Check />}
+                       {colorId === key && <Check />}
                     </div>
                   ))}
                 </div>
