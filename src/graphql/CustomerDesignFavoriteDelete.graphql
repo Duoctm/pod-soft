@@ -1,0 +1,13 @@
+mutation CustomerDesignFavoriteDelete($input: CustomerDesignFavoriteDeleteInput!) {
+	customerDesignFavoriteDelete(input: $input) {
+		errors {
+			field
+			message
+		}
+		result {
+			message
+			ok
+			statusCode
+		}
+	}
+}

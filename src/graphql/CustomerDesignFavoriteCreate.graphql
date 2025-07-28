@@ -1,0 +1,14 @@
+mutation CustomerDesignFavoriteCreate($input: CustomerDesignFavoriteCreateInput!) {
+	customerDesignFavoriteCreate(input: $input) {
+		errors {
+			field
+			message
+		}
+		result {
+			ok
+			message
+			statusCode
+			favoriteId
+		}
+	}
+}

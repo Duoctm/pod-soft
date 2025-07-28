@@ -13,6 +13,8 @@ interface StageConfig {
   layer: Konva.Layer | null;
   selectedNode: Konva.Node | null;
   borderDiv: HTMLDivElement | null;
+  stageHeight: number | null;
+  stageWidth: number | null;
   //lastPositionNode: { x: number; y: number } | null;
 }
 class TShirtDesigner {
@@ -255,7 +257,9 @@ class TShirtDesigner {
         stage: null,
         layer: null,
         selectedNode: null,
-        borderDiv: null
+        borderDiv: null,
+        stageHeight: null,
+        stageWidth: null,
         //lastPositionNode: null
       };
     }
@@ -372,10 +376,42 @@ class TShirtDesigner {
 
   }
 
-  private setupStage(stageConfig: StageConfig, faceData: PrintFaceData, image: HTMLImageElement, containerId: string, side: string) {
+  private getImageSizeEvenIfHidden(image: HTMLImageElement): { offsetWidth: number, offsetHeight: number } {
+    const computedStyle = getComputedStyle(image);
+    const isNone = computedStyle.display === 'none';
 
-    const imageWidth = image.offsetWidth;
-    const imageHeight = image.offsetHeight;
+    let originalDisplay = '';
+    let originalVisibility = '';
+
+    if (isNone) {
+      // ✅ Lưu lại trạng thái ban đầu
+      originalDisplay = image.style.display;
+      originalVisibility = image.style.visibility;
+
+      // ✅ Tạm hiện ra để đo kích thước
+      image.style.display = 'block'; // hoặc 'inline-block' nếu phù hợp
+      image.style.visibility = 'hidden'; // không hiển thị nhưng vẫn chiếm chỗ
+    }
+
+    const offsetWidth = image.offsetWidth;
+    const offsetHeight = image.offsetHeight;
+
+    if (isNone) {
+      // ✅ Khôi phục trạng thái ban đầu
+      image.style.display = originalDisplay || 'none';
+      image.style.visibility = originalVisibility || '';
+    }
+
+    return { offsetWidth, offsetHeight };
+  }
+
+
+  private setupStage(stageConfig: StageConfig, faceData: PrintFaceData, image: HTMLImageElement, containerId: string, side: string) {
+    const { offsetWidth, offsetHeight } = this.getImageSizeEvenIfHidden(image);
+
+
+    const imageWidth = offsetWidth;//image.offsetWidth;
+    const imageHeight = offsetHeight;//image.offsetHeight;
     const imageRect = image.getBoundingClientRect();
 
     const stageWidth = imageWidth * faceData.width; //imageWidth * 0.35;
@@ -414,11 +450,8 @@ class TShirtDesigner {
 
     stageConfig.layer = new Konva.Layer();
     stageConfig.stage.add(stageConfig.layer);
-
-    // stageConfig.lastPositionNode = {
-    //   x: -1,
-    //   y: -1
-    // }
+    stageConfig.stageHeight = stageHeight;
+    stageConfig.stageWidth = stageWidth;
 
     this.initializeStageEventListeners(stageConfig);
 
@@ -1389,13 +1422,156 @@ class TShirtDesigner {
     return new File([u8arr], fileName, { type: mime });
   }
 
+  public async exportDesignToSave(): Promise<{ design: object, hasDesign: boolean }> {
+    let totalObjectInsert = 0;
+    const getStageInfo = async (stageConfig: StageConfig) => {
+
+      const design: any[] = [];
+      let priorityIndex = 0;
+      if (stageConfig.layer && stageConfig.stageWidth && stageConfig.stageHeight) {
+        totalObjectInsert += stageConfig.layer.children.length;
+        for (const node of stageConfig.layer.children) {
+          priorityIndex++;
+          if (node instanceof Konva.Image) {
+            const imageElement = node.image() as HTMLImageElement;
+            //console.log('debug nua ne hehe', imageElement.src); 
+            //imageElement.crossOrigin = 'anonymous';
+
+            try {
+              let file_url = "";
+              if (/^data:image\/[a-zA-Z]+;base64,/.test(imageElement.src)) {
+
+                const file = this.base64ToFile(imageElement.src, `image${uuidv4()}.png`);
+
+                try {
+                  const formData = new FormData();
+                  formData.append('file', file);
+
+
+                  const response = await uploadImageRaw(formData);
+                  file_url = (response as { file?: { file_url?: string } }).file?.file_url ?? "";
+                }
+                catch (error) {
+                  console.error(error);
+                }
+              }
+              else {
+                file_url = imageElement.src;
+              }
+              //console.log('cloudinary_url', cloudinary_url);
+              design.push({
+                id: node.id(),
+                type: 'image',
+                src: file_url,
+                x: node.x() / stageConfig.stageWidth,
+                y: node.y() / stageConfig.stageHeight,
+                offset_x: node.offsetX() / stageConfig.stageWidth,
+                offset_y: node.offsetY() / stageConfig.stageHeight,
+                actual_x: node.x() - node.offsetX(),
+                actual_y: node.y() - node.offsetY(),
+                rotation: node.rotation(),
+                scaleX: node.scaleX(),
+                scaleY: node.scaleY(),
+                width: node.width() / stageConfig.stageWidth,
+                height: node.height() / stageConfig.stageHeight,
+                priority_index: priorityIndex,
+                cloud_url: file_url, // Optional: add uploaded URL
+              });
+            } catch (error) {
+              console.error("Upload failed:", error);
+            }
+          } else if (node instanceof Konva.Text) {
+            design.push({
+              id: node.id(),
+              type: 'text',
+              text: node.text(),
+              x: node.x() / stageConfig.stageWidth,
+              y: node.y() / stageConfig.stageHeight,
+              offset_x: node.offsetX() / stageConfig.stageWidth,
+              offset_y: node.offsetY() / stageConfig.stageHeight,
+              actual_x: (node.x() - node.offsetX()) / stageConfig.stageWidth,
+              actual_y: (node.y() - node.offsetY()) / stageConfig.stageHeight,
+              rotation: node.rotation(),
+              scaleX: node.scaleX(),
+              scaleY: node.scaleY(),
+              fontFamily: node.fontFamily(),
+              fontSize: node.fontSize() / stageConfig.stageHeight,
+              fontStyle: node.fontStyle(),
+              fontWeight: node.attrs.fontWeight || 'normal',
+              fill: node.fill(),
+              align: node.align(),
+              priority_index: priorityIndex
+            });
+          }
+        }
+      }
+      return design;
+    };
+
+    const designs: any[] = [];
+    for (const item in this.stages) {
+
+      try {
+        const designOfStage = {
+          final_image_url: "",
+          designs: [] as any[],
+          face_code: ""
+        };
+        const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
+        imageDom.crossOrigin = 'anonymous';
+
+        if (this.stages[item] == this.currentStage) {
+          //if (this.currentStage.stage?.getChildren() > 0) {
+          const stageBase64 = await this.exportStage(this.stages[item], imageDom);
+          const file = this.base64ToFile(stageBase64, `image${uuidv4()}.png`);
+
+          const formData = new FormData();
+          formData.append('file', file);
+          const response = await uploadImageRaw(formData);
+          designOfStage.final_image_url = (response as { file?: { file_url?: string } }).file?.file_url ?? "";
+          // }
+          // else {
+          //   designOfStage.final_image_url = this.data[item].image;
+          // }
+        }
+        else {
+          if (this.faceImage[this.data[item].code] != "" && this.faceImage[this.data[item].code] != null) {
+            let stageBase64 = this.faceImage[this.data[item].code];
+
+            if (stageBase64.startsWith('http://') || stageBase64.startsWith('https://')) {
+              stageBase64 = await this.urlToBase64(this.faceImage[this.data[item].code]);
+            }
+            const file = this.base64ToFile(stageBase64, `image${uuidv4()}.png`);
+
+            const formData1: FormData | null = new FormData();
+            formData1.append('file', file);
+            const response = await uploadImageRaw(formData1);
+            designOfStage.final_image_url = (response as { file?: { file_url?: string } }).file?.file_url ?? "";
+
+          }
+          else {
+            designOfStage.final_image_url = this.data[item].image;
+          }
+        }
+
+        designOfStage.designs = await getStageInfo(this.stages[item]);
+        designOfStage.face_code = this.data[item].code;
+        designs.push(designOfStage);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    return { design: designs, hasDesign: totalObjectInsert > 0 ? true : false };
+  }
+
 
   public async exportRelativeDesignToJson(): Promise<object> {
     //console.log('exportRelativeDesignToJson');
     const getStageInfo = async (stageConfig: StageConfig) => {
       const design: any[] = [];
       let priorityIndex = 0;
-      if (stageConfig.layer) {
+      if (stageConfig.layer && stageConfig.stageWidth && stageConfig.stageHeight) {
         for (const node of stageConfig.layer.children) {
           priorityIndex++;
           if (node instanceof Konva.Image) {
@@ -1405,17 +1581,17 @@ class TShirtDesigner {
               id: node.id(),
               type: 'image',
               src: imageElement.src,
-              x: node.x(),
-              y: node.y(),
-              offset_x: node.offsetX(),
-              offset_y: node.offsetY(),
-              actual_x: node.x() - node.offsetX(),
-              actual_y: node.y() - node.offsetY(),
+              x: node.x() / stageConfig.stageWidth,
+              y: node.y() / stageConfig.stageHeight,
+              offset_x: node.offsetX() / stageConfig.stageWidth,
+              offset_y: node.offsetY() / stageConfig.stageHeight,
+              actual_x: (node.x() - node.offsetX()) / stageConfig.stageWidth,
+              actual_y: (node.y() - node.offsetY()) / stageConfig.stageHeight,
               rotation: node.rotation(),
               scaleX: node.scaleX(),
               scaleY: node.scaleY(),
-              width: node.width(),
-              height: node.height(),
+              width: node.width() / stageConfig.stageWidth,
+              height: node.height() / stageConfig.stageHeight,
               priority_index: priorityIndex,
               cloud_url: imageElement.src, // Optional: add uploaded URL
             });
@@ -1424,17 +1600,17 @@ class TShirtDesigner {
               id: node.id(),
               type: 'text',
               text: node.text(),
-              x: node.x(),
-              y: node.y(),
-              offset_x: node.offsetX(),
-              offset_y: node.offsetY(),
-              actual_x: node.x() - node.offsetX(),
-              actual_y: node.y() - node.offsetY(),
+              x: node.x() / stageConfig.stageWidth,
+              y: node.y() / stageConfig.stageHeight,
+              offset_x: node.offsetX() / stageConfig.stageWidth,
+              offset_y: node.offsetY() / stageConfig.stageHeight,
+              actual_x: (node.x() - node.offsetX()) / stageConfig.stageWidth,
+              actual_y: (node.y() - node.offsetY()) / stageConfig.stageHeight,
               rotation: node.rotation(),
               scaleX: node.scaleX(),
               scaleY: node.scaleY(),
               fontFamily: node.fontFamily(),
-              fontSize: node.fontSize(),
+              fontSize: node.fontSize() / stageConfig.stageHeight,
               fontStyle: node.fontStyle(),
               fontWeight: node.attrs.fontWeight || 'normal',
               fill: node.fill(),
@@ -1624,7 +1800,7 @@ class TShirtDesigner {
 
 
   public getTotalObjectInAllStage() {
-    let print_face = []
+    const print_face = []
     for (const item in this.stages) {
       if (this.stages[item].layer?.getChildren().length) {
         print_face.push(this.data[item].code);
@@ -1759,6 +1935,170 @@ class TShirtDesigner {
     return tempCanvas.toDataURL('image/png');
   };
 
+  public async importDesignToFace(faceCodes: string[], data: object[]) {
+    const importToStage = async (stageConfig: StageConfig, data: object[]) => {
+      if (!stageConfig.stage || !stageConfig.layer || !stageConfig.stageWidth || !stageConfig.stageHeight) {
+        console.error('Stage or layer not initialized');
+        return;
+      }
+
+      console.log('importToStage', stageConfig.stageWidth, stageConfig.stageHeight);
+
+      const nodes = stageConfig.layer.children.slice();
+      nodes.forEach(node => {
+        if (!(node instanceof Konva.Transformer)) {
+          node.destroy();
+        }
+      });
+      const sortedDesign = data.sort((a, b) => {
+        return (a as any).priority_index - (b as any).priority_index;
+      });
+      for (const obj of sortedDesign) {
+        if ((obj as any).type == 'image') {
+          const img = new Image();
+          var originImage = "";
+          img.crossOrigin = "anonymous";
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            originImage = (obj as any).src;
+            img.src = (obj as any).src;
+          });
+
+          const imgNode = new Konva.Image({
+            id: (obj as any).id,
+            image: img,
+            x: (obj as any).x * stageConfig.stageWidth,
+            y: (obj as any).y * stageConfig.stageHeight,
+            width: (obj as any).width * stageConfig.stageWidth,
+            height: (obj as any).height * stageConfig.stageHeight,
+            rotation: (obj as any).rotation,
+            scaleX: (obj as any).scaleX,
+            scaleY: (obj as any).scaleY,
+            offsetX: (obj as any).offset_x * stageConfig.stageWidth,
+            offsetY: (obj as any).offset_y * stageConfig.stageHeight,
+            draggable: true,
+          });
+
+          imgNode.setAttr('lastPositionX', imgNode.x());
+          imgNode.setAttr('lastPositionY', imgNode.y());
+          imgNode.setAttr('rotationOfLastWidth', imgNode.width());
+          imgNode.setAttr('rotationOfLastHeight', imgNode.height());
+          //const stage = stageConfig.stage as Konva.Stage;
+          imgNode.dragBoundFunc(function (pos) {
+            const stage = imgNode.getStage();
+            const stageWidth = stage!.width();
+            const stageHeight = stage!.height();
+
+            const tempNode = imgNode.clone();
+            tempNode.position(pos);
+            const bounds = tempNode.getClientRect();
+
+            let newX = pos.x;
+            let newY = pos.y;
+
+            if (bounds.x < 0) {
+              newX = pos.x - bounds.x;
+            }
+            if (bounds.x + bounds.width > stageWidth) {
+              newX = pos.x - (bounds.x + bounds.width - stageWidth);
+            }
+            if (bounds.y < 0) {
+              newY = pos.y - bounds.y;
+            }
+            if (bounds.y + bounds.height > stageHeight) {
+              newY = pos.y - (bounds.y + bounds.height - stageHeight);
+            }
+
+            return { x: newX, y: newY };
+          });
+
+
+          imgNode.on('dragend', () => {
+            this.createNodeHistory();
+          });
+
+          stageConfig.layer.add(imgNode);
+          this.originImageOfStage[imgNode.id()] = originImage;
+        } else if ((obj as any).type == 'text') {
+          const textNode = new Konva.Text({
+            id: (obj as any).id,
+            text: (obj as any).text,
+            x: (obj as any).x * stageConfig.stageWidth,
+            y: (obj as any).y * stageConfig.stageHeight,
+            rotation: (obj as any).rotation,
+            scaleX: (obj as any).scaleX,
+            scaleY: (obj as any).scaleY,
+            fontFamily: (obj as any).fontFamily,
+            fontSize: (obj as any).fontSize * stageConfig.stageHeight,
+            fontStyle: (obj as any).fontStyle,
+            fontWeight: (obj as any).fontWeight,
+            fill: (obj as any).fill,
+            align: (obj as any).align,
+            offsetX: (obj as any).offset_x * stageConfig.stageWidth,
+            offsetY: (obj as any).offset_y * stageConfig.stageHeight,
+            draggable: true,
+          });
+
+          textNode.setAttr('lastPositionX', textNode.x());
+          textNode.setAttr('lastPositionY', textNode.y());
+          textNode.setAttr('rotationOfLastWidth', textNode.width());
+          textNode.setAttr('rotationOfLastHeight', textNode.height());
+
+          //const stageWidth = stageConfig.stage.width();
+          //const stageHeight = stageConfig.stage.height();
+
+          textNode.dragBoundFunc(function (pos) {
+            const stage = textNode.getStage();
+            const stageWidth = stage!.width();
+            const stageHeight = stage!.height();
+
+            const tempNode = textNode.clone();
+            tempNode.position(pos);
+            const bounds = tempNode.getClientRect();
+
+            let newX = pos.x;
+            let newY = pos.y;
+
+            if (bounds.x < 0) {
+              newX = pos.x - bounds.x;
+            }
+            if (bounds.x + bounds.width > stageWidth) {
+              newX = pos.x - (bounds.x + bounds.width - stageWidth);
+            }
+            if (bounds.y < 0) {
+              newY = pos.y - bounds.y;
+            }
+            if (bounds.y + bounds.height > stageHeight) {
+              newY = pos.y - (bounds.y + bounds.height - stageHeight);
+            }
+
+
+            return { x: newX, y: newY };
+          });
+
+          textNode.on('dragend', () => {
+            this.createNodeHistory();
+          });
+
+          stageConfig.layer.add(textNode);
+        }
+      }
+
+
+      stageConfig.layer.draw();
+    };
+
+    for (const item in this.data) {
+      for (const faceCode of faceCodes) {
+        if (this.data[item].code == faceCode) {
+          importToStage(this.stages[item], data);
+          break;
+        }
+      }
+    }
+  }
+
   public async importDesignFromChangeProduct(/*jsonContent: string*//*designs: object[][]*/ jsonContent: any) {
     const designs: object[][] = [];
     const codes = new Map<number, string>();
@@ -1769,17 +2109,13 @@ class TShirtDesigner {
       codes.set(index, (design as any).code);
     }
     try {
-      // const designInfo: DesignInfo = JSON.parse(jsonContent) as DesignInfo;
-      // console.log(designInfo);
-
-      //this.changeBackgroundColor(designInfo.backgroundColor);
-
-
       const importToStage = async (stageConfig: StageConfig, data: object[]) => {
-        if (!stageConfig.stage || !stageConfig.layer) {
+        if (!stageConfig.stage || !stageConfig.layer || !stageConfig.stageWidth || !stageConfig.stageHeight) {
           console.error('Stage or layer not initialized');
           return;
         }
+
+        console.log('importToStage', stageConfig.stageWidth, stageConfig.stageHeight);
 
         const nodes = stageConfig.layer.children.slice();
         nodes.forEach(node => {
@@ -1805,15 +2141,15 @@ class TShirtDesigner {
             const imgNode = new Konva.Image({
               id: (obj as any).id,
               image: img,
-              x: (obj as any).x,
-              y: (obj as any).y,
-              width: (obj as any).width,
-              height: (obj as any).height,
+              x: (obj as any).x * stageConfig.stageWidth,
+              y: (obj as any).y * stageConfig.stageHeight,
+              width: (obj as any).width * stageConfig.stageWidth,
+              height: (obj as any).height * stageConfig.stageHeight,
               rotation: (obj as any).rotation,
               scaleX: (obj as any).scaleX,
               scaleY: (obj as any).scaleY,
-              offsetX: (obj as any).offset_x,
-              offsetY: (obj as any).offset_y,
+              offsetX: (obj as any).offset_x * stageConfig.stageWidth,
+              offsetY: (obj as any).offset_y * stageConfig.stageHeight,
               draggable: true,
             });
 
@@ -1861,19 +2197,19 @@ class TShirtDesigner {
             const textNode = new Konva.Text({
               id: (obj as any).id,
               text: (obj as any).text,
-              x: (obj as any).x,
-              y: (obj as any).y,
+              x: (obj as any).x * stageConfig.stageWidth,
+              y: (obj as any).y * stageConfig.stageHeight,
               rotation: (obj as any).rotation,
               scaleX: (obj as any).scaleX,
               scaleY: (obj as any).scaleY,
               fontFamily: (obj as any).fontFamily,
-              fontSize: (obj as any).fontSize,
+              fontSize: (obj as any).fontSize * stageConfig.stageHeight,
               fontStyle: (obj as any).fontStyle,
               fontWeight: (obj as any).fontWeight,
               fill: (obj as any).fill,
               align: (obj as any).align,
-              offsetX: (obj as any).offset_x,
-              offsetY: (obj as any).offset_y,
+              offsetX: (obj as any).offset_x * stageConfig.stageWidth,
+              offsetY: (obj as any).offset_y * stageConfig.stageHeight,
               draggable: true,
             });
 
@@ -1929,16 +2265,19 @@ class TShirtDesigner {
 
 
       for (const item in this.data) {
+
         //console.log('bbbbbbbbbbbbbbbbbbbbbb', this.data[item].code, codes.get(Number(item)));
         for (const [, value] of codes) {
           //console.log('aaaaaaaaaaaaaaaaaaaaa', this.data[item].code == codes.get(Number(key)));
           if (this.data[item].code == value) {
+            // console.log('importDesignFromJson111111111111', item, this.data[item].code, value);
             //console.log('importDesignFromJson222222222222', item);
-            const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
-            if (imageDom) {
-              this.updateStagePosition(this.stages[item], this.data[item], imageDom);
-            }
+            // const imageDom = document.getElementById(this.data[item].code + 'Image') as HTMLImageElement;
+            // if (imageDom) {
+            //   this.updateStagePosition(this.stages[item], this.data[item], imageDom);
+            // }
             //console.log('importDesignFromJson', this.stages[item]);
+
             await importToStage(this.stages[item], designs[item]);
             break;
           }

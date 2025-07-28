@@ -1,0 +1,29 @@
+query CustomerDesignFavorites(
+	$first: Int
+	$filter: CustomerDesignFavoriteFilterInput
+	$sortBy: CustomerDesignFavoriteSortingInput
+) {
+	customerDesignFavorites(first: $first, filter: $filter, sortBy: $sortBy) {
+		edges {
+			node {
+				id
+				designJson
+				images
+				sourceId
+				sourceType
+				note
+				displayOrder
+				updatedAt
+				createdAt
+			}
+			cursor
+		}
+		pageInfo {
+			endCursor
+			hasNextPage
+			hasPreviousPage
+			startCursor
+		}
+		totalCount
+	}
+}

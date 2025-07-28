@@ -27,11 +27,13 @@ import {
   ChevronLeft,
   RedoIcon,
   Undo,
-  ArrowLeft
+  ArrowLeft,
+  Folder,
+  Save
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TShirtDesigner from "../utils/design";
-import { type DesignInfo, type PrintFaceData, type AddCartType, type PriceOfVariantDesign } from "../utils/type";
+import { type DesignInfo, type PrintFaceData, type AddCartType, type PriceOfVariantDesign, type FaceData } from "../utils/type";
 import { getMetaDtataFromColorVariant, getVariantIdFromColorSize } from "../utils/data";
 import { checkUser } from "../utils/checkout";
 import { fetchProductDetail } from "../utils/test";
@@ -40,10 +42,13 @@ import { useDesign } from "../utils/useDesign";
 import { redoStackHistory2, undoStackHistory2, destroyStackHistory2, type NodeHistory2 } from "../utils/designHistory2";
 import { addCartMultiItem, UpdateDesignMultiItem } from "../utils/addToCartMultiItemAction";
 import { groupAndSortColors } from "../../../products/[slug]/utils/soft-color";
+import GetDesignsModal from "../component/GetDesignsModal";
 import { ChangeProductModal } from "./ChangeProduct";
 import { AdditionalServicePopup } from "./AdditionalService"
+import SaveDesign from "./SaveDesign"
 import { cn } from "@/lib/utils";
 import { PrintingTechnology, PrintSide } from "@/gql/graphql";
+
 //import { PrintDetail, PrintingInfo } from "./type"
 
 interface DesignPageProps {
@@ -67,6 +72,7 @@ function DesignPage(param: DesignPageProps) {
 
   const [colorData, setColorData] = useState<Map<string, object>>(new Map());
   const [data, setData] = useState<PrintFaceData[]>([]);
+  const [faceData, setFaceData] = useState<FaceData[]>([]);
   const [colorLoading, setColorLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   let sort_data = data.sort((a, b) => a.z_index - b.z_index);
@@ -94,6 +100,8 @@ function DesignPage(param: DesignPageProps) {
   const [isFirstLoad, setIsFirstLoad] = useState<boolean>(true);
 
   const [isShowDialog, setIsShowDialog] = useState<boolean>(false);
+  const [isShowSaveDesign, setIsShowSaveDesign] = useState<boolean>(false);
+  const [isGetSaveDesign, setIsGetSaveDesign] = useState<boolean>(false);
   const [isShowFaceDialog, setIsShowFaceDialog] = useState<boolean>(false);
   const [showProductModal, setShowProductModal] = useState<number | 0 | 1 | 2>(0);
   const isDestroyHistortRef = useRef(true);
@@ -223,6 +231,15 @@ function DesignPage(param: DesignPageProps) {
     // setVariantId(variant);
     setVariantId(param.variantId);
     setVariantIdOfUpdate(param.variantId);
+
+    const faceDataTemp: FaceData[] = []
+    for (const face of result) {
+      faceDataTemp.push({
+        face_code: face.code,
+        image_url: face.image
+      });
+    }
+    setFaceData(faceDataTemp);
   };
 
   useEffect(() => {
@@ -496,6 +513,15 @@ function DesignPage(param: DesignPageProps) {
     if (designerRef.current == null || designerRef.current == undefined)
       return;
     const result = getMetaDtataFromColorVariant(key, colorData);
+    const faceDataTemp: FaceData[] = []
+    for (const face of result) {
+      faceDataTemp.push({
+        face_code: face.code,
+        image_url: face.image
+      });
+    }
+    setFaceData(faceDataTemp);
+
     sort_data = result.sort((a, b) => a.z_index - b.z_index);
 
     for (const item of result) {
@@ -1043,6 +1069,39 @@ function DesignPage(param: DesignPageProps) {
 
   return (
     <>
+      {isGetSaveDesign && (
+        <GetDesignsModal
+          onClose={() => setIsGetSaveDesign(false)}
+          faceData={faceData}
+          onImportDesignToFace={(faceCode, designJson) => {
+            if (designerRef.current) {
+              designerRef.current.importDesignToFace(faceCode, designJson);
+            }
+          }}
+          onImportDesignToMultiFace={(data) => {
+            if (designerRef.current) {
+              designerRef.current.importDesignFromChangeProduct(data);
+            }
+          }}
+          setSpinner={setSpinner}
+        />
+
+      )}
+      {(isShowSaveDesign && (
+        <SaveDesign
+          onClose={() => {
+            setIsShowSaveDesign(false)
+          }}
+          onExportDesign={async () => {
+            if (designerRef.current) {
+              const design = await designerRef.current.exportDesignToSave();
+              return design;
+            }
+            return null;
+          }}
+          setSpinner={setSpinner}
+        />
+      ))}
       {(showProductModal == 1) && (
         <ChangeProductModal
           setOpen={setShowProductModal}
@@ -1116,22 +1175,7 @@ function DesignPage(param: DesignPageProps) {
               <ArrowLeft className="h-8 w-8" />
               <span className="text-xs">Back</span>
             </div>
-            <div
-              className={cn(
-                "flex h-20 w-20 flex-col items-center justify-center hover:bg-white/20 hover:text-white",
-                { "border-l-[4px] border-l-blue-500 bg-white text-black": selected === "color" },
-              )}
-              onClick={() => {
-                //setIsColorModalOpen(true)
-                router.push(`?value=color`);
-                handleDeselect();
-                setMenuIndex(1);
-              }}
-              id="color"
-            >
-              <Palette className="h-8 w-8" />
-              <span className="text-xs">Color</span>
-            </div>
+
             <div
               id="uploadFromPC"
               className={cn(
@@ -1162,6 +1206,22 @@ function DesignPage(param: DesignPageProps) {
               <Type className="h-8 w-8" />
               <span className="text-xs">Text</span>
             </button>
+            <div
+              className={cn(
+                "flex h-20 w-20 flex-col items-center justify-center hover:bg-white/20 hover:text-white",
+                { "border-l-[4px] border-l-blue-500 bg-white text-black": selected === "color" },
+              )}
+              onClick={() => {
+                //setIsColorModalOpen(true)
+                router.push(`?value=color`);
+                handleDeselect();
+                setMenuIndex(1);
+              }}
+              id="color"
+            >
+              <Palette className="h-8 w-8" />
+              <span className="text-xs">Colors</span>
+            </div>
             <button
               id="changeProduct"
               onClick={() => {
@@ -1190,13 +1250,7 @@ function DesignPage(param: DesignPageProps) {
                 <div className="flex flex-col items-center px-2 md:pt-3">
                   <h3 className="text-2xl font-bold">What&apos;s next for you?</h3>
                   <div className="mt-4 grid w-full grid-cols-1 items-center justify-items-center gap-2">
-                    <div
-                      onClick={() => setMenuIndex(1)}
-                      className="flex w-full flex-col items-center justify-center rounded-md border py-2 shadow-inner transition-all hover:scale-95 hover:bg-slate-50"
-                    >
-                      <Palette className="h-8 w-8" />
-                      <span className="text-xl font-medium">Colors</span>
-                    </div>
+
                     <div
                       onClick={() => setMenuIndex(2)}
                       className="flex w-full flex-col items-center justify-center rounded-md border py-2 shadow-inner transition-all hover:scale-95 hover:bg-slate-50"
@@ -1214,6 +1268,23 @@ function DesignPage(param: DesignPageProps) {
                     <div
                       onClick={() => {
                         //alert('ok');
+                        setIsGetSaveDesign(true);
+                      }}
+                      className="flex w-full flex-col items-center justify-center rounded-md border py-2 shadow-inner transition-all hover:scale-95 hover:bg-slate-50"
+                    >
+                      <Folder className="h-8 w-8" />
+                      <span className="text-xl font-medium">Collection</span>
+                    </div>
+                    <div
+                      onClick={() => setMenuIndex(1)}
+                      className="flex w-full flex-col items-center justify-center rounded-md border py-2 shadow-inner transition-all hover:scale-95 hover:bg-slate-50"
+                    >
+                      <Palette className="h-8 w-8" />
+                      <span className="text-xl font-medium">Colors</span>
+                    </div>
+                    <div
+                      onClick={() => {
+                        //alert('ok');
                         setShowProductModal(1);
                       }}
                       className="flex w-full flex-col items-center justify-center rounded-md border py-2 shadow-inner transition-all hover:scale-95 hover:bg-slate-50"
@@ -1221,6 +1292,7 @@ function DesignPage(param: DesignPageProps) {
                       <ShirtIcon className="h-8 w-8" />
                       <span className="text-xl font-medium">Change Products</span>
                     </div>
+
                   </div>
                 </div>
               )}
@@ -1249,6 +1321,14 @@ function DesignPage(param: DesignPageProps) {
                             handleChangeProductColor(key);
                             designerRef.current.createNodeHistory();
                             const result = getMetaDtataFromColorVariant(key, colorData);
+                            const faceDataTemp: FaceData[] = []
+                            for (const face of result) {
+                              faceDataTemp.push({
+                                face_code: face.code,
+                                image_url: face.image
+                              });
+                            }
+                            setFaceData(faceDataTemp);
                             sort_data = result.sort((a, b) => a.z_index - b.z_index);
 
                             for (const item of result) {
@@ -2178,6 +2258,23 @@ function DesignPage(param: DesignPageProps) {
                 />
               );
             })}
+          <Button
+            sx={{
+              backgroundColor: "#2c3c50",
+              color: "#ffffff",
+              "&:hover": {
+                backgroundColor: "#2b2966",
+              },
+              width: "100%",
+              mt: "5px",
+              textTransform: "none",
+            }}
+            onClick={async () => {
+              setIsShowSaveDesign(true);
+            }}
+          >
+            Save Design
+          </Button>
           {(param.typeDesign == 1 || param.typeDesign == 4) && (
             <Button
               sx={{
@@ -2187,7 +2284,7 @@ function DesignPage(param: DesignPageProps) {
                   backgroundColor: "#2b2966",
                 },
                 width: "100%",
-                mt: "20px",
+                mt: "5px",
                 textTransform: "none",
               }}
               onClick={async () => {
@@ -2280,7 +2377,6 @@ function DesignPage(param: DesignPageProps) {
                         quantity: number;
                       };
 
-                      console.log("cartItem", cartItem);
                       setQuantity(cartItem.quantity);
                     }
                   }
@@ -2432,7 +2528,20 @@ function DesignPage(param: DesignPageProps) {
             />
           </div>
         </div>
-        <div className="absolute top-28 right-0 block lg:hidden">
+        <div className="absolute right-1 top-28  block lg:hidden">
+          <div className="flex items-center  gap-2 z-10  h-12  rounded-full bg-[#2c344b] px-4" onClick={async () => {
+            setIsShowSaveDesign(true);
+          }}>
+
+            <span className="text-white">Save Design</span>
+            <Save
+              className=" z-10 block h-12 w-12 rounded-full  p-3 lg:hidden"
+              stroke="white"
+
+            />
+          </div>
+        </div>
+        <div className="absolute top-44 right-1 block lg:hidden">
           <div className="flex items-center  gap-2 z-10  h-12  rounded-full bg-[#2c344b] px-4">
             <span className="text-white">Add to cart</span>
             {(param.typeDesign == 1) && (
@@ -2678,13 +2787,7 @@ function DesignPage(param: DesignPageProps) {
                   <h3 className="text-2xl font-bold">What&apos;s next for you?</h3>
                   <div className="mt-4 grid w-full grid-cols-1 items-center justify-items-center gap-2">
 
-                    <div
-                      onClick={() => setMenuIndex(1)}
-                      className="flex w-full flex-col items-center justify-center rounded-md border py-2 shadow-inner transition-all hover:scale-95 hover:bg-slate-50"
-                    >
-                      <Palette className="h-8 w-8" />
-                      <span className="text-xl font-medium">Colors</span>
-                    </div>
+
                     <div
                       onClick={() => setMenuIndex(2)}
                       className="flex w-full flex-col items-center justify-center rounded-md border py-2 shadow-inner transition-all hover:scale-95 hover:bg-slate-50"
@@ -2698,6 +2801,23 @@ function DesignPage(param: DesignPageProps) {
                     >
                       <Type className="h-8 w-8" />
                       <span className="text-xl font-medium">Text</span>
+                    </div>
+                    <div
+                      onClick={() => {
+                        //alert('ok');
+                        setIsGetSaveDesign(true);
+                      }}
+                      className="flex w-full flex-col items-center justify-center rounded-md border py-2 shadow-inner transition-all hover:scale-95 hover:bg-slate-50"
+                    >
+                      <Folder className="h-8 w-8" />
+                      <span className="text-xl font-medium">Collection</span>
+                    </div>
+                    <div
+                      onClick={() => setMenuIndex(1)}
+                      className="flex w-full flex-col items-center justify-center rounded-md border py-2 shadow-inner transition-all hover:scale-95 hover:bg-slate-50"
+                    >
+                      <Palette className="h-8 w-8" />
+                      <span className="text-xl font-medium">Colors</span>
                     </div>
                     <div
                       onClick={() => {
@@ -2742,6 +2862,14 @@ function DesignPage(param: DesignPageProps) {
                           handleChangeProductColor(key);
                           designerRef.current.createNodeHistory();
                           const result = getMetaDtataFromColorVariant(key, colorData);
+                          const faceDataTemp: FaceData[] = []
+                          for (const face of result) {
+                            faceDataTemp.push({
+                              face_code: face.code,
+                              image_url: face.image
+                            });
+                          }
+                          setFaceData(faceDataTemp);
                           sort_data = result.sort((a, b) => a.z_index - b.z_index);
 
                           for (const item of result) {
@@ -2782,7 +2910,7 @@ function DesignPage(param: DesignPageProps) {
                       )}
                       style={{ backgroundColor: (value as { color_value: string }).color_value }}
                     >
-                       {colorId === key && <Check />}
+                      {colorId === key && <Check />}
                     </div>
                   ))}
                 </div>

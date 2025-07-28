@@ -75,3 +75,8 @@ export interface PriceOfVariantDesign {
   color: string;
   quantity: number;
 }
+
+export interface FaceData {
+  image_url: string,
+  face_code: string,
+}
